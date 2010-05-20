@@ -21,8 +21,10 @@
     #:qx-document #:qx-callback
     #:qx-composite
     #:qx-combo-box
-    #:qx-button #:qx-label
-    #:qx-hbox #:qx-vbox
+    #:qx-button #:qx-label #:label
+    #:qx-hbox #:qx-vbox #:qx-list-item
     #:qxfmt #:qx-reset))
 
+#+xxx
+(unintern 'apropos-qx::label :apropos-qx)
 

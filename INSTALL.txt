@@ -1,3 +1,9 @@
+Open items:
+
+uh-oh: Cells in a multi-session world. Hmmm....
+
+
+
 WARNING: The installation instructions below have not been
 tested one iota and were typed in while watching game
 two of the Yankees-Red Sox mini-series. The good news is that if you have

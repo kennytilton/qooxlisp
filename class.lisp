@@ -1,17 +1,21 @@
 (in-package :qxl)
 
-(defmd qx-family (family))
+(defmd qooxlisp-family (family))
 
-(defobserver .kids ((self qx-family))
-  (with-integrity (:client `(:post-make-qx ,self))
-    (trc "kidsing" self old-value new-value)
-    (loop for k in (set-difference old-value new-value)
-        do (qxfmt "clDict[~a].remove(clDict[~a]);" (oid self)(oid k)))
-    (loop for k in (set-difference new-value old-value) do 
-          ;;(qxfmt "console.log('adding: to '+ ~a + ' the new ' + ~a);" pa new)
-          (qxfmt "clDict[~a].add(clDict[~a],~a);" (oid self) (oid k) (add-ops k)))))
+(defobserver .kids ((self qooxlisp-family))
+  (progn
+    (trc "kidsing outer!!!!!!!!!!!!!!!!!!!!!" self old-value new-value)
+    (with-integrity (:client `(:post-make-qx ,self))
+      (print (list "kidsing!!!!!!!!!!!!!!!!!" self old-value new-value))
+      (loop for k in (set-difference old-value new-value)
+          do (qxfmt "clDict[~a].remove(clDict[~a]);" (oid self)(oid k)))
+      (loop for k in (set-difference new-value old-value) do 
+            ;;(qxfmt "console.log('adding: to '+ ~a + ' the new ' + ~a);" pa new)
+            (b-if ao (add-ops k)
+              (qxfmt "clDict[~a].add(clDict[~a],~a);" (oid self) (oid k) ao)
+              (qxfmt "clDict[~a].add(clDict[~a]);" (oid self) (oid k)))))))
 
-(defmd qx-document (qx-family)
+(defmd qx-document (qooxlisp-family)
   (oid 0 :cell nil)
   (doc-hash nil :cell nil)
   (dictionary (make-hash-table) :cell nil)
@@ -37,33 +41,43 @@
   (make-qx-instance self))
 
 (defmethod make-qx-instance ((self qx-object) &aux (doc .doc))
-  (trc "mqi" *qxdoc* .doc doc)
+  (trc "mqi !!!!!!!!!!!!!!! outer" *qxdoc* .doc doc)
   (with-integrity (:client `(:make-qx ,self))
+    (trc "mqi !!!!!!!!!!!!!!! inner" *qxdoc* .doc doc)
     (setf (oid self) (get-next-id doc))
     (setf (gethash (oid self) (dictionary doc)) self)
     
     (when (qx-class self)
-      (qxfmt "clDict[~a] = new ~a().set(~a);"
-        (oid self)
-        (qx-class self)
-        (json::encode-json-to-string (qx-configurations self)))
+      (b-if cfg (qx-configurations self)
+        (qxfmt "clDict[~a] = new ~a().set(~a);" (oid self)(qx-class self)(json$ cfg))
+        (qxfmt "clDict[~a] = new ~a();" (oid self)(qx-class self)))
       (qxfmt "console.log('stored new oid/obj ~a '+ clDict[~:*~a]);" (oid self)))))
           
-(defmethod qx-configurations (self)
-            (declare (ignore self)))
-
-(defmd qx-layout-item (qx-object)
-  add)
+(defgeneric qx-configurations (self)
+  (:method-combination append)
+  (:method append (self)
+    (declare (ignore self))))
 
 (defun add-ops (self &aux (add (add self)))
   (typecase add
     (string add)
     (cons (apply 'jsk$ add))))
 
+(defmd qx-widget (qx-layout-item)
+  background-color
+  onkeypress
+  (enabled t))
 
-(defmd qx-widget (qx-layout-item))
+(defobserver enabled ()
+  (with-integrity (:client `(:post-make-qx ,self))
+    (qxfmt "clDict[~a].setEnabled(~a);" (oid self) (if new-value 'true 'false))))
+       
+(defmethod qx-configurations append ((self qx-widget))
+  (nconc
+   (b-when x (background-color self)
+     (list (cons :background-color x)))))
 
-(defmd qx-control ()
+(defmd qooxlisp-control () ;; qooxlisp- indicates this is a Lisp-side only class
   onexecute)
 
 (defobserver onexecute ()
@@ -77,7 +91,20 @@ clDict[~a].addListener('execute', function(e) {
 });" 
                   (oid self))))))
 
-(defmd qx-container (qx-widget qx-family)
+(defobserver onkeypress ()
+  (with-integrity (:client `(:post-make-qx ,self))
+    (cond
+     (new-value (qxfmt "
+clDict[~a].addListener('keypress', function(e) {
+    var rq = new qx.io.remote.Request('/callback?opcode=onkeypress&oid=~:*~a&keyId='+e.getKeyIdentifier()+'&value='+this.getValue(),'GET', 'text/javascript');
+    rq.send();
+});" 
+                  (oid self)))
+     (old-value
+      ;;untested
+      (qxfmt "clDict[~a].removeListener('keypress');" (oid self))))))
+
+(defmd qx-container (qx-widget qooxlisp-family)
   layout)
 
 (defobserver layout ()
@@ -93,11 +120,28 @@ clDict[~a].addListener('execute', function(e) {
 (defmd qx-atom (qx-widget)
   label)
 
+(defmethod qx-configurations append ((self qx-atom))
+  (nconc
+   (b-when x (label self)
+     (list (cons :label x)))))
+
 ;;; --- qx-combo-box --------------------------------------
 
-(defmd qx-combo-box (qx-control qx-atom)
+(defmd qx-abstract-select-box (qooxlisp-control qx-widget qooxlisp-family))
+
+(defmd qx-combo-box (qx-abstract-select-box)
   (qx-class "qx.ui.form.ComboBox" :allocation :class :cell nil)
-  onchangevalue)
+  (onchangevalue (lambda (self req)
+                   (print :onchangevalue-fires)
+                   (let ((nv (req-val req "value")))
+                     (setf (^value) nv)
+                     (trc "combo-box ~a changed to ~a')"
+                       (oid self) nv)
+                     (qxfmt "console.log('nada');"))))
+  :value (c-in nil))
+
+(defmd qx-list-item (qx-atom)
+  (qx-class "qx.ui.form.ListItem" :allocation :class :cell nil))
 
 (defobserver onchangevalue ()
   (with-integrity (:client `(:post-make-qx ,self))
@@ -107,15 +151,20 @@ clDict[~a].addListener('changeValue', function(e) {
     (new qx.io.remote.Request('/callback?opcode=onchangevalue&oid=~:*~a&value='+e.getData(),'GET', 'text/javascript')).send();
 });" (oid self))))))
 
-;;; --- qx-button --------------------------------------
+;;; --- button --------------------------------------
 
-(defmd qx-button (qx-control qx-atom)
-  (qx-class "qx.ui.form.Button" :allocation :class :cell nil))
+(defmd qx-button (qooxlisp-control qx-atom)
+  (qx-class "qx.ui.form.Button" :allocation :class :cell nil)
+  (allow-grow-x :js-false)
+  (allow-grow-y :js-false))
 
-(defmethod qx-configurations ((self qx-button))
+(defmethod qx-configurations append ((self qx-button))
   (nconc
-   (bwhen (x (label self))
-     (list (cons :label x)))))
+   
+   (b-when x (allow-grow-x self)
+     (list (cons :allow-grow-x x)))
+   (b-when x (allow-grow-y self)
+     (list (cons :allow-grow-y x)))))
 
 (defmacro new-button ((&rest add-plist) &rest inits)
   `(make-instance 'qx-button
@@ -123,43 +172,19 @@ clDict[~a].addListener('changeValue', function(e) {
      :add (list ,@add-plist)
      ,@inits))
 
-;;; --- qx-label --------------------------------------
+;;; --- label --------------------------------------
 
 (defmd qx-label (qx-widget)
   (qx-class "qx.ui.basic.Label" :allocation :class :cell nil)
-  value)
+  value
+  (allow-grow-x :js-false)
+  (allow-grow-y :js-false))
 
-(defmethod qx-configurations ((self qx-label))
+(defmethod qx-configurations append ((self qx-label))
   (nconc
-   (bwhen (x (value self))
-     (list (cons :value x)))))
-
-(defmd qx-layout (qx-object))
-(defmd qx-layout-abstract (qx-layout))
-(defmd qx-hbox (qx-layout-abstract)
-  (qx-class "qx.ui.layout.HBox" :allocation :class :cell nil) 
-  spacing)
-
-(defmethod qx-configurations ((self qx-hbox))
-  (nconc
-   (bwhen (x (spacing self))
-     (list (cons :spacing x)))))
-
-;;;(defmacro new-hbox ((&rest inits) &rest kids)
-;;;  `(make-instance 'qx-hbox
-;;;     ,@inits
-;;;     :kids (c? (the-kids ,@kids))))
-
-(defmd qx-vbox (qx-layout-abstract)
-  (qx-class "qx.ui.layout.VBox" :allocation :class :cell nil) 
-  spacing)
-
-(defmethod qx-configurations ((self qx-vbox))
-  (nconc
-   (bwhen (x (spacing self))
-     (list (cons :spacing x)))))
-
-(defmacro new-vbox ((&rest inits) &rest kids)
-  `(make-instance 'qx-layout-vbox
-     ,@inits
-     :kids (c? (the-kids ,@kids))))
+   (b-when x (value self)
+     (list (cons :value x)))
+   (b-when x (allow-grow-x self)
+     (list (cons :allow-grow-x x)))
+   (b-when x (allow-grow-y self)
+     (list (cons :allow-grow-y x)))))

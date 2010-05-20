@@ -6,12 +6,13 @@
   :modules (list (make-instance 'module :name "package.lisp")
                  (make-instance 'module :name "qx-utils.lisp")
                  (make-instance 'module :name "class.lisp")
+                 (make-instance 'module :name "layout.lisp")
                  (make-instance 'module :name "qooxlisp.lisp"))
   :projects (list (make-instance 'project-module :name "../cells/cells"
                                  :show-modules nil)
                   (make-instance 'project-module :name
-                                 "../cl-json_0.4.0/cl-json"
-                                 :show-modules nil))
+                                 "cl-json_0.4.0/cl-json" :show-modules
+                                 nil))
   :libraries nil
   :distributed-files nil
   :internally-loaded-files nil

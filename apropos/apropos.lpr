@@ -4,12 +4,12 @@
 
 (defpackage :apropos-qx)
 
-(define-project :name :apropos-cl
+(define-project :name :apropos
   :modules (list (make-instance 'module :name "package.lisp")
                  (make-instance 'module :name "apropos.lisp")
-                 (make-instance 'module :name "do-list"))
+                 (make-instance 'module :name "../INSTALL.txt"))
   :projects (list (make-instance 'project-module :name
-                                 "../qooxlisp.lpr" :show-modules nil))
+                                 "../qooxlisp.lpr" :show-modules t))
   :libraries nil
   :distributed-files nil
   :internally-loaded-files nil

@@ -298,11 +298,15 @@ STREAM (or to *JSON-OUTPUT*)."
 
 (defun write-json-string (s stream)
   "Write a JSON representation (String) of S to STREAM."
-  (write-char #\" stream)
-  (if (stringp s)
-      (write-json-chars s stream)
+  (cond
+   ((string-equal s "jsFalse")
+    (princ "false" stream))
+   (t
+    (write-char #\" stream)
+    (if (stringp s)
+        (write-json-chars s stream)
       (encode-json s stream))
-  (write-char #\" stream)
+    (write-char #\" stream)))
   nil)
 
 (defun write-json-chars (s stream)

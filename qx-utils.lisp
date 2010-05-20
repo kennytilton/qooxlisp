@@ -44,7 +44,7 @@
            (qxl:whtml (:princ (format nil "(function () {~a})()" *js-response*))))))))
 
 (defun qxfmt (fs &rest fa)
-  (print 
+  (progn ;;; print 
    (setf *js-response*
      (conc$ *js-response* (apply 'format nil (conc$ "~&" fs "~%") fa)))))
 
@@ -78,4 +78,5 @@
 (jsk$ :left 2 :top 3)
 
 #+test
-(json$ (list (cons :one 1)))
+(json$ (list (cons 'aa-bb t)))
+
