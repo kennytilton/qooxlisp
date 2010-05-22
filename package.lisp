@@ -16,15 +16,15 @@
     #:with-html-response
     #:with-typed-response
     #:with-js-response #:with-qx-js-response
-    #:with-json-response
-    #:json$ #:jsk$
+    #:with-json-response #:table-model
+    #:json$ #:jsk$ #:cvtjs
     #:qx-document #:qx-callback
-    #:qx-composite
-    #:qx-combo-box
+    #:qx-composite #:qx-table-model-remote
+    #:qx-combo-box #:qx-table
     #:qx-button #:qx-label #:label
     #:qx-hbox #:qx-vbox #:qx-list-item
     #:qxfmt #:qx-reset))
 
 #+xxx
-(unintern 'apropos-qx::label :apropos-qx)
+(unintern 'apropos-qx::cvtjs :apropos-qx)
 

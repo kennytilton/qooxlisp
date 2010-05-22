@@ -4,9 +4,8 @@
 
 (defobserver .kids ((self qooxlisp-family))
   (progn
-    (trc "kidsing outer!!!!!!!!!!!!!!!!!!!!!" self old-value new-value)
     (with-integrity (:client `(:post-make-qx ,self))
-      (print (list "kidsing!!!!!!!!!!!!!!!!!" self old-value new-value))
+      ;(print (list "kidsing!!!!!!!!!!!!!!!!!" self old-value new-value))
       (loop for k in (set-difference old-value new-value)
           do (qxfmt "clDict[~a].remove(clDict[~a]);" (oid self)(oid k)))
       (loop for k in (set-difference new-value old-value) do 
@@ -154,23 +153,7 @@ clDict[~a].addListener('changeValue', function(e) {
 ;;; --- button --------------------------------------
 
 (defmd qx-button (qooxlisp-control qx-atom)
-  (qx-class "qx.ui.form.Button" :allocation :class :cell nil)
-  (allow-grow-x :js-false)
-  (allow-grow-y :js-false))
-
-(defmethod qx-configurations append ((self qx-button))
-  (nconc
-   
-   (b-when x (allow-grow-x self)
-     (list (cons :allow-grow-x x)))
-   (b-when x (allow-grow-y self)
-     (list (cons :allow-grow-y x)))))
-
-(defmacro new-button ((&rest add-plist) &rest inits)
-  `(make-instance 'qx-button
-     :fm-parent *parent*
-     :add (list ,@add-plist)
-     ,@inits))
+  (qx-class "qx.ui.form.Button" :allocation :class :cell nil))
 
 ;;; --- label --------------------------------------
 
@@ -183,8 +166,4 @@ clDict[~a].addListener('changeValue', function(e) {
 (defmethod qx-configurations append ((self qx-label))
   (nconc
    (b-when x (value self)
-     (list (cons :value x)))
-   (b-when x (allow-grow-x self)
-     (list (cons :allow-grow-x x)))
-   (b-when x (allow-grow-y self)
-     (list (cons :allow-grow-y x)))))
+     (list (cons :value x)))))

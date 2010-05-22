@@ -44,10 +44,12 @@
            (qxl:whtml (:princ (format nil "(function () {~a})()" *js-response*))))))))
 
 (defun qxfmt (fs &rest fa)
-  (progn ;;; print 
+  (progn ;; print 
    (setf *js-response*
      (conc$ *js-response* (apply 'format nil (conc$ "~&" fs "~%") fa)))))
 
+(defun mprint (&rest args)
+  (format t "~&mprt> ~{~a ~}" args))
 
 (defmacro with-json-response ((req ent) &body body)
   `(prog1 nil
@@ -73,6 +75,13 @@
 (defun jsk$ (&rest plist)
   (json$ (loop for (a b) on plist by #'cddr
                collecting (cons a b))))
+
+(defun cvtjs (x)
+  (cond
+   ((string-equal x "null") nil)
+   ((string-equal x "true") t)
+   ((string-equal x "false") nil)
+   (t x)))
 
 #+xxxx
 (jsk$ :left 2 :top 3)

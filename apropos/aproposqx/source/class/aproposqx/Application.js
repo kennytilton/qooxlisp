@@ -14,6 +14,9 @@
 
 ************************************************************************ */
 
+var clDict = [];
+var qxDoc;
+
 /**
  * This is the main application class of your custom application "aproposqx"
  */
@@ -52,11 +55,10 @@ qx.Class.define("aproposqx.Application",
       }
 
       clDict[0] = qxDoc = this.getRoot();
-      (new qx.io.remote.Request("/begin","GET", "text/javascript")).send();
+      console.log("app.js> doc "+clDict[0]);
+      //(new qx.io.remote.Request("/begin","GET", "text/javascript")).send();
 
     }
   }
 });
 
-var clDict = [];
-var qxDoc;
