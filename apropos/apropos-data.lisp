@@ -11,12 +11,15 @@
       (loop for sym in (apropos-list s)
           collecting (make-symbol-info
                       :name (symbol-name sym)
-                      :pkg (symbol-package sym)
+                      :pkg (or (symbol-package sym)
+                             (break "no sympkg for ~a" sym))
                       :fntype (cond
                                ((macro-function sym) "macro")
                                ((fboundp sym) "function")
                                (t ""))
-                      :var? (eor (boundp sym))
+                      :var? (if (boundp sym)
+                                (if (constantp sym)
+                                    "con" "var") "")
                       :setf? (eor (fboundp `(setf ,sym)))
                       :class? (eor (find-class sym nil))
                       :exported? (eor (exportedp sym)))))))
@@ -50,14 +53,17 @@
                  when (< (1- start) n (+ start row-count))
                  collect (list
                           (cons :name (symbol-info-name sym))
-                          (cons :pkg (package-name (symbol-info-pkg sym)))
+                          (cons :pkg (b-if nns (remove "" (package-nicknames (symbol-info-pkg sym))
+                                                 :test 'string-equal)
+                                       (car nns)
+                                       (package-name (symbol-info-pkg sym))))
                           (cons :fntype (symbol-info-fntype sym))
                           (cons :var? (symbol-info-var? sym))
                           (cons :setf? (symbol-info-setf? sym))
                           (cons :class? (symbol-info-class? sym))
                           (cons :exported? (symbol-info-exported? sym)))))))))))
 
-
+(package-nicknames (find-package :keyword))
 
 (defun qx-getdatacount (req ent)
   (prog1 nil

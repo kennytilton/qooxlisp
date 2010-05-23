@@ -89,3 +89,52 @@
 #+test
 (json$ (list (cons 'aa-bb t)))
 
+(defmacro groupbox ((&rest layo-iargs)(&rest iargs) &rest kids)
+  `(make-kid 'qx-group-box
+     ,@iargs
+     :layout (c? (make-instance 'qx-vbox ,@layo-iargs))
+     :kids (c? (the-kids ,@kids))))
+
+(defmacro checkgroupbox ((&rest layo-iargs)(&rest iargs) &rest kids)
+  ;;; unfinished....
+  `(make-kid 'qx-check-group-box
+     ,@iargs
+     :layout (c? (make-instance 'qx-vbox ,@layo-iargs))
+     :kids (c? (the-kids ,@kids))))
+
+(defmacro vbox ((&rest box-iargs)(&rest compo-iargs) &rest kids)
+  `(make-kid 'qx-composite
+     ,@compo-iargs
+     :layout (c? (make-instance 'qx-vbox ,@box-iargs))
+     :kids (c? (the-kids ,@kids))))
+
+(defmacro hbox ((&rest box-iargs)(&rest compo-iargs) &rest kids)
+  `(make-kid 'qx-composite
+     ,@compo-iargs
+     :layout (c? (make-instance 'qx-hbox ,@box-iargs))
+     :kids (c? (the-kids ,@kids))))
+
+(defmacro lbl (label-form &rest iargs)
+  `(make-kid 'qx-label
+     :value ,label-form
+     ,@iargs))
+
+(defmacro radiobuttongroup (name (&rest iargs)(layout-class &rest layout-iargs) &rest kids)
+  `(make-kid 'qx-radio-button-group
+     :md-name ,name
+     ,@iargs
+     
+     :layout (make-instance ',layout-class ,@layout-iargs)
+     :kids (c? (the-kids ,@kids))))
+
+(defmacro radiobutton (model label &rest rbiargs)
+  `(make-kid 'qx-radio-button
+     :label ,label
+     :model ,model
+     ,@rbiargs))
+
+(defmacro checkbox (model label &rest iargs)
+  `(make-kid 'qx-check-box
+     :md-name ,model
+     :label ,label
+     ,@iargs))

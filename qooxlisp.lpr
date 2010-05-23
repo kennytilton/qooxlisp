@@ -8,7 +8,8 @@
                  (make-instance 'module :name "class.lisp")
                  (make-instance 'module :name "layout.lisp")
                  (make-instance 'module :name "qooxlisp.lisp")
-                 (make-instance 'module :name "table.lisp"))
+                 (make-instance 'module :name "table.lisp")
+                 (make-instance 'module :name "widget.lisp"))
   :projects (list (make-instance 'project-module :name "../cells/cells"
                                  :show-modules nil)
                   (make-instance 'project-module :name

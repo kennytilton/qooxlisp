@@ -17,13 +17,7 @@
 
 (defmd qx-table (qx-widget)
   (qx-class "qx.ui.table.Table" :allocation :class :cell nil)
-  #+chill
-  (tableColumnModel "function(obj){
-            	         return new qx.ui.table.columnmodel.Basic(obj);
-}")
   table-model)
-
-(defmethod qx-configurations append ((self qx-table)))
 
 (defobserver table-model ()
   (when new-value

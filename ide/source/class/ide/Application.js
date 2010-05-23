@@ -14,12 +14,13 @@
 
 ************************************************************************ */
 
+// qooxlisp glue data:
+
 var clDict = [];
 var qxDoc;
 
-/**
- * This is the main application class of your custom application "ide"
- */
+// back to the boilerplate:
+
 qx.Class.define("ide.Application",
 {
   extend : qx.application.Standalone,
@@ -53,32 +54,44 @@ qx.Class.define("ide.Application",
         // support additional cross-browser console. Press F7 to toggle visibility
         qx.log.appender.Console;
       }
-      qx.ui.form.SelectBox;
 
+      /* qooxlisp:
+        To get the qooxdoo generator to include a class we want
+        to instantiate only through eval'ed JS, we need the static
+        project source to mention the class somewhere/anywhere:
+      */
+      qx.ui.form.SelectBox;
+      qx.ui.decoration.Single;
+      qx.ui.decoration.Double;
+      qx.ui.decoration.Beveled;
+      qx.ui.decoration.Uniform;
+      ide.TableModelQXL;
+      qx.ui.layout.HBox;
+      qx.ui.layout.VBox;
+      qx.ui.layout.Grid;
+      qx.ui.form.ComboBox;
+      qx.ui.form.ListItem;
+      qx.ui.form.Button;
+      qx.ui.basic.Label;
+      qx.ui.table.model.Simple;
+      qx.ui.table.model.Remote;
+      qx.ui.table.Table;
+      qx.ui.table.columnmodel.Basic;
+      qx.ui.table.ITableModel;
+      qx.ui.form.RadioButtonGroup;
+      qx.ui.form.RadioButton;
+      qx.ui.form.CheckBox;
+      qx.ui.groupbox.GroupBox;
+      qx.ui.groupbox.CheckGroupBox;
+      qx.theme.Classic;
+      //qx.theme.manager.Meta.getInstance().setTheme(qx.theme.Classic);
+
+      // qooxlisp: set up the glue data...
       clDict[0] = qxDoc = this.getRoot();
-      console.log("app.js> doc "+clDict[0]);
+
+      // qooxlisp: in effect, start the repl...
       (new qx.io.remote.Request("/begin","GET", "text/javascript")).send();
     }
   }
 });
 
-function forceClassLoad () {
-    var a = [];
-    a.push(new ide.TableModelQXL);
-    a.push(new qx.ui.layout.HBox);
-    a.push(new qx.ui.layout.VBox);
-    a.push(new qx.ui.layout.Grid);
-    a.push(new qx.ui.form.ComboBox);
-    a.push(new qx.ui.form.ListItem);
-    a.push(new qx.ui.form.Button);
-    a.push(new qx.ui.basic.Label);
-    a.push(new qx.ui.table.model.Simple);
-    a.push(new qx.ui.table.model.Remote);
-    a.push(new qx.ui.table.Table);
-    a.push(new qx.ui.table.columnmodel.Basic);
-    a.push(new qx.ui.table.ITableModel);
-    a.push(new qx.ui.form.RadioButtonGroup);
-    a.push(new qx.ui.form.RadioButton);
-    a.push(new qx.ui.form.CheckBox);
-    return a;
-}

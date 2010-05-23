@@ -9,9 +9,10 @@ qx.Class.define("ide.TableModelQXL", {
 
         if (blocksize===undefined)
             blocksize=100;
+        this.setBlockSize(blocksize);
 
         if (this.sortU) {
-			this.addListener('metaDataChanged', function(e){
+		this.addListener('metaDataChanged', function(e){
 				var sortx = this.getSortColumnIndex();
 				var sortid = this.getColumnId(sortx);
 				var sortdir = this.isSortAscending() ? "asc" : "dsc";
@@ -24,9 +25,9 @@ qx.Class.define("ide.TableModelQXL", {
 					},this);
 					req.send();
 				}
-			});
-		}
-		this.setBlockSize(blocksize);
+		});
+	   }
+		
     },
     members: {
         countU: "/getdatacount",

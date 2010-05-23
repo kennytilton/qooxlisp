@@ -23,8 +23,9 @@
     #:qx-combo-box #:qx-table #:qx-grid #:qx-radio-button-group #:qx-radio-button
     #:qx-button #:qx-label #:label
     #:qx-hbox #:qx-vbox #:qx-list-item #:qx-check-box
-    #:qxfmt #:qx-reset))
+    #:qxfmt #:qx-reset #:vbox #:hbox #:lbl #:radiobuttongroup #:radiobutton #:checkbox
+    #:groupbox #:checkgroupbox #:radiogroupbox))
 
 #+xxx
-(unintern 'apropos-qx::qx-select-box :apropos-qx)
+(unintern 'apropos-qx::groupbox :apropos-qx)
 

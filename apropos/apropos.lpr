@@ -8,7 +8,8 @@
   :modules (list (make-instance 'module :name "package.lisp")
                  (make-instance 'module :name "apropos.lisp")
                  (make-instance 'module :name "../INSTALL.txt")
-                 (make-instance 'module :name "apropos-data.lisp"))
+                 (make-instance 'module :name "apropos-data.lisp")
+                 (make-instance 'module :name "apropos-gui.lisp"))
   :projects (list (make-instance 'project-module :name
                                  "../qooxlisp.lpr" :show-modules t))
   :libraries nil
