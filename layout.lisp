@@ -11,12 +11,10 @@
   allow-shrink-x allow-shrink-y
   allow-stretch-x allow-stretch-y)
 
-(defun kwd (x) (intern x :keyword))
-
 (defmacro cfg (f)
   (let ((x (gensym)))
     `(b-when ,x (,f self)
-       (list (cons ,(kwd f) ,x)))))
+       (list (cons ,(intern f :keyword) ,x)))))
 
 (defmethod qx-configurations append ((self qx-layout-item))
   (nconc
