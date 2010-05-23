@@ -53,13 +53,8 @@ qx.Class.define("ide.Application",
         // support additional cross-browser console. Press F7 to toggle visibility
         qx.log.appender.Console;
       }
+      qx.ui.form.SelectBox;
 
-      /*
-      -------------------------------------------------------------------------
-        Below is your actual application code...
-      -------------------------------------------------------------------------
-      */
-      console.log("ide.js> start");
       clDict[0] = qxDoc = this.getRoot();
       console.log("app.js> doc "+clDict[0]);
       (new qx.io.remote.Request("/begin","GET", "text/javascript")).send();
@@ -72,6 +67,7 @@ function forceClassLoad () {
     a.push(new ide.TableModelQXL);
     a.push(new qx.ui.layout.HBox);
     a.push(new qx.ui.layout.VBox);
+    a.push(new qx.ui.layout.Grid);
     a.push(new qx.ui.form.ComboBox);
     a.push(new qx.ui.form.ListItem);
     a.push(new qx.ui.form.Button);
@@ -81,5 +77,8 @@ function forceClassLoad () {
     a.push(new qx.ui.table.Table);
     a.push(new qx.ui.table.columnmodel.Basic);
     a.push(new qx.ui.table.ITableModel);
+    a.push(new qx.ui.form.RadioButtonGroup);
+    a.push(new qx.ui.form.RadioButton);
+    a.push(new qx.ui.form.CheckBox);
     return a;
 }

@@ -29,7 +29,7 @@
                                        (stable-sort (fifo-data user-q) 'qxl-user-queue-sort :key 'car)
                                      (fifo-clear user-q))
         do
-        (trc "!!! --- qxl-user-queue-handler dispatching" defer-info)
+        ;(trc "!!! --- qxl-user-queue-handler dispatching" defer-info)
         (funcall task :user-q defer-info)))
 
 (defun qxl-user-queue-sort (task1 task2)

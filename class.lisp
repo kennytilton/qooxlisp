@@ -40,9 +40,7 @@
   (make-qx-instance self))
 
 (defmethod make-qx-instance ((self qx-object) &aux (doc .doc))
-  (trc "mqi !!!!!!!!!!!!!!! outer" *qxdoc* .doc doc)
   (with-integrity (:client `(:make-qx ,self))
-    (trc "mqi !!!!!!!!!!!!!!! inner" *qxdoc* .doc doc)
     (setf (oid self) (get-next-id doc))
     (setf (gethash (oid self) (dictionary doc)) self)
     
@@ -50,7 +48,7 @@
       (b-if cfg (qx-configurations self)
         (qxfmt "clDict[~a] = new ~a().set(~a);" (oid self)(qx-class self)(json$ cfg))
         (qxfmt "clDict[~a] = new ~a();" (oid self)(qx-class self)))
-      (qxfmt "console.log('stored new oid/obj ~a '+ clDict[~:*~a]);" (oid self)))))
+      #+shh (qxfmt "console.log('stored new oid/obj ~a '+ clDict[~:*~a]);" (oid self)))))
           
 (defgeneric qx-configurations (self)
   (:method-combination append)
@@ -84,7 +82,7 @@
     (cond
      (new-value (qxfmt "
 clDict[~a].addListener('execute', function(e) {
-    console.log('executing ~:*~a');
+    //console.log('executing ~:*~a');
     var rq = new qx.io.remote.Request('/callback?opcode=onexecute&oid=~:*~a','GET', 'text/javascript');
     rq.send();
 });" 
@@ -103,7 +101,7 @@ clDict[~a].addListener('keypress', function(e) {
       ;;untested
       (qxfmt "clDict[~a].removeListener('keypress');" (oid self))))))
 
-(defmd qx-container (qx-widget qooxlisp-family)
+(defmd qooxlisp-layouter (qx-widget qooxlisp-family)
   layout)
 
 (defobserver layout ()
@@ -111,7 +109,7 @@ clDict[~a].addListener('keypress', function(e) {
     (with-integrity (:client `(:layout ,self))
       (qxfmt "clDict[~a].setLayout(clDict[~a]);~%" (oid self)(oid (layout self))))))
 
-(defmd qx-composite (qx-container)
+(defmd qx-composite (qooxlisp-layouter)
   (qx-class "qx.ui.container.Composite" :allocation :class :cell nil))
 
 ;; in cells "owned" handling? (defobserver .kids ((self qx-composite))
@@ -136,11 +134,8 @@ clDict[~a].addListener('keypress', function(e) {
                      (setf (^value) nv)
                      (trc "combo-box ~a changed to ~a')"
                        (oid self) nv)
-                     (qxfmt "console.log('nada');"))))
+                     (qxfmt "console.log('ack chgval');"))))
   :value (c-in nil))
-
-(defmd qx-list-item (qx-atom)
-  (qx-class "qx.ui.form.ListItem" :allocation :class :cell nil))
 
 (defobserver onchangevalue ()
   (with-integrity (:client `(:post-make-qx ,self))
@@ -149,6 +144,15 @@ clDict[~a].addListener('keypress', function(e) {
 clDict[~a].addListener('changeValue', function(e) {
     (new qx.io.remote.Request('/callback?opcode=onchangevalue&oid=~:*~a&value='+e.getData(),'GET', 'text/javascript')).send();
 });" (oid self))))))
+
+(defmd qx-list-item (qx-atom)
+  (qx-class "qx.ui.form.ListItem" :allocation :class :cell nil)
+  model)
+
+(defmethod qx-configurations append ((self qx-list-item))
+  (nconc
+   (b-when x (model self)
+     (list (cons :model x)))))
 
 ;;; --- button --------------------------------------
 
@@ -167,3 +171,63 @@ clDict[~a].addListener('changeValue', function(e) {
   (nconc
    (b-when x (value self)
      (list (cons :value x)))))
+
+
+;;; --- radio buttons --------------------------------
+
+(defmd qx-radio-button-group (qooxlisp-control qooxlisp-layouter)
+  (qx-class "qx.ui.form.RadioButtonGroup" :allocation :class :cell nil)
+  (onchangeselection (lambda (self req)
+                       (let ((nv (req-val req "value")))
+                         (print `(:rbgroup ,nv))
+                         (setf (^value) (intern nv :keyword))
+                         (qxfmt "console.log('nada');")))))
+
+(defobserver onchangeselection ()
+  (with-integrity (:client `(:post-make-qx ,self))
+    (cond
+     (new-value (qxfmt "
+clDict[~a].addListener('changeSelection', function(e) {
+    var rb = e.getData()[0];
+    console.log('new sel='+rb+ ' listen '+clDict[~a]);
+    var md = 'null';
+    if (rb) md = rb.getModel();
+    //console.log('new rb md ='+md);
+    (new qx.io.remote.Request('/callback?opcode=onchangeselection&oid=~:*~a&value='+md,'GET', 'text/javascript')).send();
+});" (oid self)(oid self))))))
+
+(defmd qx-radio-button (qx-button qooxlisp-control )
+  (qx-class "qx.ui.form.RadioButton" :allocation :class :cell nil)
+  model)
+
+(defmethod qx-configurations append ((self qx-radio-button))
+  (nconc
+   (b-when x (model self)
+     (list (cons :model x)))))
+
+(defmd qx-toggle-button (qx-atom qooxlisp-control )
+  (value (c-in nil))
+  (onchangevalue (lambda (self req)
+                   (print :onchangevalue-fires)
+                   (let ((nv (cvtjs (req-val req "value"))))
+                     (setf (^value) nv)
+                     (trc "qx-toggle-button ~a changed to ~a')"
+                       self nv)
+                     (qxfmt "console.log('nada');")))))
+
+(defmethod qx-configurations append ((self qx-toggle-button))
+  (nconc
+   (b-when x (value self)
+     (list (cons :value x)))))
+  
+(defmd qx-check-box (qx-toggle-button )
+  (qx-class "qx.ui.form.CheckBox" :allocation :class :cell nil))
+
+(defmd qx-select-box (qx-abstract-select-box)
+  (qx-class "qx.ui.form.SelectBox" :allocation :class :cell nil)
+  (onchangeselection (lambda (self req)
+                       (let ((nv (req-val req "value")))
+                         (print `(:qx-select-box ,nv))
+                         (setf (^value) (find-package nv))
+                         (qxfmt "console.log('naack chg sel');"))))
+  :value (c-in nil))

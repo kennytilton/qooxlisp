@@ -31,6 +31,18 @@
 (defmd qx-layout (qx-object))
 (defmd qx-layout-abstract (qx-layout))
 
+(defmd qx-grid (qx-layout-abstract)
+  (qx-class "qx.ui.layout.Grid" :allocation :class :cell nil)
+  spacing-x spacing-y)
+
+(defmethod qx-configurations append ((self qx-grid))
+  (nconc
+   (b-when x (spacing-x self)
+     (list (cons :spacing-x x)))
+   (b-when x (spacing-y self)
+     (list (cons :spacing-y x)))
+   ))
+
 (defmd qx-hv-box (qx-layout-abstract)
   ; anstract class on lisp side only
   align-x align-y reversed separator spacing)

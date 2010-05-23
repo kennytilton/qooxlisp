@@ -2,6 +2,37 @@
 
 (defstruct symbol-info name pkg fntype setf? var? class? exported?)
 
+(defun symbol-info-raw (s)
+  (when (plusp (length s))
+    (flet ((eor (x)
+             (if x "x" ""))
+           (exportedp (sym)
+             (eql (nth-value 1 (find-symbol (symbol-name sym)(symbol-package sym))) :external)))
+      (loop for sym in (apropos-list s)
+          collecting (make-symbol-info
+                      :name (symbol-name sym)
+                      :pkg (symbol-package sym)
+                      :fntype (cond
+                               ((macro-function sym) "macro")
+                               ((fboundp sym) "function")
+                               (t ""))
+                      :var? (eor (boundp sym))
+                      :setf? (eor (fboundp `(setf ,sym)))
+                      :class? (eor (find-class sym nil))
+                      :exported? (eor (exportedp sym)))))))
+
+(defun symbol-info-filtered (syms type exported-only-p all-pkgs-p selected-pkg)
+  (loop for sym in syms
+      when (and
+            (or (not exported-only-p) (equal "x" (symbol-info-exported? sym)))
+            (or all-pkgs-p (eq selected-pkg (symbol-info-pkg sym)))
+            (ecase type
+              (:all t)
+              (:fn (not (equal "" (symbol-info-fntype sym))))
+              (:var (equal "x" (symbol-info-var? sym)))
+              (:class (equal "x" (symbol-info-class? sym)))))
+      collecting sym))
+
 (defun qx-getdata (req ent)
   (prog1 nil
     (with-json-response (req ent)
@@ -19,29 +50,14 @@
                  when (< (1- start) n (+ start row-count))
                  collect (list
                           (cons :name (symbol-info-name sym))
-                          (cons :pkg (symbol-info-pkg sym))
+                          (cons :pkg (package-name (symbol-info-pkg sym)))
                           (cons :fntype (symbol-info-fntype sym))
                           (cons :var? (symbol-info-var? sym))
                           (cons :setf? (symbol-info-setf? sym))
                           (cons :class? (symbol-info-class? sym))
                           (cons :exported? (symbol-info-exported? sym)))))))))))
 
-(defun symbol-info-load (s)
-  (when (plusp (length s))
-    (flet ((eor (x)
-             (if x "x" " ")))
-      (loop for sym in (apropos-list s)
-          collecting (make-symbol-info
-                      :name (symbol-name sym)
-                      :pkg (package-name (symbol-package sym))
-                      :fntype (cond
-                               ((macro-function sym) "macro")
-                               ((fboundp sym) "function")
-                               (t ""))
-                      :var? (eor (boundp sym))
-                      :setf? (eor (fboundp `(setf ,sym)))
-                      :class? (eor (find-class sym nil))
-                      :exported? (eor (eql (nth-value 1 (find-symbol (symbol-name sym)(symbol-package sym))) :external)))))))
+
 
 (defun qx-getdatacount (req ent)
   (prog1 nil
@@ -64,7 +80,10 @@
             #+notyet
             (if (equal order "asc")
                 'boolean< 'boolean>))
-          :key (intern (conc$ "symbol-info-" sort-key) :apropos-qx))))))
+          :key (if (equal sort-key "pkg")
+                   (lambda (si) (package-name (symbol-info-pkg si)))
+                 (intern (conc$ "symbol-info-" sort-key) :apropos-qx)))))
+    (qxfmt "console.log('ack sort');")))
 
 (defun boolean< (a b)
   (and b (not a)))
