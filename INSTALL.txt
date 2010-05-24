@@ -71,9 +71,6 @@ Now create a top-level directory called "devel" and execute:
  git clone http://github.com/kennytilton/utils-kt
  git clone http://github.com/kennytilton/cells
  git clone http://github.com/kennytilton/qooxlisp
- cd \devel\qooxlisp
- git checkout origin/v0.1.1
- git checkout -b v0.1.1
 
 [I am still learning git, but I will look at merging the
 latest qooxlisp work back into the master branch.]
