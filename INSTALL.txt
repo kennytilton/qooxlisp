@@ -1,20 +1,7 @@
-Open items:
+If you are in a hurry, skip down to "In a hurry? Start here.".
 
-uh-oh: Cells in a multi-session world. Hmmm....
-
-
-
-WARNING: The installation instructions below have not been
-tested one iota and were typed in while watching game
-two of the Yankees-Red Sox mini-series. The good news is that if you have
-a problem I'll be delighted to help you and then refine these
-instructions.
-
-WARNING2: So far the apropos functionality is not there or commented out -- this
-is a bare minimum "proof of concept" release with miles to go before it sleeps. But
-it will be evolving daily so I should be able to delete this clause
-shortly.
-
+Get qooxdoo
+-----------
 First, get qooxdoo and work through the "hello world" tutorial:
 
    http://qooxdoo.org/documentation/1.1/helloworld
@@ -23,6 +10,8 @@ The above is incredibly simple to execute but you do need
 Python installed, which qooxdoo uses as a scripting platform
 for building stuff.
 
+In a hurry? Start here
+----------------------
 Next you need AllegroCL (which includes AllegroServe, the web server):
 
   http://www.franz.com/downloads/clp/survey
@@ -30,11 +19,21 @@ Next you need AllegroCL (which includes AllegroServe, the web server):
 A port to OtherCL and OtherServe (or OtherToot) should be 
 ridiculously easy but is left as an exercise. Contribs welcome.
 
-You got qooxlisp or you would not be reading this, but that needs
-other libs:
+Get git
+-------
+Not too hard on *nix. On Windows I use msysgit: 
 
-   http://github.com/kennytilton/utils-kt
-   http://github.com/kennytilton/cells
+    http://code.google.com/p/msysgit/
+
+Now create a top-level directory called "devel" and in there execute:
+
+ git clone http://github.com/kennytilton/utils-kt
+ git clone http://github.com/kennytilton/cells
+ git clone http://github.com/kennytilton/qooxlisp
+
+If you want to put them somewhere else there are code paths 
+in the lisp source (see function serve-apropos) which you will 
+have to change to match.
 
 qooxlisp also needs cl-json but as a convenience (and to work in the
 ACL project file I use) I have duplicated the needed code under qooxdoo:
@@ -42,18 +41,6 @@ ACL project file I use) I have duplicated the needed code under qooxdoo:
 You can safely use a direct copy of cl-json (http://www.cliki.net/cl-json) 
 if you like, but then you need to ASDF load it somehow and eliminate the
 cl-json project from the qooxlisp project (referring to the ACL project manager).
-
-Now we have a problem. What I did was repeat the qooxdoo hello-world exercise
-in a directory called aproposqx under the apropos directory. Since that is 
-enormous I have included only a deeply nested Application.js, the only file I 
-had to modify to make qooxlisp work.
-
-The name does not matter, nor even the location. I suggest you just create
-a project called aproposqx somewhere outside the qooxlisp tree 
-and copy files over from the qooxlisp directory as they develop. There
-will not be much of this since the whole idea of qooxlisp is to have as much
-code as possible on the Lisp/server side, including JS code sent over to
-run on the client.
 
 Now fire up the AllegroCL trial and open the apropos project.
 
@@ -63,12 +50,11 @@ to match your set-up.
 Run the project (which starts up Allegroserve) then open localhost:8000 in your browser. 
 I have tested FireFox, Chrome, Safari, and IE -- all on Windows.
 
-With luck you'll see a button "Knock-knock" and, if you click it, an alert 
-saying "Hello world" as well as the object identity used by qooxlisp
-to glue your Lisp CLOS model to the mirror qooxdoo model in the browser.
+With luck you'll see a busy dialog offering a GUI interface to the Lisp apropos
+function running in the server.
 
-From here on we just slog thru the huge and magnificent qooxdoo classes and 
-properties providing the glue, but really the interesting part is done. Like
+From here on we just slog thru the vast and magnificent qooxdoo framework
+providing glue, but really the interesting part is done. Like
 LTk and Celtk and cells-gtk before it, the manual for qooxlisp will be the
 qooxdoo manual. qooxlisp will hide a lot of the wiring, but the classes and slots
 of qooxlisp will be the classes and properties of qooxdoo.

@@ -4,8 +4,10 @@
   (when s (if (consp s) (mapcar 'k-word s)
             (intern s :keyword))))
 
-(defun qxl-sym (s)
-  (intern s :qxl))
+(let ((case (if (string= "x" (symbol-name 'x)) :modern :ansi)))
+  (defun qxl-sym (s)
+    (intern (ecase case (:modern s)(:ansi (string-upcase s))) :qxl)))
+
 
 (defmacro whtml (&body body)
   `(catch 'excl::printer-error

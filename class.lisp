@@ -79,7 +79,7 @@
 
 (defobserver enabled ()
   (with-integrity (:client `(:post-make-qx ,self))
-    (qxfmt "clDict[~a].setEnabled(~a);" (oid self) (if new-value 'true 'false))))
+    (qxfmt "clDict[~a].setEnabled(~a);" (oid self) (if new-value "true" "false"))))
 
 (defobserver decorator () ;; this one is not known to work yet
   (when new-value

@@ -63,7 +63,7 @@
                           (cons :class? (symbol-info-class? sym))
                           (cons :exported? (symbol-info-exported? sym)))))))))))
 
-(package-nicknames (find-package :keyword))
+
 
 (defun qx-getdatacount (req ent)
   (prog1 nil

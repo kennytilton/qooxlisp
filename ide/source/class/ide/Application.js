@@ -85,12 +85,13 @@ qx.Class.define("ide.Application",
       qx.ui.groupbox.GroupBox;
       qx.ui.groupbox.CheckGroupBox;
       qx.theme.Classic;
-      //qx.theme.manager.Meta.getInstance().setTheme(qx.theme.Classic);
 
-      // qooxlisp: set up the glue data...
+      // ugly: qx.theme.manager.Meta.getInstance().setTheme(qx.theme.Classic);
+
+      // set up the qooxlisp glue data...
       clDict[0] = qxDoc = this.getRoot();
 
-      // qooxlisp: in effect, start the repl...
+      // in effect, start the repl...
       (new qx.io.remote.Request("/begin","GET", "text/javascript")).send();
     }
   }
