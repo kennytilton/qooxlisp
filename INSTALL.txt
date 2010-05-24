@@ -12,6 +12,10 @@ Apropos example in Chrome or Safari the server will be seen
 to be serving one file a second, and qooxdoo uses hundreds. C
 Clearing the browser cache cures this.
 
+Opera (on Windows, at least): the page comes up and works to a
+degree, but no results are displayed after a search. Not sure I'll
+address this myself.
+
 -----------
 /WARNINGS
 -----------
