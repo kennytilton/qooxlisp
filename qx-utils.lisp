@@ -55,8 +55,14 @@
   `(prog1 nil
      (net.aserve:with-http-response (,req ,ent :content-type "application/json")
        (net.aserve:with-http-body (,req ,ent)
-         (let ((ws (net.aserve:websession-from-req ,req)))
-           (declare (ignorable ws))
+         (let ((*qxdoc* (qxl-request-session ,req)))
+           (assert *qxdoc* () "qx-getdatacount sees no session ~a. Known: ~a"
+             (req-val ,req "sessId") (loop for id being the hash-keys of qxl::*qx-sessions*
+                                        collecting id))
+           (assert (typep *qxdoc* 'qxl-session))
+;;; less portably but more reliably, let aserve manage the session:       
+;;;         (let ((ws (net.aserve:websession-from-req ,req)))
+;;;           (declare (ignorable ws))
            ,@body)))))
 
 (defmacro ml$ (&rest x)
@@ -83,6 +89,11 @@
    ((string-equal x "false") nil)
    (t x)))
 
+(defmacro mk-session-instance (class &rest initargs)
+  `(make-instance ,class
+     ,@initargs
+     :session (progn (assert self) (u^ qxl-session))))
+
 #+xxxx
 (jsk$ :left 2 :top 3)
 
@@ -92,26 +103,26 @@
 (defmacro groupbox ((&rest layo-iargs)(&rest iargs) &rest kids)
   `(make-kid 'qx-group-box
      ,@iargs
-     :layout (c? (make-instance 'qx-vbox ,@layo-iargs))
+     :layout (c? (mk-session-instance 'qx-vbox ,@layo-iargs))
      :kids (c? (the-kids ,@kids))))
 
 (defmacro checkgroupbox ((&rest layo-iargs)(&rest iargs) &rest kids)
   ;;; unfinished....
   `(make-kid 'qx-check-group-box
      ,@iargs
-     :layout (c? (make-instance 'qx-vbox ,@layo-iargs))
+     :layout (c? (mk-session-instance 'qx-vbox ,@layo-iargs))
      :kids (c? (the-kids ,@kids))))
 
 (defmacro vbox ((&rest box-iargs)(&rest compo-iargs) &rest kids)
   `(make-kid 'qx-composite
      ,@compo-iargs
-     :layout (c? (make-instance 'qx-vbox ,@box-iargs))
+     :layout (c? (mk-session-instance 'qx-vbox ,@box-iargs))
      :kids (c? (the-kids ,@kids))))
 
 (defmacro hbox ((&rest box-iargs)(&rest compo-iargs) &rest kids)
   `(make-kid 'qx-composite
      ,@compo-iargs
-     :layout (c? (make-instance 'qx-hbox ,@box-iargs))
+     :layout (c? (mk-session-instance 'qx-hbox ,@box-iargs))
      :kids (c? (the-kids ,@kids))))
 
 (defmacro lbl (label-form &rest iargs)
@@ -124,7 +135,7 @@
      :md-name ,name
      ,@iargs
      
-     :layout (make-instance ',layout-class ,@layout-iargs)
+     :layout (mk-session-instance ',layout-class ,@layout-iargs)
      :kids (c? (the-kids ,@kids))))
 
 (defmacro radiobutton (model label &rest rbiargs)

@@ -28,7 +28,7 @@
     (cond
      (new-value (qxfmt "
 clDict[~a].addListener('changeValue', function(e) {
-    (new qx.io.remote.Request('/callback?opcode=onchangevalue&oid=~:*~a&value='+e.getData(),'GET', 'text/javascript')).send();
+    (new qx.io.remote.Request('/callback?sessId='+sessId+'&opcode=onchangevalue&oid=~:*~a&value='+e.getData(),'GET', 'text/javascript')).send();
 });" (oid self))))))
 
 (defmd qx-list-item (qx-atom)
@@ -83,7 +83,7 @@ clDict[~a].addListener('changeSelection', function(e) {
     var md = 'null';
     if (rb) md = rb.getModel();
     //console.log('new rb md ='+md);
-    (new qx.io.remote.Request('/callback?opcode=onchangeselection&oid=~:*~a&value='+md,'GET', 'text/javascript')).send();
+    (new qx.io.remote.Request('/callback?sessId='+sessId+'&opcode=onchangeselection&oid=~:*~a&value='+md,'GET', 'text/javascript')).send();
 });" (oid self)(oid self))))))
 
 (defmd qx-radio-button (qx-button qooxlisp-control )

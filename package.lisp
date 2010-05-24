@@ -9,16 +9,12 @@
   (:use #:cells #:utils-kt #:cl #:excl)
   (:export #:*qxdoc* #:oid
     #:k-word #:whtml #:req-val
-    #:mrq^ #:mrq #:wsv #:nsfmt
-    #:nsfmt^ #:wsv^ #:ns #:pqsym
-    #:ns^ #:with-session #:with-response
     #:with-plain-text-response
-    #:with-html-response
-    #:with-typed-response
-    #:with-js-response #:with-qx-js-response
+    #:with-html-response #:qxl-request-session
+    #:with-qx-js-response #:mk-session-instance
     #:with-json-response #:table-model
-    #:json$ #:jsk$ #:cvtjs
-    #:qx-document #:qx-callback #:qx-select-box
+    #:json$ #:jsk$ #:cvtjs #:session-id
+    #:qxl-session #:qx-callback #:qx-select-box
     #:qx-composite #:qx-table-model-remote
     #:qx-combo-box #:qx-table #:qx-grid #:qx-radio-button-group #:qx-radio-button
     #:qx-button #:qx-label #:label
@@ -27,5 +23,5 @@
     #:groupbox #:checkgroupbox #:radiogroupbox))
 
 #+xxx
-(unintern 'apropos-qx::groupbox :apropos-qx)
+(unintern 'apropos-qx::qxl-request-session :apropos-qx)
 

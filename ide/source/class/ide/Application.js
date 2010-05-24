@@ -17,6 +17,7 @@
 // qooxlisp glue data:
 
 var clDict = [];
+var sessId;
 var qxDoc;
 
 // back to the boilerplate:

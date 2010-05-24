@@ -14,36 +14,47 @@
               (qxfmt "clDict[~a].add(clDict[~a],~a);" (oid self) (oid k) ao)
               (qxfmt "clDict[~a].add(clDict[~a]);" (oid self) (oid k)))))))
 
-(defmd qx-document (qooxlisp-family)
+(defparameter *session-ct* 0)
+(defparameter *qx-sessions* (make-hash-table))
+
+(defmd qxl-session (qooxlisp-family)
+  (session-id (incf *session-ct*) :cell nil)
   (oid 0 :cell nil)
-  (doc-hash nil :cell nil)
   (dictionary (make-hash-table) :cell nil)
-  (next-id 1 :cell nil :allocation :class)
+  (next-oid 1 :cell nil :allocation :class)
   )
 
-(defmethod initialize-instance :after ((self qx-document) &key)
-  (setf *qxdoc* self))
-      
-(defun get-next-id (doc)
-  (prog1
-      (next-id doc)
-    (incf (next-id doc))))
+(defun qxl-request-session (req)
+  (gethash (parse-integer (req-val req "sessId") :junk-allowed t) *qx-sessions*))
 
-(define-symbol-macro .doc *qxdoc*) ;; eventually to be held in a session variable
-(define-symbol-macro .dict (dictionary .doc))
+(defmethod initialize-instance :after ((self qxl-session) &key)
+  (assert (null (gethash (session-id self) *qx-sessions*)))
+  (setf (gethash (session-id self) *qx-sessions*) self))
+      
+(defun get-next-oid (doc)
+  (prog1
+      (next-oid doc)
+    (incf (next-oid doc))))
 
 (defmd qx-object ()
-  (oid nil :cell nil)
-  (jsoid nil :cell nil))
+  (session nil :cell nil)
+  (oid nil :cell nil))
+
+(defmethod initialize-instance :after ((self qx-object) &rest iargs &key)
+  (unless (session self)
+    (when (fm-parent self)
+      (setf (session self) (nearest (fm-parent self) qxl-session))))
+  (assert (session self) () "No session for ~a: keys ~a" self iargs)
+  (setf (oid self) (get-next-oid (session self)))
+  (setf (gethash (oid self) (dictionary (session self))) self))
+
+
 
 (defmethod md-awaken :before ((self qx-object))
   (make-qx-instance self))
 
-(defmethod make-qx-instance ((self qx-object) &aux (doc .doc))
+(defmethod make-qx-instance ((self qx-object))
   (with-integrity (:client `(:make-qx ,self))
-    (setf (oid self) (get-next-id doc))
-    (setf (gethash (oid self) (dictionary doc)) self)
-    
     (when (qx-class self)
       (b-if cfg (qx-configurations self)
         (qxfmt "clDict[~a] = new ~a().set(~a);" (oid self)(qx-class self)(json$ cfg))
@@ -89,7 +100,7 @@
      (new-value (qxfmt "
 clDict[~a].addListener('execute', function(e) {
     //console.log('executing ~:*~a');
-    var rq = new qx.io.remote.Request('/callback?opcode=onexecute&oid=~:*~a','GET', 'text/javascript');
+    var rq = new qx.io.remote.Request('/callback?sessId='+sessId+'&opcode=onexecute&oid=~:*~a','GET', 'text/javascript');
     rq.send();
 });" 
                   (oid self))))))
@@ -99,7 +110,7 @@ clDict[~a].addListener('execute', function(e) {
     (cond
      (new-value (qxfmt "
 clDict[~a].addListener('keypress', function(e) {
-    var rq = new qx.io.remote.Request('/callback?opcode=onkeypress&oid=~:*~a&keyId='+e.getKeyIdentifier()+'&value='+this.getValue(),'GET', 'text/javascript');
+    var rq = new qx.io.remote.Request('/callback?sessId='+sessId+'&opcode=onkeypress&oid=~:*~a&keyId='+e.getKeyIdentifier()+'&value='+this.getValue(),'GET', 'text/javascript');
     rq.send();
 });" 
                   (oid self)))

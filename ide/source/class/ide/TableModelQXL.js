@@ -18,6 +18,7 @@ qx.Class.define("ide.TableModelQXL", {
 				var sortdir = this.isSortAscending() ? "asc" : "dsc";
 				if (sortx > -1 && sortid) {
 					var req = new qx.io.remote.Request(this.sortU, "GET", "text/javascript");
+                           req.setParameter('sessId', sessId);
 					req.setParameter('key', sortid);
 					req.setParameter('order', sortdir);
 					req.addListener("completed", function(e){
@@ -43,7 +44,7 @@ qx.Class.define("ide.TableModelQXL", {
 		this.base(arguments);
 	   },
         _loadRowCount: function(){
-           this.req = new qx.io.remote.Request(this.countU, "GET", "application/json");
+           this.req = new qx.io.remote.Request(this.countU+'?sessId='+sessId, "GET", "application/json");
 		this.req.setTimeout(2000);
 		this.req.addListener("completed", function(response){					
 			var result = response.getContent();
@@ -62,7 +63,7 @@ qx.Class.define("ide.TableModelQXL", {
         },
         _loadRowData: function(firstRow, lastRow){
             var ru = (typeof this.rowU=='function')? (this.rowU)():this.rowU;
-            var req = new qx.io.remote.Request(ru, "GET", "application/json");
+            var req = new qx.io.remote.Request(ru+'?sessId='+sessId, "GET", "application/json");
 			this.req = req;
 			req.setParameter('start',firstRow);
 			req.setParameter('count',parseInt(lastRow)-parseInt(firstRow)+1);

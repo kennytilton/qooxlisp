@@ -11,7 +11,7 @@
           :md-name :selected-pkg
           :enabled (c? (not (value (fm-other :all-packages))))
           :kids (c? (the-kids
-                     (b-if syms (syms-unfiltered (u^ qx-document))
+                     (b-if syms (syms-unfiltered (u^ qxl-session))
                        (loop with pkgs
                            for symi in syms
                            do (pushnew (symbol-info-pkg symi) pkgs)
@@ -20,7 +20,7 @@
                                                  (make-kid 'qx-list-item
                                                    :model (package-name pkg)
                                                    :label (package-name pkg)))))
-                       (loop for pkg in (subseq (list-all-packages) 0 10)
+                       (loop for pkg in (subseq (list-all-packages) 0 5)
                            collecting
                              (make-kid 'qx-list-item
                                :model (package-name pkg)
@@ -43,7 +43,7 @@
 (defun symbols-found (self)
   (vbox (:spacing 6)
     (:add '(:flex 1))
-    (lbl (c? (let ((sym-seg (sym-seg (u^ qx-document))))
+    (lbl (c? (let ((sym-seg (sym-seg (u^ qxl-session))))
                (if (plusp (length sym-seg))
                    (format nil "Symbols containing ~s" sym-seg)
                  "Symbols Found:"))))
@@ -52,7 +52,7 @@
       :add '(:flex 1)
       :allow-grow-x t
       :allow-grow-y t
-      :table-model (make-instance 'qx-table-model-remote
+      :table-model (mk-session-instance 'qx-table-model-remote
                      :column-name-ids '(("Symbol Name" name)
                                         ("Package" pkg)
                                         ("Function" fntype)
@@ -72,7 +72,7 @@
       :allow-grow-x t
       :onchangevalue (lambda (self req)
                        (let ((sympart (req-val req "value")))
-                         (setf (sym-seg (u^ qx-document)) sympart)))
+                         (setf (sym-seg (u^ qxl-session)) sympart)))
       :onkeypress (lambda (self req)
                     (let* ((key (req-val req "keyId"))
                            (jsv (req-val req "value"))
@@ -84,7 +84,7 @@
                                        (subseq v 0 (max 0 (1- (length v)))))
                                       (t v)))
                       (qxfmt "console.log('ackkeypress');" )))
-      :kids (c? (let ((sympart (sym-seg (u^ qx-document))))
+      :kids (c? (let ((sympart (sym-seg (u^ qxl-session))))
                   (if (plusp (length sympart))
                       (if (find sympart .cache :key 'label :test 'string-equal)
                           .cache
@@ -103,7 +103,7 @@
                    (b-if sympart (value (psib))
                      (progn
                        (print `(:sympart-onexec ,sympart))
-                       (setf (sym-seg (u^ qx-document)) sympart))
+                       (setf (sym-seg (u^ qxl-session)) sympart))
                      (qxfmt "alert('Disable me!!!')" ))))
     ))
 

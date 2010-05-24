@@ -69,13 +69,14 @@
   (prog1 nil
     (with-json-response (req ent)
       (whtml
-       (:princ
-        (json:encode-json-to-string (length (sym-info *qxdoc*))))))))
+         (:princ
+          (json:encode-json-to-string (length (sym-info *qxdoc*))))))))
 
 (defun qx-sortdata (req ent)
   (with-qx-js-response (req ent)
     (let ((sort-key (req-val req "key"))
-          (order (req-val req "order")))
+          (order (req-val req "order"))
+          (*qxdoc* (qxl-request-session req)))
       (setf (sym-info *qxdoc*)
         (sort (sym-info *qxdoc*) 
           (if (find$ sort-key '("name" "pkg"))

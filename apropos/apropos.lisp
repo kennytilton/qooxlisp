@@ -4,6 +4,7 @@
 (defun serve-apropos ()
   (let ((port 8000))
     (when *wserver* (shutdown))
+    (qx-reset)
     (net.aserve:start :debug t :port port)
     (flet ((pfl (p f)
              (publish-file :port port
@@ -32,13 +33,16 @@
           (pdr "/script/" (src-ext "script/")))))))
   
 (defun qx-begin (req ent)
+  (ukt::stop-check :qx-begin)
+  (trace md-awaken)
   (with-qx-js-response (req ent)
-    (qx-reset)
     (print :beginning-request)
     (with-integrity ()
-      (make-instance 'apropos-document))))
+      (qxfmt "
+sessId=~a;
+console.log('sessid='+sessId);" (session-id (make-instance 'apropos-session) )))))
 
-(defmd apropos-document (qx-document)
+(defmd apropos-session (qxl-session)
   (sym-seg (c-in nil))
   (syms-unfiltered (c? (b-when seg (^sym-seg)
                          (symbol-info-raw seg))))
