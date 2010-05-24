@@ -1,3 +1,21 @@
+--------
+WARNINGS
+--------
+The free AllegroCL Trial version may not have enough oomph for 
+the included starter app Apropos. On one occasion it said it was
+out of memory and I was toast. So I exited ACL and came back in
+and all went well. If you run into this and bouncing does not help,
+a port to Hunchentoot and non-trial Lisps will be needed.
+
+Not sure what is going on, but often trying to access the 
+Apropos example in Chrome or Safari the server will be seen
+to be serving one file a second, and qooxdoo uses hundreds. C
+Clearing the browser cache cures this.
+
+-----------
+/WARNINGS
+-----------
+
 If you are in a hurry, skip down to "In a hurry? Start here.".
 The next step will be needed as soon as you want to modify the 
 starter example app, apropos, to use a different qooxdoo widget
