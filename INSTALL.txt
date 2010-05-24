@@ -1,4 +1,9 @@
 If you are in a hurry, skip down to "In a hurry? Start here.".
+The next step will be needed as soon as you want to modify the 
+starter example app, apropos, to use a different qooxdoo widget
+or as soon as you want to start your own qooxdoo project, but 
+the git repo for qooxlisp includes all the qooxdoo code required
+for the apropos example.
 
 Get qooxdoo
 -----------
@@ -8,8 +13,10 @@ First, get qooxdoo and work through the "hello world" tutorial:
 
 The above is incredibly simple to execute but you do need
 Python installed, which qooxdoo uses as a scripting platform
-for building stuff.
+for building stuff. If you have to install Python or msysgit (see below),
+on Windows I found I had to reboot to get PATH mods into action.
 
+----------------------
 In a hurry? Start here
 ----------------------
 Next you need AllegroCL (which includes AllegroServe, the web server):
@@ -19,46 +26,107 @@ Next you need AllegroCL (which includes AllegroServe, the web server):
 A port to OtherCL and OtherServe (or OtherToot) should be 
 ridiculously easy but is left as an exercise. Contribs welcome.
 
+--------------------------------------------
+Get a browser that can handle console.log();
+--------------------------------------------
+I think this is Chrome, Safari, or Firefox+Firebug (or I guess IE+FireBug).
+I'll look at getting this requirement out of there.
+
+-------
 Get git
 -------
-Not too hard on *nix. On Windows I use msysgit: 
+This has links for different OSes:
+
+    http://git-scm.com/download
+   
+On Windows I use msysgit: 
 
     http://code.google.com/p/msysgit/
 
-Now create a top-level directory called "devel" and in there execute:
+------------
+Get qooxlisp
+------------
 
+Now create a top-level directory called "devel" and execute:
+
+ cd \devel
  git clone http://github.com/kennytilton/utils-kt
  git clone http://github.com/kennytilton/cells
  git clone http://github.com/kennytilton/qooxlisp
+ cd \devel\qooxlisp
+ git checkout origin/v0.1.1
+ git checkout -b v0.1.1
 
-If you want to put them somewhere else there are code paths 
+[I am still learning git, but I will look at merging the
+latest qooxlisp work back into the master branch.]
+
+If you want to put the projects somewhere else there are paths 
 in the lisp source (see function serve-apropos) which you will 
-have to change to match.
+have to change so AllegroServe can find the files.
 
-qooxlisp also needs cl-json but as a convenience (and to work in the
-ACL project file I use) I have duplicated the needed code under qooxdoo:
-
+[Note: qooxlisp also needs cl-json but as a convenience (and to work in the
+ACL project file I use) I have duplicated the needed code under qooxlisp. 
 You can safely use a direct copy of cl-json (http://www.cliki.net/cl-json) 
 if you like, but then you need to ASDF load it somehow and eliminate the
-cl-json project from the qooxlisp project (referring to the ACL project manager).
+cl-json project from the qooxlisp project (referring to the ACL project manager).]
 
-Now fire up the AllegroCL trial and open the apropos project.
+Now fire up the AllegroCL trial and open the apropos project:
 
-In apropos.lisp, modify the paths to the qooxdoo stuff in function serve-apropos
-to match your set-up.
+   'File>Open Project...' and look for \devel\qooxlisp\qooxlisp.lpr
 
-Run the project (which starts up Allegroserve) then open localhost:8000 in your browser. 
-I have tested FireFox, Chrome, Safari, and IE -- all on Windows.
+As mentioned above, edit apropos.lisp and modify the paths to the qooxdoo stuff 
+in function serve-apropos to match your set-up.
 
-With luck you'll see a busy dialog offering a GUI interface to the Lisp apropos
-function running in the server.
+Run the project (first 'Tools>Compile Project' then 'Run>Run Project') to 
+start up Allegroserve serving apropos on port 8000 (easy enough to change) then
+open localhost:8000 in your browser. I have tested FireFox, Chrome, Safari, 
+and IE -- all on Windows.
 
-From here on we just slog thru the vast and magnificent qooxdoo framework
-providing glue, but really the interesting part is done. Like
-LTk and Celtk and cells-gtk before it, the manual for qooxlisp will be the
-qooxdoo manual. qooxlisp will hide a lot of the wiring, but the classes and slots
-of qooxlisp will be the classes and properties of qooxdoo.
+With luck you'll see a dialog offering a GUI interface to the Lisp apropos
+function running in the server. Screenshots here:
 
+    http://github.com/kennytilton/qooxlisp/downloads
+
+I like to test on strings like "qx" and "combo" but any will do. 
+Symbols do not get searched until you hit enter or click "Search". (It searched after 
+every keystroke which was fun but the exercise I set myself was to recreate
+the IDE apropos dialog as closely as possible so I defeated that.) 
+
+Speaking of which, in the ACL IDE you can see/use the dialog: Windows>Apropos. 
+
+----------
+Problems?
+----------
+Don't feel bad: these install notes have not been exercised much because
+qooxlisp was not released until May, 2010. Post support questions here:
+
+   http://github.com/kennytilton/qooxlisp/issues
+
+...and long diatribes/chit-chatty stuff here:
+
+   http://common-lisp.net/mailman/listinfo/cells-devel
+
+I will improve these notes as issues arise.
+
+------------
+Next steps
+------------
+qooxlisp is just getting off the ground. More widgets and events need to be wrapped,
+and a meta-task is the macrology to make that as easy as listing qooxdoo
+classes, properties, and events. 
+
+Some of this wrapping will be tricky. Example: the columns in the apropos table
+all start out as the same size. We can do better, but it means gluing in what
+is known as a tableColumnModel and I ran out of gas before I got that wrapped.
+Also, some columns are booleans and qooxdoo lets us declare that and then get a
+pretty checkmark to show. Again, just more wrapping I decided to leave off for now.
+
+Lot's of issues as well in the code. /My/ next step is a mad dash to bring a big
+proprietary desktop application to the Web using qooxlisp, so it will be getting
+a lot of work anyway, though only as it serves the larger purpose of the mad dash.
+
+kenneth tilton
+5/24/2010
 
 
 
