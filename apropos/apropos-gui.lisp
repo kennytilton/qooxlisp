@@ -1,4 +1,4 @@
-(in-package :apropos-qx)
+(in-package :qooxlisp)
 
 (defun exported-pkg-filter (self)
   (vbox (:spacing 6)(:add '(:flex 1))
@@ -7,24 +7,21 @@
       (hbox (:spacing 20)()
         (checkbox :all-packages "All"
           :value (c-in t))
-        (make-kid 'qx-select-box
-          :md-name :selected-pkg
-          :enabled (c? (not (value (fm-other :all-packages))))
-          :kids (c? (the-kids
-                     (b-if syms (syms-unfiltered (u^ qxl-session))
-                       (loop with pkgs
-                           for symi in syms
-                           do (pushnew (symbol-info-pkg symi) pkgs)
-                           finally (return (loop for pkg in pkgs
-                                               collecting
-                                                 (make-kid 'qx-list-item
-                                                   :model (package-name pkg)
-                                                   :label (package-name pkg)))))
-                       (loop for pkg in (subseq (list-all-packages) 0 5)
-                           collecting
-                             (make-kid 'qx-list-item
-                               :model (package-name pkg)
-                               :label (package-name pkg)))))))))))
+        (selectbox :selected-pkg () ;; issue with disabled selectboxes (:enabled (c? (not (value (fm-other :all-packages)))))
+          (b-if syms (syms-unfiltered (u^ qxl-session))
+            (loop with pkgs
+                for symi in syms
+                do (pushnew (symbol-info-pkg symi) pkgs)
+                finally (return (loop for pkg in pkgs
+                                    collecting
+                                      (make-kid 'qx-list-item
+                                        :model (package-name pkg)
+                                        :label (package-name pkg)))))
+            (loop for pkg in (list-all-packages)
+                collecting
+                  (make-kid 'qx-list-item
+                    :model (package-name pkg)
+                    :label (package-name pkg)))))))))
 
 
 (defun type-filter (self)
@@ -61,50 +58,29 @@
                                         ("Class" class?)
                                         ("Exp" exported?))))))
 
+
 (defun search-panel (self)
   (hbox (:align-y 'middle :spacing 12)
     (:allow-grow-y :js-false
       :padding 4)
     (lbl "String:")
-    (make-kid 'qx-combo-box
-      :md-name :symbol-string
-      :add '(:flex 1)
-      :allow-grow-x t
-      :onchangevalue (lambda (self req)
-                       (let ((sympart (req-val req "value")))
-                         (setf (sym-seg (u^ qxl-session)) sympart)))
-      :onkeypress (lambda (self req)
-                    (let* ((key (req-val req "keyId"))
-                           (jsv (req-val req "value"))
-                           (v (cvtjs jsv)))
-                      (setf (^value) (cond
-                                      ((= 1 (length key))
-                                       (conc$ v key))
-                                      ((string-equal key "Backspace")
-                                       (subseq v 0 (max 0 (1- (length v)))))
-                                      (t v)))
-                      (qxfmt "console.log('ackkeypress');" )))
-      :kids (c? (let ((sympart (sym-seg (u^ qxl-session))))
-                  (if (plusp (length sympart))
-                      (if (find sympart .cache :key 'label :test 'string-equal)
-                          .cache
-                        (cons (make-kid 'qx-list-item
-                                :label sympart) .cache))
-                    .cache))))
-    
-    
-    (make-kid 'qx-button
-      :label "Search"
-      :enabled (c? (trc nil "enabled rule sees" (value (psib)))
-                 (> (length (value (psib))) 1))
-      :onexecute (lambda (self req)
-                   (declare (ignorable req self))
-                   (trc nil "sympart" (value (psib)))
-                   (b-if sympart (value (psib))
-                     (progn
-                       (print `(:sympart-onexec ,sympart))
-                       (setf (sym-seg (u^ qxl-session)) sympart))
-                     (qxfmt "alert('Disable me!!!')" ))))
-    ))
+    (combobox :symbol-string (:add '(:flex 1)
+                               :allow-grow-x t
+                               :onchangevalue (lambda (self req)
+                                                (let ((sympart (req-val req "value")))
+                                                  (setf (sym-seg (u^ qxl-session)) sympart))))
+      (let ((sympart (sym-seg (u^ qxl-session))))
+        (if (plusp (length sympart))
+            (if (find sympart .cache :key 'label :test 'string-equal)
+                .cache
+              (cons (make-kid 'qx-list-item
+                      :label sympart) .cache))
+          .cache)))
+    (button "Search" (:enabled t #+not (c? (> (length (value (psib))) 1)))
+      :onexec (b-if sympart (value (psib))
+                (progn
+                  (print `(:sympart-onexec ,sympart))
+                  (setf (sym-seg (u^ qxl-session)) sympart))
+                (qxfmt "alert('Disable me!!!')" )))))
 
 

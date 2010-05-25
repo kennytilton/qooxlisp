@@ -1,4 +1,4 @@
-(in-package :apropos-qx)
+(in-package :qooxlisp)
 
 
 (defun serve-apropos ()
@@ -34,13 +34,10 @@
   
 (defun qx-begin (req ent)
   (ukt::stop-check :qx-begin)
-  (trace md-awaken)
-  (with-qx-js-response (req ent)
+  (with-js-response (req ent)
     (print :beginning-request)
     (with-integrity ()
-      (qxfmt "
-sessId=~a;
-console.log('sessid='+sessId);" (session-id (make-instance 'apropos-session) )))))
+      (qxfmt "sessId=~a;" (session-id (make-instance 'apropos-session) )))))
 
 (defmd apropos-session (qxl-session)
   (sym-seg (c-in nil))

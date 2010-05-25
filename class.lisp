@@ -6,10 +6,23 @@
   (progn
     (with-integrity (:client `(:post-make-qx ,self))
       ;(print (list "kidsing!!!!!!!!!!!!!!!!!" self old-value new-value))
+      (qxfmt "clDict[~a].removeAll()" (oid self))
+      (loop for k in new-value do 
+            ;;(qxfmt "consolelog('adding: to '+ ~a + ' the new ' + ~a);" pa new)
+            (b-if ao (add-ops k)
+              (qxfmt "clDict[~a].add(clDict[~a],~a);" (oid self) (oid k) ao)
+              (qxfmt "clDict[~a].add(clDict[~a]);" (oid self) (oid k)))))))
+
+#+planb ;; the problem here is that as each item gets deleted from, say, a select box,
+;; a changeSelection event fires.
+(defobserver .kids ((self qooxlisp-family))
+  (progn
+    (with-integrity (:client `(:post-make-qx ,self))
+      ;(print (list "kidsing!!!!!!!!!!!!!!!!!" self old-value new-value))
       (loop for k in (set-difference old-value new-value)
           do (qxfmt "clDict[~a].remove(clDict[~a]);" (oid self)(oid k)))
       (loop for k in (set-difference new-value old-value) do 
-            ;;(qxfmt "console.log('adding: to '+ ~a + ' the new ' + ~a);" pa new)
+            ;;(qxfmt "consolelog('adding: to '+ ~a + ' the new ' + ~a);" pa new)
             (b-if ao (add-ops k)
               (qxfmt "clDict[~a].add(clDict[~a],~a);" (oid self) (oid k) ao)
               (qxfmt "clDict[~a].add(clDict[~a]);" (oid self) (oid k)))))))
@@ -59,7 +72,7 @@
       (b-if cfg (qx-configurations self)
         (qxfmt "clDict[~a] = new ~a().set(~a);" (oid self)(qx-class self)(json$ cfg))
         (qxfmt "clDict[~a] = new ~a();" (oid self)(qx-class self)))
-      #+shh (qxfmt "console.log('stored new oid/obj ~a '+ clDict[~:*~a]);" (oid self)))))
+      #+shhh (qxfmt "consolelog('stored new oid/obj ~a '+ clDict[~:*~a]);" (oid self)))))
           
 (defgeneric qx-configurations (self)
   (:method-combination append)
@@ -99,7 +112,7 @@
     (cond
      (new-value (qxfmt "
 clDict[~a].addListener('execute', function(e) {
-    //console.log('executing ~:*~a');
+    //consolelog('executing ~:*~a');
     var rq = new qx.io.remote.Request('/callback?sessId='+sessId+'&opcode=onexecute&oid=~:*~a','GET', 'text/javascript');
     rq.send();
 });" 

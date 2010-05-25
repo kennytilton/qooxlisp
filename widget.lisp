@@ -20,7 +20,8 @@
                      (setf (^value) nv)
                      (trc "combo-box ~a changed to ~a')"
                        (oid self) nv)
-                     (qxfmt "console.log('ack chgval');"))))
+                     ;;(qxfmt "consolelog('ack chgval');")
+                     )))
   :value (c-in nil))
 
 (defobserver onchangevalue ()
@@ -71,7 +72,8 @@ clDict[~a].addListener('changeValue', function(e) {
                        (let ((nv (req-val req "value")))
                          (print `(:rbgroup ,nv))
                          (setf (^value) (intern nv :keyword))
-                         (qxfmt "console.log('nada');")))))
+                         ;;(qxfmt "null" #+not "consolelog('nada');")
+                         ))))
 
 (defobserver onchangeselection ()
   (with-integrity (:client `(:post-make-qx ,self))
@@ -79,10 +81,10 @@ clDict[~a].addListener('changeValue', function(e) {
      (new-value (qxfmt "
 clDict[~a].addListener('changeSelection', function(e) {
     var rb = e.getData()[0];
-    console.log('new sel='+rb+ ' listen '+clDict[~a]);
+    //consolelog('new sel='+rb+ ' listen '+clDict[~a]);
     var md = 'null';
     if (rb) md = rb.getModel();
-    //console.log('new rb md ='+md);
+    //consolelog('new rb md ='+md);
     (new qx.io.remote.Request('/callback?sessId='+sessId+'&opcode=onchangeselection&oid=~:*~a&value='+md,'GET', 'text/javascript')).send();
 });" (oid self)(oid self))))))
 
@@ -102,8 +104,7 @@ clDict[~a].addListener('changeSelection', function(e) {
                    (let ((nv (cvtjs (req-val req "value"))))
                      (setf (^value) nv)
                      (trc "qx-toggle-button ~a changed to ~a')"
-                       self nv)
-                     (qxfmt "console.log('nada');")))))
+                       self nv)))))
 
 (defmethod qx-configurations append ((self qx-toggle-button))
   (nconc
@@ -117,7 +118,5 @@ clDict[~a].addListener('changeSelection', function(e) {
   (qx-class "qx.ui.form.SelectBox" :allocation :class :cell nil)
   (onchangeselection (lambda (self req)
                        (let ((nv (req-val req "value")))
-                         (print `(:qx-select-box ,nv))
-                         (setf (^value) (find-package nv))
-                         (qxfmt "console.log('naack chg sel');"))))
+                         (setf (^value) (find-package nv)))))
   :value (c-in nil))

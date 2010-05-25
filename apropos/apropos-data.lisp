@@ -1,4 +1,4 @@
-(in-package :apropos-qx)
+(in-package :qooxlisp)
 
 (defstruct symbol-info name pkg fntype setf? var? class? exported?)
 
@@ -73,7 +73,7 @@
           (json:encode-json-to-string (length (sym-info *qxdoc*))))))))
 
 (defun qx-sortdata (req ent)
-  (with-qx-js-response (req ent)
+  (with-js-response (req ent)
     (let ((sort-key (req-val req "key"))
           (order (req-val req "order"))
           (*qxdoc* (qxl-request-session req)))
@@ -89,8 +89,7 @@
                 'boolean< 'boolean>))
           :key (if (equal sort-key "pkg")
                    (lambda (si) (package-name (symbol-info-pkg si)))
-                 (intern (conc$ "symbol-info-" sort-key) :apropos-qx)))))
-    (qxfmt "console.log('ack sort');")))
+                 (intern (conc$ "symbol-info-" sort-key) :qooxlisp)))))))
 
 (defun boolean< (a b)
   (and b (not a)))

@@ -2,11 +2,10 @@
 
 (in-package :cg-user)
 
-(defpackage :apropos-qx)
+(defpackage :qooxlisp)
 
 (define-project :name :apropos
-  :modules (list (make-instance 'module :name "package.lisp")
-                 (make-instance 'module :name "apropos.lisp")
+  :modules (list (make-instance 'module :name "apropos.lisp")
                  (make-instance 'module :name "../INSTALL.txt")
                  (make-instance 'module :name "apropos-data.lisp")
                  (make-instance 'module :name "apropos-gui.lisp"))
@@ -15,7 +14,7 @@
   :libraries nil
   :distributed-files nil
   :internally-loaded-files nil
-  :project-package-name :apropos-qx
+  :project-package-name :qooxlisp
   :main-form nil
   :compilation-unit t
   :verbose nil
@@ -93,7 +92,7 @@
   :new-space-size 6144
   :runtime-build-option :standard
   :build-number 0
-  :on-initialization 'apropos-qx::serve-apropos
+  :on-initialization 'qooxlisp::serve-apropos
   :on-restart 'do-default-restart)
 
 ;; End of Project Definition

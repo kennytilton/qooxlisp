@@ -5,7 +5,7 @@
 (defparameter *qxdoc* nil)
 
 (defun qx-callback (req ent)
-  (with-qx-js-response (req ent)
+  (with-js-response (req ent)
     (with-integrity ()
       (b-if session (b-if sessId (parse-integer (req-val req "sessId") :junk-allowed t)
                       (gethash sessId *qx-sessions*)

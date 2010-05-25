@@ -34,7 +34,7 @@
 
 (defparameter *js-response* nil)
 
-(defmacro with-qx-js-response ((req ent) &body body)
+(defmacro with-js-response ((req ent) &body body)
   `(prog1 nil
      (net.aserve:with-http-response (,req ,ent :content-type "text/javascript")
        (net.aserve:with-http-body (,req ,ent)
@@ -42,8 +42,8 @@
            (declare (ignorable ws))
            (setf *js-response* nil)
            ,@body
-           (print `(responding ,*js-response*))
-           (qxl:whtml (:princ (format nil "(function () {~a})()" *js-response*))))))))
+           ;(print `(responding ,*js-response*))
+           (qxl:whtml (:princ (format nil "(function () {~a})()" (or *js-response* "null;")))))))))
 
 (defun qxfmt (fs &rest fa)
   (progn ;; print 
@@ -102,6 +102,8 @@
 #+test
 (json$ (list (cons 'aa-bb t)))
 
+
+
 (defmacro groupbox ((&rest layo-iargs)(&rest iargs) &rest kids)
   `(make-kid 'qx-group-box
      ,@iargs
@@ -151,3 +153,43 @@
      :md-name ,model
      :label ,label
      ,@iargs))
+
+(defmacro selectbox (name (&rest iargs) &body kids)
+  `(make-kid 'qx-select-box
+    :md-name ,name
+     ,@iargs
+     :kids (c? (the-kids ,@kids))))
+
+(defmacro combobox (name (&rest iargs) &rest kids)
+  `(make-kid 'qx-combo-box
+     :md-name ,name
+     ,@iargs
+     :onkeypress (lambda (self req)
+                   (let* ((key (req-val req "keyId"))
+                          (jsv (req-val req "value"))
+                          (v (cvtjs jsv)))
+                     (setf (^value) (cond
+                                     ((= 1 (length key))
+                                      (conc$ v key))
+                                     ((string-equal key "Backspace")
+                                      (subseq v 0 (max 0 (1- (length v)))))
+                                     (t v)))))
+     :onkeypress (lambda (self req)
+                   (let* ((key (req-val req "keyId"))
+                          (jsv (req-val req "value"))
+                          (v (cvtjs jsv)))
+                     (setf (^value) (cond
+                                     ((= 1 (length key))
+                                      (conc$ v key))
+                                     ((string-equal key "Backspace")
+                                      (subseq v 0 (max 0 (1- (length v)))))
+                                     (t v)))))
+     :kids (c? (the-kids ,@kids))))
+
+(defmacro button (label (&rest iargs) &key onexec)
+  `(make-kid 'qx-button
+     :label ,label
+     ,@iargs
+     :onexecute (lambda (self req)
+                  (declare (ignorable self req))
+                  ,onexec)))
