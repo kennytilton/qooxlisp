@@ -32,7 +32,7 @@
             (ecase type
               (:all t)
               (:fn (not (equal "" (symbol-info-fntype sym))))
-              (:var (equal "x" (symbol-info-var? sym)))
+              (:var (plusp (length (symbol-info-var? sym))))
               (:class (equal "x" (symbol-info-class? sym)))))
       collecting sym))
 

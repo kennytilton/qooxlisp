@@ -17,10 +17,13 @@
     #:qxl-session #:qx-callback #:qx-select-box
     #:qx-composite #:qx-table-model-remote
     #:qx-combo-box #:qx-table #:qx-grid #:qx-radio-button-group #:qx-radio-button
-    #:qx-button #:qx-label #:label #:button
+    #:qx-button #:qx-label #:label #:button #:qx-html #:qx-html-math
     #:qx-hbox #:qx-vbox #:qx-list-item #:qx-check-box #:combobox
     #:qxfmt #:qx-reset #:vbox #:hbox #:lbl #:radiobuttongroup #:radiobutton #:checkbox
     #:groupbox #:checkgroupbox #:radiogroupbox #:selectbox))
+
+#+adhoc
+(unintern 'mathx::qx-html-math :mathx)
 
 
 

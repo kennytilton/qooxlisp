@@ -125,27 +125,27 @@
     (let ((bad (position #\# r)))
       (if bad
           (progn
-            (mprint `(bad form!!!!!! ,symbolic-form))
-            (mprint `(bad r!!!! ,r))
-            (mprint `(trouble!!!!!!!!!!!!!!!!!!!!!! ,bad))
-            (mprint `(starting ,(subseq r bad (+ bad 32)))))
-        #+shhh (mprint `(no sharps in command))))
+            (print `(bad form!!!!!! ,symbolic-form))
+            (print `(bad r!!!! ,r))
+            (print `(trouble!!!!!!!!!!!!!!!!!!!!!! ,bad))
+            (print `(starting ,(subseq r bad (+ bad 32)))))
+        #+shhh (print `(no sharps in command))))
     r))
 
 (defun mrqe^ (form &optional show?)
   (let ((r$ (req$ form)))
     (when show?
       (let ((*print-level* 10))
-        (mprint `(form ,form))
-        (mprint `(request ,r$))))
+        (mprt `(form ,form))
+        (mprt `(request ,r$))))
     (make-server-request r$)))
 
 (defun mrqe (form &optional show?)
   (let ((r$ (req$ `(prog1 nil ,form))))
     (when show?
       (let ((*print-level* 10))
-        (mprint `(form ,form))
-        (mprint `(request ,r$))))
+        (mprt `(form ,form))
+        (mprt `(request ,r$))))
     (make-server-request r$)))
 
 ;;;#+test
@@ -187,7 +187,7 @@
   (handler-case
       (setf *websource-connection* (websource-connect ws-name :host websource-host :port wp))
     (t (c)
-      (mprint `(:error-connecting-to-websource ,c))
+      (mprt `(:error-connecting-to-websource ,c))
       (setf *websource-connection* nil)
       nil))
   (if (is-pq-running?)
@@ -196,7 +196,7 @@
         (mrq (unless *browser-backend-initialized*
                (asp-backend-init)))
         (if (not (mrq^ *browser-backend-initialized*))
-            (mprint "******************************************
+            (mprt "******************************************
 ******************************************
 *******  ASP not started!!!!       *******
 *******  Backend Initialization    *******
@@ -206,12 +206,12 @@
           (progn
             (actually-set-up-remote-image-working)
             (setf *common-server* (net.aserve:start :port sp))
-            (mprint "******************************************
+            (mprt "******************************************
 ******************************************
 ******** ASP successfully started  *******
 ******************************************
 ******************************************"))))
-          (mprint "******************************************
+          (mprt "******************************************
 ******************************************
 *******  ASP not started!!!!!!!!   *******
 ******************************************
@@ -296,7 +296,7 @@ Now access ASP Browser from the Safari browser:
 ;; already ported to JS:
 #+teststststs
 (defun parse-1 ()
-  (mprint (let* ((s (with-output-to-string (j)
+  (mprt (let* ((s (with-output-to-string (j)
               (net.aserve::html-stream j
                 (pqhtml 
                  (:princ
@@ -307,14 +307,14 @@ Now access ASP Browser from the Safari browser:
                           (net.aserve::html-stream s
                             (:div (:p "hi")(:br)(:p "mom ('is') mom"))
                             )))))))))))
-    (mprint s)
+    (mprt s)
     
     (loop with state = 'find-start
         with pairs = (make-array 0 :adjustable t :fill-pointer t)
         and car-start and car-end and cdr-start and cdr-end
         for ch across s
         for cn upfrom 0
-        do ;(mprint (list state ch))
+        do ;(mprt (list state ch))
           (case state
             (find-start (when (eql ch #\()
                           (setf state 'find-sub-start)))

@@ -2,6 +2,7 @@
 
 (defmd qooxlisp-family (family))
 
+
 (defobserver .kids ((self qooxlisp-family))
   (progn
     (with-integrity (:client `(:post-make-qx ,self))
@@ -13,8 +14,9 @@
               (qxfmt "clDict[~a].add(clDict[~a],~a);" (oid self) (oid k) ao)
               (qxfmt "clDict[~a].add(clDict[~a]);" (oid self) (oid k)))))))
 
-#+planb ;; the problem here is that as each item gets deleted from, say, a select box,
+;; the problem here is that as each item gets deleted from, say, a select box,
 ;; a changeSelection event fires.
+#+seeabovecomment
 (defobserver .kids ((self qooxlisp-family))
   (progn
     (with-integrity (:client `(:post-make-qx ,self))
@@ -153,4 +155,65 @@ clDict[~a].addListener('keypress', function(e) {
 
 (defmd qx-check-group-box (qooxlisp-layouter)
   (qx-class "qx.ui.groupbox.CheckGroupBox" :allocation :class :cell nil))
+
+(defmd qx-html (qx-widget)
+  (qx-class "qx.ui.embed.Html" :allocation :class :cell nil)
+  html
+ (onappear t))
+
+
+(defmd qx-html-math (qx-html)
+  )
+
+(defobserver onappear ((self qx-html-math))
+  (with-integrity (:client `(:post-make-qx ,self))
+    (cond
+     (new-value (qxfmt "
+    clDict[~a].addListener('appear', function(e) {
+       console.log('on-appear ~:*~a');
+       var ce = clDict[~:*~a].getContentElement();
+       console.log('appear Html qx content ' + ce);
+       var de = ce.getDomElement();
+       console.log('appear Html dom elt ' + de);
+       if (de) {
+          jsMath.ConvertTex(de);
+          jsMath.ProcessBeforeShowing(de);
+       }
+});" 
+                  (oid self))))))
+
+(defobserver onchangehtml ((self qx-html-math))
+  (with-integrity (:client `(:post-make-qx ,self))
+    (cond
+     (new-value (qxfmt "
+    clDict[~a].addListener('changeHtml', function(e) {
+       console.log('on-onchangehtml ~:*~a');
+       var ce = clDict[~:*~a].getContentElement();
+       console.log('onchangehtml Html qx content ' + ce);
+       var de = ce.getDomElement();
+       console.log('onchangehtml Html dom elt ' + de);
+       if (de) {
+          jsMath.ProcessBeforeShowing(de);
+       }
+});" 
+                  (oid self))))))
+
+(defobserver html ()
+  (with-integrity (:client `(:post-make-qx ,self))
+    (qxfmt "clDict[~a].setHtml(~a);
+/*
+var ce = clDict[~a].getContentElement();
+console.log('Html qx content ' + ce);
+var de = ce.getDomElement();
+console.log('Html dom elt ' + de);
+jsMath.ProcessBeforeShowing(de);
+*/
+" (oid self)(or new-value "null")(oid self) (oid self))))
   
+#|
+save
+var ce = embed1.getContentElement();
+      console.log("Html qx content "+ ce);
+      var de = ce.getDomElement();
+
+|#

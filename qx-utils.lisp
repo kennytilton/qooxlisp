@@ -42,16 +42,13 @@
            (declare (ignorable ws))
            (setf *js-response* nil)
            ,@body
-           ;(print `(responding ,*js-response*))
+           (print `(responding ,*js-response*))
            (qxl:whtml (:princ (format nil "(function () {~a})()" (or *js-response* "null;")))))))))
 
 (defun qxfmt (fs &rest fa)
   (progn ;; print 
    (setf *js-response*
      (conc$ *js-response* (apply 'format nil (conc$ "~&" fs "~%") fa)))))
-
-(defun mprint (&rest args)
-  (format t "~&mprt> ~{~a ~}" args))
 
 (defmacro with-json-response ((req ent) &body body)
   `(prog1 nil
