@@ -2,6 +2,9 @@
 
 (defstruct symbol-info name pkg fntype setf? var? class? exported?)
 
+;;; Next two functions support rules for gathering matching symbols
+;;; and filtering them as user changes constraints on what to show
+
 (defun symbol-info-raw (s)
   (when (plusp (length s))
     (flet ((eor (x)
@@ -24,17 +27,27 @@
                       :class? (eor (find-class sym nil))
                       :exported? (eor (exportedp sym)))))))
 
-(defun symbol-info-filtered (syms type exported-only-p all-pkgs-p selected-pkg)
+(defun symbol-info-filtered (syms type exported-only-p selected-pkg-p selected-pkg)
   (loop for sym in syms
       when (and
             (or (not exported-only-p) (equal "x" (symbol-info-exported? sym)))
-            (or all-pkgs-p (eq selected-pkg (symbol-info-pkg sym)))
+            (or (not selected-pkg-p) (eq selected-pkg (symbol-info-pkg sym)))
             (ecase type
               (:all t)
               (:fn (not (equal "" (symbol-info-fntype sym))))
               (:var (plusp (length (symbol-info-var? sym))))
               (:class (equal "x" (symbol-info-class? sym)))))
       collecting sym))
+
+;;; Next three functions serve the data model of the table widget
+;;; that shows the symbol search results
+
+(defun qx-getdatacount (req ent)
+  (prog1 nil
+    (with-json-response (req ent)
+      (whtml
+         (:princ
+          (json:encode-json-to-string (length (sym-info *qxdoc*))))))))
 
 (defun qx-getdata (req ent)
   (prog1 nil
@@ -63,15 +76,6 @@
                           (cons :class? (symbol-info-class? sym))
                           (cons :exported? (symbol-info-exported? sym)))))))))))
 
-
-
-(defun qx-getdatacount (req ent)
-  (prog1 nil
-    (with-json-response (req ent)
-      (whtml
-         (:princ
-          (json:encode-json-to-string (length (sym-info *qxdoc*))))))))
-
 (defun qx-sortdata (req ent)
   (with-js-response (req ent)
     (let ((sort-key (req-val req "key"))
@@ -79,21 +83,9 @@
           (*qxdoc* (qxl-request-session req)))
       (setf (sym-info *qxdoc*)
         (sort (sym-info *qxdoc*) 
-          (if (find$ sort-key '("name" "pkg"))
-              (if (equal order "asc")
-                  'string-lessp 'string-greaterp)
-            (if (equal order "asc")
-                'string-lessp 'string-greaterp)
-            #+notyet
-            (if (equal order "asc")
-                'boolean< 'boolean>))
+          (if (equal order "asc")
+              'string-lessp 'string-greaterp)
           :key (if (equal sort-key "pkg")
                    (lambda (si) (package-name (symbol-info-pkg si)))
                  (intern (conc$ "symbol-info-" sort-key) :qooxlisp)))))))
-
-(defun boolean< (a b)
-  (and b (not a)))
-
-(defun boolean> (a b)
-  (and a (not b)))
 

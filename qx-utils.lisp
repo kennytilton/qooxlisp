@@ -99,8 +99,6 @@
 #+test
 (json$ (list (cons 'aa-bb t)))
 
-
-
 (defmacro groupbox ((&rest layo-iargs)(&rest iargs) &rest kids)
   `(make-kid 'qx-group-box
      ,@iargs

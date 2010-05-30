@@ -2,7 +2,6 @@
 
 (defmd qooxlisp-family (family))
 
-
 (defobserver .kids ((self qooxlisp-family))
   (progn
     (with-integrity (:client `(:post-make-qx ,self))
@@ -15,7 +14,9 @@
               (qxfmt "clDict[~a].add(clDict[~a]);" (oid self) (oid k)))))))
 
 ;; the problem here is that as each item gets deleted from, say, a select box,
-;; a changeSelection event fires.
+;; a changeSelection event fires. Might need to hack qooxdoo itself to
+;; grok setf of children
+
 #+seeabovecomment
 (defobserver .kids ((self qooxlisp-family))
   (progn
@@ -37,14 +38,25 @@
   (oid 0 :cell nil)
   (dictionary (make-hash-table) :cell nil)
   (next-oid 1 :cell nil :allocation :class)
+  (theme "qx.theme.Modern")
   )
-
-(defun qxl-request-session (req)
-  (gethash (parse-integer (req-val req "sessId") :junk-allowed t) *qx-sessions*))
 
 (defmethod initialize-instance :after ((self qxl-session) &key)
   (assert (null (gethash (session-id self) *qx-sessions*)))
   (setf (gethash (session-id self) *qx-sessions*) self))
+
+(defmethod make-qx-instance :after ((self qxl-session))
+  (qxfmt "
+clDict[0] = qx.core.Init.getApplication().getRoot();
+sessId=~a;" (session-id self)))
+
+(defobserver theme ()
+  (when new-value
+    (qxfmt "qx.theme.manager.Meta.getInstance().setTheme(~a);" new-value)))
+
+(defun qxl-request-session (req)
+  (gethash (parse-integer (req-val req "sessId") :junk-allowed t) *qx-sessions*))
+
       
 (defun get-next-oid (doc)
   (prog1
@@ -62,8 +74,6 @@
   (assert (session self) () "No session for ~a: keys ~a" self iargs)
   (setf (oid self) (get-next-oid (session self)))
   (setf (gethash (oid self) (dictionary (session self))) self))
-
-
 
 (defmethod md-awaken :before ((self qx-object))
   (make-qx-instance self))
@@ -144,71 +154,14 @@ clDict[~a].addListener('keypress', function(e) {
 (defmd qx-composite (qooxlisp-layouter)
   (qx-class "qx.ui.container.Composite" :allocation :class :cell nil))
 
-(defmd qx-group-box (qooxlisp-layouter)
-  (qx-class "qx.ui.groupbox.GroupBox" :allocation :class :cell nil)
-  legend)
-
-(defmethod qx-configurations append ((self qx-group-box))
-  (nconc
-   (b-when x (legend self)
-     (list (cons :legend x)))))
-
-(defmd qx-check-group-box (qooxlisp-layouter)
-  (qx-class "qx.ui.groupbox.CheckGroupBox" :allocation :class :cell nil))
-
 (defmd qx-html (qx-widget)
   (qx-class "qx.ui.embed.Html" :allocation :class :cell nil)
   html
  (onappear t))
 
-
-(defmd qx-html-math (qx-html)
-  )
-
-(defobserver onappear ((self qx-html-math))
-  (with-integrity (:client `(:post-make-qx ,self))
-    (cond
-     (new-value (qxfmt "
-    clDict[~a].addListener('appear', function(e) {
-       console.log('on-appear ~:*~a');
-       var ce = clDict[~:*~a].getContentElement();
-       console.log('appear Html qx content ' + ce);
-       var de = ce.getDomElement();
-       console.log('appear Html dom elt ' + de);
-       if (de) {
-          jsMath.ConvertTex(de);
-          jsMath.ProcessBeforeShowing(de);
-       }
-});" 
-                  (oid self))))))
-
-(defobserver onchangehtml ((self qx-html-math))
-  (with-integrity (:client `(:post-make-qx ,self))
-    (cond
-     (new-value (qxfmt "
-    clDict[~a].addListener('changeHtml', function(e) {
-       console.log('on-onchangehtml ~:*~a');
-       var ce = clDict[~:*~a].getContentElement();
-       console.log('onchangehtml Html qx content ' + ce);
-       var de = ce.getDomElement();
-       console.log('onchangehtml Html dom elt ' + de);
-       if (de) {
-          jsMath.ProcessBeforeShowing(de);
-       }
-});" 
-                  (oid self))))))
-
 (defobserver html ()
   (with-integrity (:client `(:post-make-qx ,self))
-    (qxfmt "clDict[~a].setHtml(~a);
-/*
-var ce = clDict[~a].getContentElement();
-console.log('Html qx content ' + ce);
-var de = ce.getDomElement();
-console.log('Html dom elt ' + de);
-jsMath.ProcessBeforeShowing(de);
-*/
-" (oid self)(or new-value "null")(oid self) (oid self))))
+    (qxfmt "clDict[~a].setHtml(~a);" (oid self)(or new-value "null")(oid self) (oid self))))
   
 #|
 save

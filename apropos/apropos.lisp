@@ -37,32 +37,15 @@
   (with-js-response (req ent)
     (print :beginning-request)
     (with-integrity ()
-      (qxfmt "sessId=~a;" (session-id (make-instance 'apropos-session) )))))
-
-(defmd apropos-session (qxl-session)
-  (sym-seg (c-in nil))
-  (syms-unfiltered (c? (b-when seg (^sym-seg)
-                         (symbol-info-raw seg))))
-  (sym-info (c? (symbol-info-filtered (^syms-unfiltered)
-                  (value (fm-other :type-filter))
-                  (value (fm-other :exported-only))
-                  (value (fm-other :all-packages))
-                  (value (fm-other :selected-pkg)))))
-  :kids (c? (the-kids
-             (vbox (:spacing 6) 
-               (:add '(:left 0 :top 0 :width "100%" :height "100%")
-                 :padding 6)
-               (search-panel self)
-               (hbox (:spacing 6)()
-                 (exported-pkg-filter self)
-                 (type-filter self))
-               (symbols-found self)))))
-
-(defobserver sym-info ()
-  (with-integrity (:client `(:post-make-qx ,self))
-    (let ((tbl (fm-other :sym-info-table)))
-      (assert tbl)
-      (when (oid (table-model tbl))
-        (qxfmt "clDict[~a].reloadData();" (oid (table-model tbl)))))))
-
+      (let ((session
+             #+oldskool
+             (make-instance 'apropos-session ;; ACL version
+               :theme "qx.theme.Classic")
+             (make-instance
+                 'apropos-session-kt ;; kenny's makeover, step one
+               :theme "qx.theme.Modern")))
+        ;; todo: hide plumbing
+        (qxfmt "
+clDict[0] = qx.core.Init.getApplication().getRoot();
+sessId=~a;" (session-id session))))))
 

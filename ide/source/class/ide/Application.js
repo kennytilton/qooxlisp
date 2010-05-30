@@ -18,15 +18,12 @@
 
 var clDict = [];
 var sessId;
-var qxDoc;
 
 // back to the boilerplate:
 
 qx.Class.define("ide.Application",
 {
   extend : qx.application.Standalone,
-
-
 
   /*
   *****************************************************************************
@@ -85,11 +82,7 @@ qx.Class.define("ide.Application",
       qx.ui.groupbox.GroupBox;
       qx.ui.groupbox.CheckGroupBox;
       qx.theme.Classic;
-
-      // ugly: qx.theme.manager.Meta.getInstance().setTheme(qx.theme.Classic);
-
-      // set up the qooxlisp glue data...
-      clDict[0] = qxDoc = this.getRoot();
+      qx.theme.Modern;
 
       // in effect, start the repl...
       (new qx.io.remote.Request("/begin","GET", "text/javascript")).send();

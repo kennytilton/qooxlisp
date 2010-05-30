@@ -8,11 +8,12 @@
   :modules (list (make-instance 'module :name "apropos.lisp")
                  (make-instance 'module :name "../INSTALL.txt")
                  (make-instance 'module :name "apropos-data.lisp")
-                 (make-instance 'module :name "apropos-gui.lisp"))
+                 (make-instance 'module :name "apropos-gui.lisp")
+                 (make-instance 'module :name "apropos-gui-ex.lisp"))
   :projects (list (make-instance 'project-module :name
                                  "../qooxlisp.lpr" :show-modules t))
   :libraries nil
-  :distributed-files nil
+  :distributed-files (list "../ide/source/class/ide/Application.js")
   :internally-loaded-files nil
   :project-package-name :qooxlisp
   :main-form nil

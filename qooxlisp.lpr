@@ -14,7 +14,7 @@
                                  :show-modules nil)
                   (make-instance 'project-module :name
                                  "cl-json_0.4.0/cl-json" :show-modules
-                                 nil))
+                                 t))
   :libraries nil
   :distributed-files nil
   :internally-loaded-files nil
