@@ -9,7 +9,9 @@
                  (make-instance 'module :name "../INSTALL.txt")
                  (make-instance 'module :name "apropos-data.lisp")
                  (make-instance 'module :name "apropos-gui.lisp")
-                 (make-instance 'module :name "apropos-gui-ex.lisp"))
+                 (make-instance 'module :name
+                                "apropos-gui-makeover.lisp")
+                 (make-instance 'module :name "apropos-gui-kt"))
   :projects (list (make-instance 'project-module :name
                                  "../qooxlisp.lpr" :show-modules t))
   :libraries nil

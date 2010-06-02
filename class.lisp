@@ -4,9 +4,9 @@
 
 (defobserver .kids ((self qooxlisp-family))
   (progn
-    (with-integrity (:client `(:post-make-qx ,self))
-      ;(print (list "kidsing!!!!!!!!!!!!!!!!!" self old-value new-value))
-      (qxfmt "clDict[~a].removeAll()" (oid self))
+    (with-integrity (:client `(:post-make-qx ,self)) 
+      (loop for k in (set-difference old-value new-value)
+          do (qxfmt "clDict[~a].remove(clDict[~a]);" (oid self)(oid k)))
       (loop for k in new-value do 
             ;;(qxfmt "consolelog('adding: to '+ ~a + ' the new ' + ~a);" pa new)
             (b-if ao (add-ops k)
@@ -39,6 +39,7 @@
   (dictionary (make-hash-table) :cell nil)
   (next-oid 1 :cell nil :allocation :class)
   (theme "qx.theme.Modern")
+  (responses nil :cell nil)
   )
 
 (defmethod initialize-instance :after ((self qxl-session) &key)
@@ -52,7 +53,7 @@ sessId=~a;" (session-id self)))
 
 (defobserver theme ()
   (when new-value
-    (qxfmt "qx.theme.manager.Meta.getInstance().setTheme(~a);" new-value)))
+    #+cvbug (qxfmt "qx.theme.manager.Meta.getInstance().setTheme(~a);" new-value)))
 
 (defun qxl-request-session (req)
   (gethash (parse-integer (req-val req "sessId") :junk-allowed t) *qx-sessions*))
@@ -139,6 +140,7 @@ clDict[~a].addListener('keypress', function(e) {
     rq.send();
 });" 
                   (oid self)))
+     #+chill-youneedtobespecific
      (old-value
       ;;untested
       (qxfmt "clDict[~a].removeListener('keypress');" (oid self))))))

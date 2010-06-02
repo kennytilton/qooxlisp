@@ -29,6 +29,15 @@ clDict[~a].addListener('changeValue', function(e) {
     (new qx.io.remote.Request('/callback?sessId='+sessId+'&opcode=onchangevalue&oid=~:*~a&value='+e.getData(),'GET', 'text/javascript')).send();
 });" (oid self))))))
 
+(defmd qx-text-field (qx-abstract-field)
+  (qx-class "qx.ui.form.TextField" :allocation :class :cell nil)
+  (onchangevalue (lambda (self req)
+                   (print :onchangevalue-fires)
+                   (let ((nv (req-val req "value")))
+                     (setf (^value) nv)
+                     (mprt :onchgvalu self :now nv))))
+  :value (c-in nil))
+
 (defmd qx-list-item (qx-atom)
   (qx-class "qx.ui.form.ListItem" :allocation :class :cell nil)
   model)
@@ -37,6 +46,13 @@ clDict[~a].addListener('changeValue', function(e) {
   (nconc
    (b-when x (model self)
      (list (cons :model x)))))
+
+(defmacro listitem (label-form &optional model)
+  (let ((label (gensym)))
+    `(let ((,label ,label-form))
+       (make-kid 'qx-list-item
+         :label ,label
+         :model (or ,model ,label)))))
 
 ;;; --- button --------------------------------------
 
@@ -68,7 +84,7 @@ clDict[~a].addListener('changeValue', function(e) {
   (onchangeselection (lambda (self req)
                        (let ((nv (req-val req "value")))
                          (print `(:rbgroup ,nv))
-                         (setf (^value) (intern nv :keyword))
+                         (setf (^value) nv)
                          ;;(qxfmt "null" #+not "consolelog('nada');")
                          ))))
 

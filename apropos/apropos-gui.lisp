@@ -30,6 +30,17 @@
                               "Symbols Found:"))))
                  (symbols-found self))))))
 
+#|
+(lbl (c? (let ((sym-seg (sym-seg (u^ qxl-session))))
+           (if (plusp (length sym-seg))
+               (format nil "Symbols containing ~s" sym-seg)
+             "Symbols Found:"))))
+(make-kid 'qx-label
+  :value (c? (let ((sym-seg (sym-seg (u^ qxl-session))))
+               (if (plusp (length sym-seg))
+                   (format nil "Symbols containing ~s" sym-seg)
+                 "Symbols Found:"))))
+|#
 (defobserver sym-info ()
   (with-integrity (:client `(:post-make-qx ,self))
     (let ((tbl (fm-other :sym-info-table)))
@@ -41,16 +52,23 @@
 ;;; The combo-box used to hold prior matches is overkill but let's us
 ;;; show off a new widget and is indeed how the original dialog works.
 
+
+
 (defun search-panel (self)
   (hbox (:align-y 'middle :spacing 12)
     (:allow-grow-y :js-false
       :padding 4)
     (lbl "String:")
-    (combobox :symbol-string (:add '(:flex 1)
-                               :allow-grow-x t
-                               :onchangevalue (lambda (self req)
-                                                (let ((sympart (req-val req "value")))
-                                                  (setf (sym-seg (u^ qxl-session)) sympart))))
+    (combobox :symbol-string
+      (:add '(:flex 1)
+        :allow-grow-x t
+        :onchangevalue (lambda (self req)
+                         (let ((sympart (req-val req "value")))
+                           (setf (sym-seg (u^ qxl-session)) sympart))))
+      ;; rule below runs whenever the user searches for a segment
+      ;; if they did not search on "" and they searched on something new,
+      ;; that is added to the existing list of prior searches and
+      ;; thru hidden plumbing gets added to the client-side menu of the combo box
       (let ((sympart (sym-seg (u^ qxl-session))))
         (if (plusp (length sympart))
             (if (find sympart .cache :key 'label :test 'string-equal)
@@ -72,40 +90,32 @@
   ;; this guy could be a lot simpler (for user and developer)
   ;; as a check-group-box "Search Specific Package", but the
   ;; original works this way, so...
-
   (groupbox (:spacing 2)(:legend "Package(s) to Search")
       (hbox (:spacing 20)()
         (checkbox :all-packages "All"
           :value (c-in t))
         (selectbox :selected-pkg (:add '(:flex 1)
                                    :enabled (c? (not (value (fm-other :all-packages)))))
-          (b-if syms (syms-unfiltered (u^ qxl-session))
-            (loop with pkgs
-                for symi in syms
-                do (pushnew (symbol-info-pkg symi) pkgs)
-                finally (return (loop for pkg in pkgs
-                                    collecting
-                                      (make-kid 'qx-list-item
-                                        :model (package-name pkg)
-                                        :label (package-name pkg)))))
-            (loop for pkg in (list-all-packages)
-                collecting
-                  (make-kid 'qx-list-item
-                    :model (package-name pkg)
-                    :label (package-name pkg))))))))
+          (loop for pkg in (b-if syms (syms-unfiltered (u^ qxl-session))
+                             (loop with pkgs
+                                 for symi in syms
+                                 do (pushnew (symbol-info-pkg symi) pkgs)
+                                 finally (return pkgs))
+                             (subseq (list-all-packages) 0 4))
+              collecting (listitem (package-name pkg)))))))
 
 
 (defun type-filter (self)
   (groupbox ()(:legend "Show")
-    (radiobuttongroup :type-filter (:value (c-in :all))
+    (radiobuttongroup :type-filter (:value (c-in "all"))
       (qx-grid :spacing-x 12 :spacing-y 6)
-      (radiobutton 'all "All"
+      (radiobutton "all" "All"
         :add '(:row 0 :column 0))
-      (radiobutton 'var "Variables"
+      (radiobutton "var" "Variables"
         :add '(:row 0 :column 1))
-      (radiobutton 'fn "Functions"
+      (radiobutton "fn" "Functions"
         :add '(:row 1 :column 0))
-      (radiobutton 'class "Classes"
+      (radiobutton "class" "Classes"
         :add '(:row 1 :column 1)))))
 
 ;;; The search results table itself

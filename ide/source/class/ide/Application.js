@@ -70,6 +70,7 @@ qx.Class.define("ide.Application",
       qx.ui.form.ComboBox;
       qx.ui.form.ListItem;
       qx.ui.form.Button;
+      qx.ui.table.columnmenu.Button;
       qx.ui.basic.Label;
       qx.ui.table.model.Simple;
       qx.ui.table.model.Remote;

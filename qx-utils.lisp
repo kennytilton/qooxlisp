@@ -38,11 +38,19 @@
   `(prog1 nil
      (net.aserve:with-http-response (,req ,ent :content-type "text/javascript")
        (net.aserve:with-http-body (,req ,ent)
-         (let ((ws (net.aserve:websession-from-req ,req)))
+         (let ((ws (net.aserve:websession-from-req ,req))
+               (*qxdoc* (qxl-request-session ,req)))
            (declare (ignorable ws))
+           #+notonbegin!!!
+           (progn
+             (assert *qxdoc* () "with-js-response sees no session ~a. Known: ~a"
+               (req-val ,req "sessId") (loop for id being the hash-keys of qxl::*qx-sessions*
+                                           collecting id))
+             (assert (typep *qxdoc* 'qxl-session)))
            (setf *js-response* nil)
            ,@body
            (print `(responding ,*js-response*))
+           (push *js-response* (responses *qxdoc*))
            (qxl:whtml (:princ (format nil "(function () {~a})()" (or *js-response* "null;")))))))))
 
 (defun qxfmt (fs &rest fa)
@@ -169,17 +177,12 @@
                                      ((string-equal key "Backspace")
                                       (subseq v 0 (max 0 (1- (length v)))))
                                      (t v)))))
-     :onkeypress (lambda (self req)
-                   (let* ((key (req-val req "keyId"))
-                          (jsv (req-val req "value"))
-                          (v (cvtjs jsv)))
-                     (setf (^value) (cond
-                                     ((= 1 (length key))
-                                      (conc$ v key))
-                                     ((string-equal key "Backspace")
-                                      (subseq v 0 (max 0 (1- (length v)))))
-                                     (t v)))))
      :kids (c? (the-kids ,@kids))))
+
+(defmacro textfield (name &rest iargs)
+  `(make-kid 'qx-text-field
+     :md-name ,name
+     ,@iargs))
 
 (defmacro button (label (&rest iargs) &key onexec)
   `(make-kid 'qx-button

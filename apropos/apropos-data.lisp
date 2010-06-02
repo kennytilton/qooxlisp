@@ -33,10 +33,10 @@
             (or (not exported-only-p) (equal "x" (symbol-info-exported? sym)))
             (or (not selected-pkg-p) (eq selected-pkg (symbol-info-pkg sym)))
             (ecase type
-              (:all t)
-              (:fn (not (equal "" (symbol-info-fntype sym))))
-              (:var (plusp (length (symbol-info-var? sym))))
-              (:class (equal "x" (symbol-info-class? sym)))))
+              ("all" t)
+              ("fn" (not (equal "" (symbol-info-fntype sym))))
+              ("var" (plusp (length (symbol-info-var? sym))))
+              ("class" (equal "x" (symbol-info-class? sym)))))
       collecting sym))
 
 ;;; Next three functions serve the data model of the table widget
