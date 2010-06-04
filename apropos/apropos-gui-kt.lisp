@@ -13,7 +13,7 @@
              (vbox (:spacing 6) 
                (:add '(:left 0 :top 0 :width "100%" :height "100%")
                  :padding 6)
-               (search-panel-kt self)
+               (search-panel self)
                (hbox (:spacing 6)()
                  (pkg-filter-kt self)
                  (vbox (:spacing 6 :align-x "center")()
@@ -21,6 +21,7 @@
                    (checkbox :exported-only "Exported Only")))
                (symbols-found self)))))
 
+#+wait
 (defun search-panel-kt (self)
   (hbox (:align-y 'middle :spacing 12)
     (:allow-grow-y :js-false
