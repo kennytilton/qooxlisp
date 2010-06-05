@@ -18,7 +18,7 @@
                      (warn "Invalid oid parameter ~s in callback req: ~a" (req-val req "oid")
                        (list (req-val req "sessId")(req-val req "opcode"))))
           (let ((opcode (qxl-sym (req-val req "opcode"))))
-            (mprt :callback opcode)
+            (mprt :callback opcode :self self :req (request-raw-request req))
             (b-if cb (funcall opcode self)
               (funcall cb self req)
               (dwarn "Widget ~a oid ~a in session ~a has no handler for ~a callback " self (oid self) (session-id session) opcode)))
@@ -50,6 +50,7 @@
     '(:make-qx :layout :post-make-qx))
 
 (defun qxl-user-queue-handler (user-q)
+  #+qxldebug
   (loop for (defer-info . nil) in (fifo-data user-q)
       unless (find (car defer-info) *qxl-client-task-priority*)
         do (error "unknown qxl client task type ~a in task: ~a " (car defer-info) defer-info))
@@ -58,7 +59,7 @@
                                        (stable-sort (fifo-data user-q) 'qxl-user-queue-sort :key 'car)
                                      (fifo-clear user-q))
         do
-        ;(trc "!!! --- qxl-user-queue-handler dispatching" defer-info)
+        ;(mprt "!!! --- qxl-user-queue-handler dispatching" defer-info)
         (funcall task :user-q defer-info)))
 
 (defun qxl-user-queue-sort (task1 task2)

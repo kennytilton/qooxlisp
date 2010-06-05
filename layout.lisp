@@ -2,7 +2,8 @@
 
 (defmd qx-layout-item (qx-object) ;; better name: qx-laid-out-item
   add
-  height width
+  height min-height max-height
+  width min-width max-width
   margin margin-left margin-top margin-right margin-bottom
   padding padding-left padding-top padding-right padding-bottom
   align-x align-y 
@@ -18,7 +19,10 @@
 
 (defmethod qx-configurations append ((self qx-layout-item))
   (nconc
-   (cfg padding)
+   (cfg height)(cfg min-height)(cfg max-height)
+   (cfg width)(cfg min-width)(cfg max-width)
+   (cfg margin)(cfg margin-left)(cfg margin-top)(cfg margin-right)(cfg margin-bottom)
+   (cfg padding)(cfg padding-left)(cfg padding-top)(cfg padding-right)(cfg padding-bottom)
    (cfg align-x)
    (cfg align-y)
    (cfg allow-grow-y)
@@ -35,11 +39,7 @@
 
 (defmethod qx-configurations append ((self qx-grid))
   (nconc
-   (b-when x (spacing-x self)
-     (list (cons :spacing-x x)))
-   (b-when x (spacing-y self)
-     (list (cons :spacing-y x)))
-   ))
+   (cfg spacing-x)(cfg spacing-y)))
 
 (defmd qx-hv-box (qx-layout-abstract)
   ; anstract class on lisp side only
@@ -47,17 +47,7 @@
 
 (defmethod qx-configurations append ((self qx-hv-box))
   (nconc
-   (b-when x (align-x self)
-     (list (cons :align-x x)))
-   (b-when x (align-y self)
-     (list (cons :align-y x)))
-   (b-when x (reversed self)
-     (list (cons :reversed x)))
-   (b-when x (separator self)
-     (list (cons :separator x)))
-   (b-when x (spacing self)
-     (list (cons :spacing x)))
-   ))
+   (cfg align-x)(cfg align-y)(cfg reversed)(cfg separator)(cfg spacing)))
 
 (defmd qx-hbox (qx-hv-box)
   (qx-class "qx.ui.layout.HBox" :allocation :class :cell nil))

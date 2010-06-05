@@ -62,9 +62,7 @@ sessId=~a;" (session-id self)))
 
 (defmethod initialize-instance :after ((self qx-object) &key oid fm-parent)
   (unless (typep self 'qxl-session)
-    (if (or oid fm-parent)
-        (print `(parentcool ,self ,fm-parent ,oid))
-      (assert fm-parent () "No fm-parent at i-i for ~a" self))))
+    (assert (or oid fm-parent) () "No fm-parent at i-i for ~a" self)))
 
 (defmethod md-awaken :before ((self qx-object))
   (unless (oid self)
@@ -111,7 +109,8 @@ sessId=~a;" (session-id self)))
 (defmethod qx-configurations append ((self qx-widget))
   (nconc
    (b-when x (background-color self)
-     (list (cons :background-color x)))))
+     (list (cons :background-color x)
+       ))))
 
 (defmd qooxlisp-control () ;; qooxlisp- indicates this is a Lisp-side only class
   onexecute)

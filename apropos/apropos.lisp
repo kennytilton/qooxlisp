@@ -46,28 +46,29 @@ sessId=~a;" (session-id
              ;; the deferred queue where a response gets built.
              ;;
              (setf *qxdoc*
-               #+notthis (make-instance 'apropos-session-classic ;; ACL version
-                           :theme "qx.theme.Classic")
+               #+notthis(make-instance 'apropos-session-classic ;; ACL version
+                 :theme #+xxxxxx "qx.theme.Modern" "qx.theme.Classic")
+               #+notthis  (make-instance
+                             'apropos-session-makeover ;; kenny's makeover, step one
+                           :theme "qx.theme.Modern")
                (make-instance
-                   'apropos-session-makeover ;; kenny's makeover, step one
-                 :theme "qx.theme.Modern")
-               #+notthis (make-instance
-                             'apropos-session-kt ;; kenny's makeover, step one
-                           theme "qx.theme.Modern")))))))
+                   'apropos-session-kt ;; kenny's makeover, step two
+                 :theme "qx.theme.Modern")))))))
 
 
-(defmd apropos-session (qxl-session)
+(defmd apropos-session (qxl-session) ;; abstract class
   (sym-seg (c-in nil))
   (syms-unfiltered (c? (b-when seg (^sym-seg)
                          (symbol-info-raw seg))))
+  selected-pkg-p ;; supplied by subclasses
   (syms-filtered (c? (symbol-info-filtered (^syms-unfiltered)
                        (value (fm-other :type-filter))
                        (value (fm-other :exported-only))
-                       (not (value (fm-other :all-packages)))
+                       (^selected-pkg-p)
                        (value (fm-other :selected-pkg)))))
   (sym-sort-spec (c-in nil))
   (sym-info (c? (let ((si (^syms-filtered)))
-                  (mprt :sym-info-fires)
+                  (mprt :sym-info-fires (length si))
                   (b-if sort (^sym-sort-spec)
                     (destructuring-bind (sort-key order) sort
                       (sort (copy-list si)

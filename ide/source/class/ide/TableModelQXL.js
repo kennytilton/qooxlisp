@@ -27,10 +27,10 @@ qx.Class.define("ide.TableModelQXL", {
     },
     members: {
     	oid: null, // server-side object id
-    	reloadData : function (fn) {
+    	/* reloadData : function (fn) {
     		console.log('reloadData entry '+this.oid);
     		this.base(arguments);
-    	},
+    	},*/
         _loadRowCount: function(){
     			var req = new qx.io.remote.Request("/cbjson", "GET", "application/json");
     			this.buildReq(req,'loadrowcount');

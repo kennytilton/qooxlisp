@@ -5,11 +5,10 @@
 ;;; Next two functions support rules for gathering matching symbols
 ;;; and filtering them as user changes constraints on what to show
 
-(defun symbol-info-raw (s)
+(defun symbol-info-raw (s &key (eor (lambda (x)
+                                      (if x "x" ""))))
   (when (plusp (length s))
-    (flet ((eor (x)
-             (if x "x" ""))
-           (exportedp (sym)
+    (flet ((exportedp (sym)
              (eql (nth-value 1 (find-symbol (symbol-name sym)(symbol-package sym))) :external)))
       (loop for sym in (apropos-list s)
           collecting (make-symbol-info
@@ -23,20 +22,26 @@
                       :var? (if (boundp sym)
                                 (if (constantp sym)
                                     "con" "var") "")
-                      :setf? (eor (fboundp `(setf ,sym)))
-                      :class? (eor (find-class sym nil))
-                      :exported? (eor (exportedp sym)))))))
+                      :setf? (funcall eor (fboundp `(setf ,sym)))
+                      :class? (funcall eor (find-class sym nil))
+                      :exported? (funcall eor (exportedp sym)))))))
 
 (defun symbol-info-filtered (syms type exported-only-p selected-pkg-p selected-pkg)
+  (mprt :symbol-info-filtered-sees selected-pkg-p selected-pkg)
   (loop for sym in syms
       when (and
-            (or (not exported-only-p) (equal "x" (symbol-info-exported? sym)))
-            (or (not selected-pkg-p) (eq selected-pkg (symbol-info-pkg sym)))
-            (ecase type
+            (or (not exported-only-p) (or (eq t (symbol-info-exported? sym))
+                                        (equal "x" (symbol-info-exported? sym))))
+            (or (not selected-pkg-p) (if (listp selected-pkg)
+                                         (find (symbol-info-pkg sym) selected-pkg)
+                                       (eq selected-pkg (symbol-info-pkg sym))))
+            (case$ type
               ("all" t)
               ("fn" (not (equal "" (symbol-info-fntype sym))))
               ("var" (plusp (length (symbol-info-var? sym))))
-              ("class" (equal "x" (symbol-info-class? sym)))))
+              ("class" (or (eq t (symbol-info-class? sym))
+                         (equal "x" (symbol-info-class? sym))))
+              (otherwise (error "Type selector ~a invalid" type) )))
       collecting sym))
 
 (defun sym-get (self req)

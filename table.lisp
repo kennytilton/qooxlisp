@@ -58,15 +58,21 @@
                       collecting name into names
                       collecting id into ids
                       finally (return (list (json$ names)(json$ ids))))))
-        ;; first tell table (data) model...
+        ;; very delicate order follows
+        ;; have to tell table (data) model about columns...
         (apply 'qxfmt "clDict[~a].setColumns(~a,~a);" model-oid cols)
-        ;; ...then tell table column model
-        #+chill
-        (loop for col in new-value
+        ;; ...before telling table about tableModel
+        (qxfmt "clDict[~a].setTableModel(clDict[~a]);
+var tcm = clDict[~a].getTableColumnModel();" (oid self) model-oid (oid self))
+        ;; ...and only now can columns be referenced in table column model!
+        (loop for col in (columns self)
             for n upfrom 0
-            do (b-when w (tcol-width col)
-                 (qxfmt "clDict[~a].getTableColumnModel().setColumnWidth(~a,~a)" (oid self) n w)))
-        (qxfmt "clDict[~a].setTableModel(clDict[~a]);" (oid self) model-oid)))))
+            do
+              (b-when w (tcol-width col)
+                (qxfmt "tcm.setColumnWidth(~a,~a);"  n w))
+              (b-when w (tcol-renderer col)
+                (qxfmt "tcm.setDataCellRenderer(~a, new qx.ui.table.cellrenderer.~:(~a~)());" n w)))
+        ))))
 
 (defstruct (table-column (:conc-name tcol-))
   name id width renderer visible editable)

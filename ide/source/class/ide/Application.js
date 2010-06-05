@@ -84,7 +84,9 @@ qx.Class.define("ide.Application",
       qx.ui.groupbox.CheckGroupBox;
       qx.theme.Classic;
       qx.theme.Modern;
-
+      qx.ui.table.cellrenderer.Boolean;
+      qx.ui.form.List;
+      qx.ui.form.ListItem;
       // in effect, start the repl...
       (new qx.io.remote.Request("/begin","GET", "text/javascript")).send();
     }

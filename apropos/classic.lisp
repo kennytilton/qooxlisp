@@ -23,24 +23,9 @@
                               "Symbols Found:"))))
                  (symbols-found self))))))
 
-#|
-(lbl (c? (let ((sym-seg (sym-seg (u^ qxl-session))))
-           (if (plusp (length sym-seg))
-               (format nil "Symbols containing ~s" sym-seg)
-             "Symbols Found:"))))
-(make-kid 'qx-label
-  :value (c? (let ((sym-seg (sym-seg (u^ qxl-session))))
-               (if (plusp (length sym-seg))
-                   (format nil "Symbols containing ~s" sym-seg)
-                 "Symbols Found:"))))
-|#
-
-
 ;;; The top row of the dialogue, where one specifies the search substring.
 ;;; The combo-box used to hold prior matches is overkill but let's us
 ;;; show off a new widget and is indeed how the original dialog works.
-
-
 
 (defun search-panel (self)
   (hbox (:align-y 'middle :spacing 12)
@@ -83,8 +68,11 @@
         (checkbox :all-packages "All"
           :value (c-in t))
         (selectbox :selected-pkg (:add '(:flex 1)
-                                   ;:enabled (c? (not (value (fm-other :all-packages))))
-                                   )
+                                   :enabled (c? (not (value (fm-other :all-packages))))
+                                   :onchangeselection (lambda (self req)
+                                                        (let ((nv (req-val req "value")))
+                                                          (mprt :pkgsel nv (find-package nv))
+                                                          (setf (^value) (find-package nv)))))
           (loop for pkg in (b-if syms (syms-unfiltered (u^ qxl-session))
                              (loop with pkgs
                                  for symi in syms
@@ -130,11 +118,11 @@
     :columns (flet ((mtc (n i &rest iargs)
                       (apply 'make-table-column :name n :id i iargs)))
                (list 
-                (mtc "Symbol Name" 'name :width 96)
+                (mtc "Symbol Name" 'name :width 192)
                 (mtc "Package" 'pkg)
                 (mtc "Function" 'fntype)
-                (mtc "Setf" 'setf?)
-                (mtc "Var" 'var?)
-                (mtc "Class" 'class?)
-                (mtc "Exp" 'exported?)
+                (mtc "Setf" 'setf? :width 48)
+                (mtc "Var" 'var? :width 48)
+                (mtc "Class" 'class? :width 48)
+                (mtc "Exp" 'exported? :width 48)
                 ))))

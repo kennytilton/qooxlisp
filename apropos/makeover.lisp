@@ -1,39 +1,35 @@
 (in-package :qooxlisp)
 
-(defmd apropos-session-kt (apropos-session)
-  :selected-pkg-p (c? (value (fm-other :selected-pkg-p)))
+(defmd apropos-session-makeover (apropos-session)
+  :syms-filtered (c? (symbol-info-filtered (^syms-unfiltered)
+                       (value (fm-other :type-filter))
+                       (value (fm-other :exported-only))
+                       (value (fm-other :selected-pkg-p))
+                       (value (fm-other :selected-pkg))))
   :kids (c? (the-kids
              (vbox (:spacing 6) 
                (:add '(:left 0 :top 0 :width "100%" :height "100%")
                  :padding 6)
-               (search-panel-kt self)
+               (search-panel self)
                (hbox (:spacing 6)()
-                 (pkg-filter-kt self)
+                 (pkg-filter-mo self)
                  (vbox (:spacing 6 :align-x "center")()
-                   (type-filter-kt self)
+                   (type-filter-mo self)
                    (checkbox :exported-only "Exported Only")))
                (symbols-found self)))))
 
-(defun search-panel-kt (self)
-  (hbox (:align-y 'middle :spacing 12)
-    (:allow-grow-y :js-false
-      :padding 4)
-    (lbl "Search for:")
-    (textfield :symbol-string ;; WARNING -- new and untested
-      :add '(:flex 1)
-      :allow-grow-x t
-      :onchangevalue (lambda (self req)
-                       (let ((sympart (req-val req "value")))
-                         (setf (sym-seg (u^ qxl-session)) sympart))))))
 
-(defun pkg-filter-kt (self)
+(defun pkg-filter-mo (self)
   (checkgroupbox (:spacing 2)(:md-name :selected-pkg-p
                                :add '(:flex 1)
                                :allow-grow-y :js-false
                                :legend "Search One Package"
                                :value (c-in nil)) ;; becomes state of check-box!
     (selectbox :selected-pkg (:add '(:flex 1)
-                               :enabled (c? (value (fm-other :selected-pkg-p))))
+                               :enabled (c? (value (fm-other :selected-pkg-p)))
+                               :onchangeselection (lambda (self req)
+                                                        (let ((nv (req-val req "value")))
+                                                          (setf (^value) (find-package nv)))))
       (b-if syms (syms-unfiltered (u^ qxl-session))
         (loop with pkgs
             for symi in syms
@@ -49,7 +45,7 @@
                 :model (package-name pkg)
                 :label (package-name pkg)))))))
 
-(defun type-filter-kt (self)
+(defun type-filter-mo (self)
   (groupbox ()(:legend "Show")
     (radiobuttongroup :type-filter (:value (c-in "all"))
       (qx-grid :spacing-x 12 :spacing-y 6)

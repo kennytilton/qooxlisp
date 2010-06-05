@@ -157,6 +157,12 @@
      ,@iargs
      :kids (c? (the-kids ,@kids))))
 
+(defmacro qxlist (name (&rest iargs) &body kids)
+  `(make-kid 'qx-list
+    :md-name ,name
+     ,@iargs
+     :kids (c? (the-kids ,@kids))))
+
 (defmacro combobox (name (&rest iargs) &rest kids)
   `(make-kid 'qx-combo-box
      :md-name ,name
