@@ -7,7 +7,7 @@
   (sym-info (c? (symbol-info-filtered (^syms-unfiltered)
                   (value (fm-other :type-filter))
                   (value (fm-other :exported-only))
-                  (value (fm-other :selected-package-p))
+                  (value (fm-other :selected-pkg-p))
                   (value (fm-other :selected-pkg)))))
   :kids (c? (the-kids
              (vbox (:spacing 6) 
@@ -27,22 +27,21 @@
     (:allow-grow-y :js-false
       :padding 4)
     (lbl "Search for:")
-    (textfield :symbol-string
-      (:add '(:flex 1)
-        :allow-grow-x t
-        :margin 12
-        :onchangevalue (lambda (self req)
-                         (let ((sympart (req-val req "value")))
-                           (setf (sym-seg (u^ qxl-session)) sympart)))))))
+    (textfield :symbol-string ;; WARNING -- new and untested
+      :add '(:flex 1)
+      :allow-grow-x t
+      :onchangevalue (lambda (self req)
+                       (let ((sympart (req-val req "value")))
+                         (setf (sym-seg (u^ qxl-session)) sympart))))))
 
 (defun pkg-filter-kt (self)
-  (checkgroupbox (:spacing 2)(:md-name :selected-package-p
+  (checkgroupbox (:spacing 2)(:md-name :selected-pkg-p
                                :add '(:flex 1)
                                :allow-grow-y :js-false
                                :legend "Search One Package"
                                :value (c-in nil)) ;; becomes state of check-box!
     (selectbox :selected-pkg (:add '(:flex 1)
-                               :enabled (c? (value (fm-other :selected-package-p))))
+                               :enabled (c? (value (fm-other :selected-pkg-p))))
       (b-if syms (syms-unfiltered (u^ qxl-session))
         (loop with pkgs
             for symi in syms

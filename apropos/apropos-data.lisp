@@ -39,53 +39,29 @@
               ("class" (equal "x" (symbol-info-class? sym)))))
       collecting sym))
 
-;;; Next three functions serve the data model of the table widget
-;;; that shows the symbol search results
+(defun sym-get (self req)
+  (let* ((start (req-val req "start"))
+         (row-count (req-val req "count")))   
+    (setf start (parse-integer start))
+    (setf row-count (parse-integer row-count))
+    (trcx :qx-getdata start row-count)
+    (loop for sym in (sym-info (u^ qxl-session))
+        for n upfrom 0
+        when (< (1- start) n (+ start row-count))
+        collect (list
+                 (cons :name (symbol-info-name sym))
+                 (cons :pkg (b-if nns (remove "" (package-nicknames (symbol-info-pkg sym))
+                                        :test 'string-equal)
+                              (car nns)
+                              (package-name (symbol-info-pkg sym))))
+                 (cons :fntype (symbol-info-fntype sym))
+                 (cons :var? (symbol-info-var? sym))
+                 (cons :setf? (symbol-info-setf? sym))
+                 (cons :class? (symbol-info-class? sym))
+                 (cons :exported? (symbol-info-exported? sym))))))
 
-(defun qx-getdatacount (req ent)
+(defun sym-sort (self req)
   (prog1 nil
-    (with-json-response (req ent)
-      (whtml
-         (:princ
-          (json:encode-json-to-string (length (sym-info *qxdoc*))))))))
-
-(defun qx-getdata (req ent)
-  (prog1 nil
-    (with-json-response (req ent)
-        (let* ((start (req-val req "start"))
-               (row-count (req-val req "count")))   
-          
-          (setf start (parse-integer start))
-          (setf row-count (parse-integer row-count))
-          (trcx :qx-getdata start row-count)
-          (whtml
-           (:princ 
-            (json:encode-json-to-string
-             (loop for sym in (sym-info *qxdoc*)
-                 for n upfrom 0
-                 when (< (1- start) n (+ start row-count))
-                 collect (list
-                          (cons :name (symbol-info-name sym))
-                          (cons :pkg (b-if nns (remove "" (package-nicknames (symbol-info-pkg sym))
-                                                 :test 'string-equal)
-                                       (car nns)
-                                       (package-name (symbol-info-pkg sym))))
-                          (cons :fntype (symbol-info-fntype sym))
-                          (cons :var? (symbol-info-var? sym))
-                          (cons :setf? (symbol-info-setf? sym))
-                          (cons :class? (symbol-info-class? sym))
-                          (cons :exported? (symbol-info-exported? sym)))))))))))
-
-(defun qx-sortdata (req ent)
-  (with-js-response (req ent)
-    (let ((sort-key (req-val req "key"))
-          (order (req-val req "order"))
-          (*qxdoc* (qxl-request-session req)))
-      (setf (sym-info *qxdoc*)
-        (sort (sym-info *qxdoc*) 
-          (if (equal order "asc")
-              'string-lessp 'string-greaterp)
-          :key (if (equal sort-key "pkg")
-                   (lambda (si) (package-name (symbol-info-pkg si)))
-                 (intern (conc$ "symbol-info-" sort-key) :qooxlisp)))))))
+    (setf (sym-sort-spec (u^ qxl-session))
+      (list (req-val req "key")(req-val req "order")))))
 

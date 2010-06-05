@@ -1,14 +1,11 @@
 (in-package :qooxlisp)
 
-(defmd apropos-session-makeover (qxl-session)
-  (sym-seg (c-in nil))
-  (syms-unfiltered (c? (b-when seg (^sym-seg)
-                         (symbol-info-raw seg))))
-  (sym-info (c? (symbol-info-filtered (^syms-unfiltered)
-                  (value (fm-other :type-filter))
-                  (value (fm-other :exported-only))
-                  (value (fm-other :selected-package-p))
-                  (value (fm-other :selected-pkg)))))
+(defmd apropos-session-makeover (apropos-session)
+  :syms-filtered (c? (symbol-info-filtered (^syms-unfiltered)
+                       (value (fm-other :type-filter))
+                       (value (fm-other :exported-only))
+                       (value (fm-other :selected-pkg-p))
+                       (value (fm-other :selected-pkg))))
   :kids (c? (the-kids
              (vbox (:spacing 6) 
                (:add '(:left 0 :top 0 :width "100%" :height "100%")
@@ -23,13 +20,13 @@
 
 
 (defun pkg-filter-mo (self)
-  (checkgroupbox (:spacing 2)(:md-name :selected-package-p
+  (checkgroupbox (:spacing 2)(:md-name :selected-pkg-p
                                :add '(:flex 1)
                                :allow-grow-y :js-false
                                :legend "Search One Package"
                                :value (c-in nil)) ;; becomes state of check-box!
     (selectbox :selected-pkg (:add '(:flex 1)
-                               :enabled (c? (value (fm-other :selected-package-p))))
+                               :enabled (c? (value (fm-other :selected-pkg-p))))
       (b-if syms (syms-unfiltered (u^ qxl-session))
         (loop with pkgs
             for symi in syms

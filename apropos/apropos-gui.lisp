@@ -4,15 +4,7 @@
 ;;; slots for key data items and also constitutes
 ;;; the root of the GUI framework
 
-(defmd apropos-session (qxl-session)
-  (sym-seg (c-in nil))
-  (syms-unfiltered (c? (b-when seg (^sym-seg)
-                         (symbol-info-raw seg))))
-  (sym-info (c? (symbol-info-filtered (^syms-unfiltered)
-                  (value (fm-other :type-filter))
-                  (value (fm-other :exported-only))
-                  (not (value (fm-other :all-packages)))
-                  (value (fm-other :selected-pkg)))))
+(defmd apropos-session-classic (apropos-session)
   :kids (c? (the-kids
              (vbox (:spacing 6) 
                (:add '(:left 0 :top 0 :width "100%" :height "100%")
@@ -41,12 +33,7 @@
                    (format nil "Symbols containing ~s" sym-seg)
                  "Symbols Found:"))))
 |#
-(defobserver sym-info ()
-  (with-integrity (:client `(:post-make-qx ,self))
-    (let ((tbl (fm-other :sym-info-table)))
-      (assert tbl)
-      (when (oid (table-model tbl))
-        (qxfmt "clDict[~a].reloadData();" (oid (table-model tbl)))))))
+
 
 ;;; The top row of the dialogue, where one specifies the search substring.
 ;;; The combo-box used to hold prior matches is overkill but let's us
@@ -124,16 +111,28 @@
 ;;; as boolean to get a neat check-mark rendering
 
 (defun symbols-found (self)
-  (make-kid 'qx-table
-      :md-name :sym-info-table
-      :add '(:flex 1)
-      :allow-grow-x t
-      :allow-grow-y t
-      :table-model (mk-session-instance 'qx-table-model-remote
-                     :column-name-ids '(("Symbol Name" name)
-                                        ("Package" pkg)
-                                        ("Function" fntype)
-                                        ("Setf" setf?)
-                                        ("Var" var?)
-                                        ("Class" class?)
-                                        ("Exp" exported?)))))
+  (make-kid 'qxl-table-remote
+    :md-name :sym-info-table
+    :add '(:flex 1)
+    :allow-grow-x t
+    :allow-grow-y t
+    ;; next three are for data model delegate
+    :cb-row-count (lambda (self req)
+                    (declare (ignore req))
+                    (mprt :load-row-count-says (length (sym-info (u^ qxl-session))))
+                    (length (sym-info (u^ qxl-session))))
+    :cb-load-row-data 'sym-get
+    :cb-sort-row-data 'sym-sort
+    :block-size 100
+    ;; columns go to table, table model, table column model, resize behavior....
+    :columns (flet ((mtc (n i &rest iargs)
+                      (apply 'make-table-column :name n :id i iargs)))
+               (list 
+                (mtc "Symbol Name" 'name :width 96)
+                (mtc "Package" 'pkg)
+                (mtc "Function" 'fntype)
+                (mtc "Setf" 'setf?)
+                (mtc "Var" 'var?)
+                (mtc "Class" 'class?)
+                (mtc "Exp" 'exported?)
+                ))))

@@ -3,32 +3,19 @@
 (defmd qooxlisp-family (family))
 
 (defobserver .kids ((self qooxlisp-family))
-  (progn
-    (with-integrity (:client `(:post-make-qx ,self)) 
-      (loop for k in (set-difference old-value new-value)
-          do (qxfmt "clDict[~a].remove(clDict[~a]);" (oid self)(oid k)))
-      (loop for k in new-value do 
-            ;;(qxfmt "consolelog('adding: to '+ ~a + ' the new ' + ~a);" pa new)
-            (b-if ao (add-ops k)
-              (qxfmt "clDict[~a].add(clDict[~a],~a);" (oid self) (oid k) ao)
-              (qxfmt "clDict[~a].add(clDict[~a]);" (oid self) (oid k)))))))
-
-;; the problem here is that as each item gets deleted from, say, a select box,
-;; a changeSelection event fires. Might need to hack qooxdoo itself to
-;; grok setf of children
-
-#+seeabovecomment
-(defobserver .kids ((self qooxlisp-family))
-  (progn
-    (with-integrity (:client `(:post-make-qx ,self))
-      ;(print (list "kidsing!!!!!!!!!!!!!!!!!" self old-value new-value))
-      (loop for k in (set-difference old-value new-value)
-          do (qxfmt "clDict[~a].remove(clDict[~a]);" (oid self)(oid k)))
-      (loop for k in (set-difference new-value old-value) do 
-            ;;(qxfmt "consolelog('adding: to '+ ~a + ' the new ' + ~a);" pa new)
-            (b-if ao (add-ops k)
-              (qxfmt "clDict[~a].add(clDict[~a],~a);" (oid self) (oid k) ao)
-              (qxfmt "clDict[~a].add(clDict[~a]);" (oid self) (oid k)))))))
+  ;; the problem here is that as each item gets deleted from, say, a select box,
+  ;; a changeSelection event fires. Might need to hack qooxdoo itself to
+  ;; grok setf of children. todo: m/b
+  
+  (with-integrity (:client `(:post-make-qx ,self))
+    ;(print (list "kidsing!!!!!!!!!!!!!!!!!" self old-value new-value))
+    (loop for k in (set-difference old-value new-value)
+        do (qxfmt "clDict[~a].remove(clDict[~a]);" (oid self)(oid k)))
+    (loop for k in (set-difference new-value old-value) do 
+          ;;(qxfmt "consolelog('adding: to '+ ~a + ' the new ' + ~a);" pa new)
+          (b-if ao (add-ops k)
+            (qxfmt "clDict[~a].add(clDict[~a],~a);" (oid self) (oid k) ao)
+            (qxfmt "clDict[~a].add(clDict[~a]);" (oid self) (oid k))))))
 
 (defparameter *session-ct* 0)
 (defparameter *qx-sessions* (make-hash-table))
@@ -46,6 +33,8 @@
   (assert (null (gethash (session-id self) *qx-sessions*)))
   (setf (gethash (session-id self) *qx-sessions*) self))
 
+(defmethod session ((self qxl-session)) self)
+
 (defmethod make-qx-instance :after ((self qxl-session))
   (qxfmt "
 clDict[0] = qx.core.Init.getApplication().getRoot();
@@ -53,7 +42,7 @@ sessId=~a;" (session-id self)))
 
 (defobserver theme ()
   (when new-value
-    #+cvbug (qxfmt "qx.theme.manager.Meta.getInstance().setTheme(~a);" new-value)))
+    (qxfmt "qx.theme.manager.Meta.getInstance().setTheme(~a);" new-value)))
 
 (defun qxl-request-session (req)
   (gethash (parse-integer (req-val req "sessId") :junk-allowed t) *qx-sessions*))
@@ -65,27 +54,34 @@ sessId=~a;" (session-id self)))
     (incf (next-oid doc))))
 
 (defmd qx-object ()
-  (session nil :cell nil)
-  (oid nil :cell nil))
+  (oid nil :cell nil)
+  constructor-args)
 
-(defmethod initialize-instance :after ((self qx-object) &rest iargs &key)
-  (unless (session self)
-    (when (fm-parent self)
-      (setf (session self) (nearest (fm-parent self) qxl-session))))
-  (assert (session self) () "No session for ~a: keys ~a" self iargs)
-  (setf (oid self) (get-next-oid (session self)))
-  (setf (gethash (oid self) (dictionary (session self))) self))
+(defmethod session (self)
+  (u^ qxl-session))
+
+(defmethod initialize-instance :after ((self qx-object) &key oid fm-parent)
+  (unless (typep self 'qxl-session)
+    (if (or oid fm-parent)
+        (print `(parentcool ,self ,fm-parent ,oid))
+      (assert fm-parent () "No fm-parent at i-i for ~a" self))))
 
 (defmethod md-awaken :before ((self qx-object))
+  (unless (oid self)
+    (let ((s (session self)))
+      (assert s () "No session for ~a, par ~a, usess ~a" self (fm-parent self) (u^ qxl-session))
+      (setf (oid self) (get-next-oid s))
+      (setf (gethash (oid self) (dictionary s)) self)))
   (make-qx-instance self))
 
 (defmethod make-qx-instance ((self qx-object))
   (with-integrity (:client `(:make-qx ,self))
     (when (qx-class self)
-      (b-if cfg (qx-configurations self)
-        (qxfmt "clDict[~a] = new ~a().set(~a);" (oid self)(qx-class self)(json$ cfg))
-        (qxfmt "clDict[~a] = new ~a();" (oid self)(qx-class self)))
-      #+shhh (qxfmt "consolelog('stored new oid/obj ~a '+ clDict[~:*~a]);" (oid self)))))
+      (qxfmt "clDict[~a] = new ~a(~{~a~^,~});" 
+        (oid self) (qx-class self)
+        (constructor-args self))
+      (b-when cfg (qx-configurations self)
+        (qxfmt "clDict[~a].set(~a);" (oid self)(json$ cfg))))))
           
 (defgeneric qx-configurations (self)
   (:method-combination append)
@@ -146,7 +142,7 @@ clDict[~a].addListener('keypress', function(e) {
       (qxfmt "clDict[~a].removeListener('keypress');" (oid self))))))
 
 (defmd qooxlisp-layouter (qx-widget qooxlisp-family)
-  layout)
+  (layout nil :owning t))
 
 (defobserver layout ()
   (when new-value

@@ -11,11 +11,12 @@
                  (make-instance 'module :name "apropos-gui.lisp")
                  (make-instance 'module :name
                                 "apropos-gui-makeover.lisp")
-                 (make-instance 'module :name "apropos-gui-kt"))
+                 (make-instance 'module :name "apropos-gui-kt.lisp"))
   :projects (list (make-instance 'project-module :name
                                  "../qooxlisp.lpr" :show-modules t))
   :libraries nil
-  :distributed-files (list "../ide/source/class/ide/Application.js")
+  :distributed-files (list "../ide/source/class/ide/Application.js"
+                           "../ide/source/class/ide/TableModelQXL.js")
   :internally-loaded-files nil
   :project-package-name :qooxlisp
   :main-form nil

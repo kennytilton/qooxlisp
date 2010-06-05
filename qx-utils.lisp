@@ -8,7 +8,6 @@
   (defun qxl-sym (s)
     (intern (ecase case (:modern s)(:ansi (string-upcase s))) :qxl)))
 
-
 (defmacro whtml (&body body)
   `(catch 'excl::printer-error
      (net.html.generator:html ,@body)))
@@ -53,24 +52,18 @@
            (push *js-response* (responses *qxdoc*))
            (qxl:whtml (:princ (format nil "(function () {~a})()" (or *js-response* "null;")))))))))
 
-(defun qxfmt (fs &rest fa)
-  (progn ;; print 
-   (setf *js-response*
-     (conc$ *js-response* (apply 'format nil (conc$ "~&" fs "~%") fa)))))
-
 (defmacro with-json-response ((req ent) &body body)
   `(prog1 nil
      (net.aserve:with-http-response (,req ,ent :content-type "application/json")
        (net.aserve:with-http-body (,req ,ent)
-         (let ((*qxdoc* (qxl-request-session ,req)))
-           (assert *qxdoc* () "qx-getdatacount sees no session ~a. Known: ~a"
-             (req-val ,req "sessId") (loop for id being the hash-keys of qxl::*qx-sessions*
-                                        collecting id))
-           (assert (typep *qxdoc* 'qxl-session))
-;;; less portably but more reliably, let aserve manage the session:       
-;;;         (let ((ws (net.aserve:websession-from-req ,req)))
-;;;           (declare (ignorable ws))
+         (let ((ws nil #+nahhh (net.aserve:websession-from-req ,req)))
+           (declare (ignorable ws))
            ,@body)))))
+
+(defun qxfmt (fs &rest fa)
+  (progn ;; print 
+   (setf *js-response*
+     (conc$ *js-response* (apply 'format nil (conc$ "~&" fs "~%") fa)))))
 
 (defmacro ml$ (&rest x)
   (let ((s (gensym)))
@@ -96,10 +89,11 @@
    ((string-equal x "false") nil)
    (t x)))
 
-(defmacro mk-session-instance (class &rest initargs)
+(defmacro mk-layout (model class &rest initargs) 
+  "NOP for now"
   `(make-instance ,class
-     ,@initargs
-     :session (progn (assert self) (u^ qxl-session))))
+     :oid (get-next-oid (session ,model))
+     ,@initargs))
 
 #+xxxx
 (jsk$ :left 2 :top 3)
@@ -110,26 +104,26 @@
 (defmacro groupbox ((&rest layo-iargs)(&rest iargs) &rest kids)
   `(make-kid 'qx-group-box
      ,@iargs
-     :layout (c? (mk-session-instance 'qx-vbox ,@layo-iargs))
+     :layout (c? (mk-layout self 'qx-vbox ,@layo-iargs))
      :kids (c? (the-kids ,@kids))))
 
 (defmacro checkgroupbox ((&rest layo-iargs)(&rest iargs) &rest kids)
   ;;; unfinished....
   `(make-kid 'qx-check-group-box
      ,@iargs
-     :layout (c? (mk-session-instance 'qx-vbox ,@layo-iargs))
+     :layout (c? (mk-layout self 'qx-vbox ,@layo-iargs))
      :kids (c? (the-kids ,@kids))))
 
 (defmacro vbox ((&rest box-iargs)(&rest compo-iargs) &rest kids)
   `(make-kid 'qx-composite
      ,@compo-iargs
-     :layout (c? (mk-session-instance 'qx-vbox ,@box-iargs))
+     :layout (c? (mk-layout self 'qx-vbox ,@box-iargs))
      :kids (c? (the-kids ,@kids))))
 
 (defmacro hbox ((&rest box-iargs)(&rest compo-iargs) &rest kids)
   `(make-kid 'qx-composite
      ,@compo-iargs
-     :layout (c? (mk-session-instance 'qx-hbox ,@box-iargs))
+     :layout (c? (mk-layout self 'qx-hbox ,@box-iargs))
      :kids (c? (the-kids ,@kids))))
 
 (defmacro lbl (label-form &rest iargs)
@@ -142,7 +136,7 @@
      :md-name ,name
      ,@iargs
      
-     :layout (mk-session-instance ',layout-class ,@layout-iargs)
+     :layout (mk-layout self ',layout-class ,@layout-iargs)
      :kids (c? (the-kids ,@kids))))
 
 (defmacro radiobutton (model label &rest rbiargs)

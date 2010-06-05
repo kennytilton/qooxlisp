@@ -11,7 +11,7 @@
     #:k-word #:whtml #:req-val
     #:with-plain-text-response
     #:with-html-response #:qxl-request-session
-    #:with-js-response #:mk-session-instance
+    #:with-js-response #:mk-layout
     #:with-json-response #:table-model
     #:json$ #:jsk$ #:cvtjs #:session-id
     #:qxl-session #:qx-callback #:qx-select-box
