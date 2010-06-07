@@ -65,23 +65,25 @@
                                                  (print :pkg-filter-kt-changesel-fires)
                                                  (let* ((nv (req-val req "value"))
                                                         (nvs (split-sequence #\! nv)))
-                                                   (setf (^value) (loop for pkg$ in nvs
-                                                                      when (find-package pkg$)
-                                                                        collect it)))))
-      (b-if syms (syms-unfiltered (u^ qxl-session))
-        (loop with pkgs
-            for symi in syms
-            do (pushnew (symbol-info-pkg symi) pkgs)
-            finally (return (loop for pkg in pkgs
-                                collecting
-                                  (make-kid 'qx-list-item
-                                    :model (package-name pkg)
-                                    :label (package-name pkg)))))
-        (loop for pkg in (list-all-packages)
-            collecting
-              (make-kid 'qx-list-item
-                :model (package-name pkg)
-                :label (package-name pkg)))))))
+                                                   (mprt :pkg-filter-kt-changesel-sees :nv nv :nvs nvs)
+                                                   (setf (^value) (delete nil
+                                                                    (loop for pkg$ in nvs
+                                                                        for pkg = (unless (string-equal "" pkg$)
+                                                                                    (find-package pkg$))
+
+                                                                        do (mprt :pkgfound pkg$ pkg)
+                                                                        when (find-package pkg$)
+                                                                        collect pkg))))))
+      (loop for pkg in (b-if syms (syms-unfiltered (u^ qxl-session))
+                         (loop with pkgs
+                             for symi in syms
+                             do (pushnew (symbol-info-pkg symi) pkgs)
+                             finally (return pkgs))
+                         (subseq (list-all-packages) 0 3))
+          collecting
+            (make-kid 'qx-list-item
+              :model (package-name pkg)
+              :label (package-name pkg))))))
 
 
 

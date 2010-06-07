@@ -10,7 +10,8 @@
                  (make-instance 'module :name "apropos-data.lisp")
                  (make-instance 'module :name "classic.lisp")
                  (make-instance 'module :name "makeover.lisp")
-                 (make-instance 'module :name "rethought.lisp"))
+                 (make-instance 'module :name "rethought.lisp")
+                 (make-instance 'module :name "make.lisp"))
   :projects (list (make-instance 'project-module :name
                                  "../qooxlisp.lpr" :show-modules t))
   :libraries nil

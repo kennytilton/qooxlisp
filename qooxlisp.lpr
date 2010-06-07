@@ -11,9 +11,9 @@
                  (make-instance 'module :name "table.lisp")
                  (make-instance 'module :name "widget.lisp"))
   :projects (list (make-instance 'project-module :name "../cells/cells"
-                                 :show-modules nil)
+                                 :show-modules t)
                   (make-instance 'project-module :name
-                                 "cl-json_0.4.0/cl-json" :show-modules
+                                 "../cl-json/cl-json" :show-modules
                                  nil))
   :libraries nil
   :distributed-files nil
