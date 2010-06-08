@@ -71,6 +71,7 @@ clDict[~a].addListener('changeSelection', function(e) {
     (cond
      (new-value (qxfmt "
 clDict[~a].addListener('changeValue', function(e) {
+    console.log('change value fires: '+e.getData());
     (new qx.io.remote.Request('/callback?sessId='+sessId+'&opcode=onchangevalue&oid=~:*~a&value='+e.getData(),'GET', 'text/javascript')).send();
 });" (oid self))))))
 
@@ -114,14 +115,15 @@ clDict[~a].addListener('changeValue', function(e) {
 (defmd qx-label (qx-widget)
   (qx-class "qx.ui.basic.Label" :allocation :class :cell nil)
   value
+  rich
   (allow-grow-x :js-false)
   (allow-grow-y :js-false))
 
 
 (defmethod qx-configurations append ((self qx-label))
   (nconc
-   (b-when x (value self)
-     (list (cons :value x)))))
+   (cfg rich)
+   (cfg value)))
 
 (defobserver value ((self qx-label))
   (with-integrity (:client `(:post-make-qx ,self))

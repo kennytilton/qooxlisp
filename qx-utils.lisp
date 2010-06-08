@@ -48,7 +48,7 @@
              (assert (typep *qxdoc* 'qxl-session)))
            (setf *js-response* nil)
            ,@body
-           (print `(responding ,*js-response*))
+           ;(print `(responding ,*js-response*))
            (push *js-response* (responses *qxdoc*))
            (qxl:whtml (:princ (format nil "(function () {~a})()" (or *js-response* "null;")))))))))
 

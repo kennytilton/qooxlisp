@@ -36,7 +36,9 @@
     "API_EXCLUDE"  : ["qx.test.*", "${APPLICATION}.theme.*", "${APPLICATION}.test.*"],
     "LOCALES"      : [ "en" ],
     "CACHE"        : "${TMPDIR}/cache",
-    "ROOT"         : "."
+    "ROOT"         : ".",
+    "OPTIMIZE" : []
+      
   }
 
   // You only need to edit the remainder of this file, if you want to customize

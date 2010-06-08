@@ -2,7 +2,7 @@
 
 (in-package :cg-user)
 
-(defpackage :qooxlisp)
+(defpackage :QOOXLISP)
 
 (define-project :name :apropos
   :modules (list (make-instance 'module :name "apropos.lisp")
@@ -10,10 +10,9 @@
                  (make-instance 'module :name "apropos-data.lisp")
                  (make-instance 'module :name "classic.lisp")
                  (make-instance 'module :name "makeover.lisp")
-                 (make-instance 'module :name "rethought.lisp")
-                 (make-instance 'module :name "make.lisp"))
+                 (make-instance 'module :name "rethought.lisp"))
   :projects (list (make-instance 'project-module :name
-                                 "../qooxlisp.lpr" :show-modules t))
+                                 "../qooxlisp.lpr" :show-modules nil))
   :libraries nil
   :distributed-files (list "../ide/source/class/ide/Application.js"
                            "../ide/source/class/ide/TableModelQXL.js")

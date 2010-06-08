@@ -22,13 +22,16 @@
     (pfn "/callback" 'qx-callback-js)
     (pfn "/cbjson" 'qx-callback-json)
     
-    (let* ((app-root "/devel/qooxlisp/ide") ;; <=== change this to point to your qooxdoo app
-           (app-source (format nil "~a/source/" app-root)))
+    (let* ((src-build "build")
+           (app-root "/devel/qooxlisp/ide") ;; <=== change this to point to your qooxdoo app
+           (app-source (format nil "~a/~a/" app-root src-build)))
       (flet ((src-ext (x)
                (format nil "~a~a" app-source x)))
         (pfl "/" (src-ext "index.html"))
-        (pdr "/source/" app-source)
-        (pdr "/script/" (src-ext "script/"))))))
+        (pdr (format nil "/~a/" src-build) app-source)
+        (pdr "/script/" (src-ext "script/"))
+        (pdr "/resource/" (src-ext "resource/"))
+        (format t "~&Now serving apropos on port ~a, index ~a" port (src-ext "index.html"))))))
 
 (defun qx-begin (req ent)
   (ukt::stop-check :qx-begin)
@@ -36,6 +39,7 @@
   (with-js-response (req ent)
     (print :beginning-request)
     (with-integrity ()
+      (qxfmt "console.log('starting...');")
       (qxfmt "
 clDict[0] = qx.core.Init.getApplication().getRoot();
 sessId=~a;" (session-id  

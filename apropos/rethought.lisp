@@ -1,14 +1,22 @@
 (in-package :qooxlisp)
 
+(defparameter *ug* (format nil "Below: a UI into the Lisp function <code>apropos-list</code> which searches ~
+the running application for any Lisp source name containing a given substring. Yes, names live on in ~
+Lisp even after native compilation. ~
+Try \"qx\" or \"qxl\" to see elements used in <b>qooxlisp</b>. ~
+Try \"apropos\" to see elements used in this specific example. Packages, by the way, are Lisp groups of names."))
+
 (defmd apropos-session-kt (apropos-session)
   :syms-unfiltered (c? (b-when seg (^sym-seg)
                          (symbol-info-raw seg :eor (lambda (x)
                                                      (if x t :js-false)))))
   :selected-pkg-p (c? (not (null (value (fm-other :selected-pkg)))))
   :kids (c? (the-kids
-             (vbox (:spacing 6) 
+             (vbox (:spacing 6)
                (:add '(:left 0 :top 0 :width "100%" :height "100%")
                  :padding 6)
+               (lbl *ug* :rich t :width 600)
+ 
                (search-panel-kt self)
                (hbox (:spacing 6)()
                  (pkg-filter-kt self)
@@ -53,8 +61,15 @@
       :add '(:flex 1)
       :allow-grow-x t
       :onchangevalue (lambda (self req)
+                       (mprt :onchangevalue!!!!!! (req-val req "value"))
                        (let ((sympart (req-val req "value")))
-                         (setf (sym-seg (u^ qxl-session)) sympart))))))
+                         (setf (sym-seg (u^ qxl-session)) sympart))))
+    (button "Search" (:enabled t #+not (c? (> (length (value (psib))) 1)))
+      :onexec (b-when sympart (value (psib))
+                (progn
+                  (print `(:sympart-onexec ,sympart))
+                  (setf (sym-seg (u^ qxl-session)) sympart))
+                #+saveaselse (qxfmt "alert('Disable me!!!')" )))))
 
 (defun pkg-filter-kt (self)
   (vbox ()(:add '(:flex 1))
@@ -79,7 +94,7 @@
                              for symi in syms
                              do (pushnew (symbol-info-pkg symi) pkgs)
                              finally (return pkgs))
-                         (subseq (list-all-packages) 0 3))
+                         (subseq (list-all-packages) 0 20))
           collecting
             (make-kid 'qx-list-item
               :model (package-name pkg)

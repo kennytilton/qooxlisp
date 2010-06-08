@@ -109,7 +109,7 @@
     ;; next three are for data model delegate
     :cb-row-count (lambda (self req)
                     (declare (ignore req))
-                    (mprt :load-row-count-says (length (sym-info (u^ qxl-session))))
+                    ;(mprt :load-row-count-says (length (sym-info (u^ qxl-session))))
                     (length (sym-info (u^ qxl-session))))
     :cb-load-row-data 'sym-get
     :cb-sort-row-data 'sym-sort
