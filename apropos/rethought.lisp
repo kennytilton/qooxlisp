@@ -34,7 +34,6 @@ Try \"apropos\" to see elements used in this specific example. Packages, by the 
     ;; next three are for data model delegate
     :cb-row-count (lambda (self req)
                     (declare (ignore req))
-                    (mprt :load-row-count-says (length (sym-info (u^ qxl-session))))
                     (length (sym-info (u^ qxl-session))))
     :cb-load-row-data 'sym-get
     :cb-sort-row-data 'sym-sort
@@ -61,34 +60,34 @@ Try \"apropos\" to see elements used in this specific example. Packages, by the 
       :add '(:flex 1)
       :allow-grow-x t
       :onchangevalue (lambda (self req)
-                       (mprt :onchangevalue!!!!!! (req-val req "value"))
                        (let ((sympart (req-val req "value")))
                          (setf (sym-seg (u^ qxl-session)) sympart))))
     (button "Search" (:enabled t #+not (c? (> (length (value (psib))) 1)))
       :onexec (b-when sympart (value (psib))
-                (progn
-                  (print `(:sympart-onexec ,sympart))
-                  (setf (sym-seg (u^ qxl-session)) sympart))
-                #+saveaselse (qxfmt "alert('Disable me!!!')" )))))
+                (print `(:sympart-onexec ,sympart))
+                (setf (sym-seg (u^ qxl-session)) sympart)))))
 
 (defun pkg-filter-kt (self)
   (vbox ()(:add '(:flex 1))
     (lbl "...within package(s):")
-    (qxlist :selected-pkg (:add '(:flex 1) :max-height 96 :spacing -6
-                            :selection-mode 'additive
-                            :onchangeselection (lambda (self req)
-                                                 (print :pkg-filter-kt-changesel-fires)
-                                                 (let* ((nv (req-val req "value"))
-                                                        (nvs (split-sequence #\! nv)))
-                                                   (mprt :pkg-filter-kt-changesel-sees :nv nv :nvs nvs)
-                                                   (setf (^value) (delete nil
-                                                                    (loop for pkg$ in nvs
-                                                                        for pkg = (unless (string-equal "" pkg$)
-                                                                                    (find-package pkg$))
-
-                                                                        do (mprt :pkgfound pkg$ pkg)
-                                                                        when (find-package pkg$)
-                                                                        collect pkg))))))
+    (qxlist :selected-pkg
+      (:add '(:flex 1)
+        :max-height 96 
+        :spacing -6
+        :selection-mode 'additive
+        :onchangeselection (lambda (self req)
+                             (print :pkg-filter-kt-changesel-fires)
+                             (let* ((nv (req-val req "value"))
+                                    (nvs (split-sequence #\! nv)))
+                               (mprt :pkg-filter-kt-changesel-sees :nv nv :nvs nvs)
+                               (setf (^value) (delete nil
+                                                (loop for pkg$ in nvs
+                                                    for pkg = (unless (string-equal "" pkg$)
+                                                                (find-package pkg$))
+                                                      
+                                                    do (mprt :pkgfound pkg$ pkg)
+                                                    when (find-package pkg$)
+                                                    collect pkg))))))
       (loop for pkg in (b-if syms (syms-unfiltered (u^ qxl-session))
                          (loop with pkgs
                              for symi in syms

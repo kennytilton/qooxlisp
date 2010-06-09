@@ -18,7 +18,6 @@
 
 var clDict = [];
 var sessId;
-var zippy = "bigblonde";
 
 // back to the boilerplate:
 

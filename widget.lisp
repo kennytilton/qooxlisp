@@ -39,7 +39,6 @@ clDict[~a].addListener('changeSelection', function(e) {
        if (i > 0) sel = sel + '!';
        sel = sel + items[i].getModel();
     }
-    console.log('new sel='+sel);
     var req = new qx.io.remote.Request('/callback','GET', 'text/javascript');
     req.setParameter('sessId', sessId);
     req.setParameter('oid', ~a);
@@ -71,7 +70,6 @@ clDict[~a].addListener('changeSelection', function(e) {
     (cond
      (new-value (qxfmt "
 clDict[~a].addListener('changeValue', function(e) {
-    console.log('change value fires: '+e.getData());
     (new qx.io.remote.Request('/callback?sessId='+sessId+'&opcode=onchangevalue&oid=~:*~a&value='+e.getData(),'GET', 'text/javascript')).send();
 });" (oid self))))))
 

@@ -39,7 +39,6 @@
   (with-js-response (req ent)
     (print :beginning-request)
     (with-integrity ()
-      (qxfmt "console.log('starting...');")
       (qxfmt "
 clDict[0] = qx.core.Init.getApplication().getRoot();
 sessId=~a;" (session-id  

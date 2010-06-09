@@ -158,12 +158,20 @@ clDict[~a].addListener('keypress', function(e) {
 
 (defobserver html ()
   (with-integrity (:client `(:post-make-qx ,self))
-    (qxfmt "clDict[~a].setHtml(~a);" (oid self)(or new-value "null")(oid self) (oid self))))
-  
-#|
-save
-var ce = embed1.getContentElement();
-      console.log("Html qx content "+ ce);
-      var de = ce.getDomElement();
+    (if new-value
+        (qxfmt "clDict[~a].setHtml('~a');" (oid self) new-value)
+      (qxfmt "clDict[~a].setHtml('');" (oid self)))))
 
-|#
+
+;;;(defobserver html ()
+;;;  (with-integrity (:client `(:post-make-qx ,self))
+;;;    (qxfmt "clDict[~a].setHtml(~a);
+;;;/*
+;;;var ce = clDict[~a].getContentElement();
+;;;this.debug('Html qx content ' + ce);
+;;;var de = ce.getDomElement();
+;;;this.debug('Html dom elt ' + de);
+;;;jsMath.ProcessBeforeShowing(de);
+;;;*/
+;;;" (oid self)(or new-value "null")(oid self) (oid self))))
+  
