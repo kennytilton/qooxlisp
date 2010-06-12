@@ -4,7 +4,9 @@
 (defparameter *qxdocs* nil)
 (defparameter *qxdoc* nil)
 
-(defun dwarn (&rest x)(print (apply 'format nil x)))
+(defun dwarn (&rest x)(print (apply 'format nil x))(values))
+
+(defun dfail (&rest x) (apply 'error x))
 
 (defun qx-callback-js (req ent)
   (with-js-response (req ent) 

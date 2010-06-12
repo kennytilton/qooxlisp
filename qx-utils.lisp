@@ -48,10 +48,15 @@
              (assert (typep *qxdoc* 'qxl-session)))
            (setf *js-response* nil)
            ,@body
-           ;(print `(responding ,*js-response*))
+           (print `(responding ,*js-response*))
            (push *js-response* (responses *qxdoc*))
            (qxl:whtml (:princ (format nil "(function () {~a})()" (or *js-response* "null;")))))))))
 
+(export! rq-raw)
+(defun rq-raw (r) (request-raw-request req))
+
+#+check
+(print *js-response*)
 (defmacro with-json-response ((req ent) &body body)
   `(prog1 nil
      (net.aserve:with-http-response (,req ,ent :content-type "application/json")
@@ -64,6 +69,12 @@
   (progn ;; print 
    (setf *js-response*
      (conc$ *js-response* (apply 'format nil (conc$ "~&" fs "~%") fa)))))
+
+(defun qxfmtd (fs &rest fa)
+  (let ((x (apply 'format nil (conc$ "~&" fs "~%") fa)))
+    (mprt :qxfmtd-adds x)
+    (setf *js-response*
+      (conc$ *js-response* x))))
 
 (defmacro ml$ (&rest x)
   (let ((s (gensym)))

@@ -1,6 +1,5 @@
 (in-package :qooxlisp)
 
-
 (defun serve-apropos (&optional (port 8000))
   
   (when *wserver* (shutdown))
