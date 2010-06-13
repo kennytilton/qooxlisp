@@ -31,9 +31,6 @@
            (declare (ignorable ws))
            ,@body)))))
 
-
-(defparameter *qxdocs* nil)
-
 (defparameter *js-response* nil)
 
 (defmacro with-js-response ((req ent) &body body)

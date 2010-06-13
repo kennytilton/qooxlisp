@@ -35,8 +35,9 @@
   (setf (gethash (session-id self) *qx-sessions*) self))
 
 (export! .focus .focused)
-(define-symbol-macro .focus (focus (n^ qxl-session)))
-(define-symbol-macro .focused (eq self (focus (n^ qxl-session))))
+(define-symbol-macro .session (n^ qxl-session))
+(define-symbol-macro .focus (focus .session))
+(define-symbol-macro .focused (eq self .focus))
 
 (defmethod session ((self qxl-session)) self)
 
