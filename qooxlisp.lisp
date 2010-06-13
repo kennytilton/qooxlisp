@@ -1,12 +1,11 @@
 (in-package :qxl)
 
 
-(defparameter *qxdocs* nil)
-(defparameter *qxdoc* nil)
-
 (defun dwarn (&rest x)(print (apply 'format nil x))(values))
 
 (defun dfail (&rest x) (apply 'error x))
+
+(export! qx-callback-js qx-callback-json make-qx-instance) ;;>>> maybe not once start-up inherits
 
 (defun qx-callback-js (req ent)
   (with-js-response (req ent) 
@@ -27,6 +26,8 @@
           (dwarn "Widget not found for oid ~a in session ~a for ~a callback" (oid self) (session-id session) (req-val req "opcode")))
         (dwarn "Unknown session ID ~a in callback: ~a" (req-val req "sessId") 
           (list (req-val req "opcode") (req-val req "oid")))))))
+
+(export! gethtml)
 
 (defun qx-callback-json (req ent)
   (with-integrity ()

@@ -5,21 +5,6 @@
   (oid nil :cell nil)
   constructor-args)
 
-(defun session-focus (req ent)
-  (with-js-response (req ent)
-    (with-integrity ()
-      (b-when session (b-if sessId (parse-integer (req-val req "sessId") :junk-allowed t)
-                        (or (gethash sessId *qx-sessions*)
-                          (dwarn "session-focus: Unknown session ID ~a in ~s" sessId (request-raw-request req)))
-                        (dwarn "session-focus: No sessId parameter: ~s" (request-raw-request req)))
-        (b-when new-focus (b-if oid (parse-integer (req-val req "oid") :junk-allowed t)
-                          (or (gethash oid (dictionary session))
-                            (dwarn "session-focus: oid ~s not in dictionary" oid))
-                          (dwarn "session-focus: No oid parameter: ~s" (request-raw-request req)))
-          (setf (focus session) new-focus))))))
-
-
-
 (defmethod initialize-instance :after ((self qx-object) &key oid fm-parent)
   (unless (typep self 'qxl-session)
     (assert (or oid fm-parent) () "No fm-parent at i-i for ~a" self)))
@@ -55,22 +40,27 @@
   decorator
   background-color
   onkeypress
-  (enabled t))
+  onkeyinput
+  (enabled t)
+  (focusable nil :cell nil))
 
 (defmethod make-qx-instance :after ((self qx-widget))
-  (qxfmt "
+  ;;>>> Make this dependent on some focusable flag, prolly a non-cell
+  (with-integrity (:client `(:post-make-qx ,self))
+    (when (focusable self)
+      (qxfmt "
 clDict[~a].addListener('focus', function (e) {
     console.log('focus cb this is '+this+' oid '+~:*~d);
-    this.setBackgroundColor('blue');
     var rq = new qx.io.remote.Request('/focusOn?sessId='+sessId+'&oid=~:*~a'
                                       ,'GET'
                                       , 'text/javascript');
     rq.send();
-    });" (oid self)))
+    });" (oid self)))))
 
 (defobserver enabled ()
-  (with-integrity (:client `(:post-make-qx ,self))
-    (qxfmt "clDict[~a].setEnabled(~a);" (oid self) (if new-value "true" "false"))))
+  (when (or (null new-value) old-value-boundp) ;; only needed if off or was off
+    (with-integrity (:client `(:post-make-qx ,self))
+      (qxfmt "clDict[~a].setEnabled(~a);" (oid self) (if new-value "true" "false")))))
 
 (defobserver decorator () ;; this one is not known to work yet
   (when new-value
@@ -82,6 +72,11 @@ clDict[~a].addListener('focus', function (e) {
    (b-when x (background-color self)
      (list (cons :background-color x)
        ))))
+
+(defobserver background-color ()
+  (mprt :background-color self new-value old-value)
+  (when old-value
+    (qxfmt "clDict[~a].setBackgroundColor('~(~a~)');" (oid self) new-value)))
 
 (defmd qooxlisp-control () ;; qooxlisp- indicates this is a Lisp-side only class
   onexecute)
@@ -97,19 +92,42 @@ clDict[~a].addListener('execute', function(e) {
 });" 
                   (oid self))))))
 
+
 (defobserver onkeypress ()
   (with-integrity (:client `(:post-make-qx ,self))
     (cond
      (new-value (qxfmt "
 clDict[~a].addListener('keypress', function(e) {
-    var rq = new qx.io.remote.Request('/callback?sessId='+sessId+'&opcode=onkeypress&oid=~:*~a&keyId='+e.getKeyIdentifier()+'&value='+this.getValue(),'GET', 'text/javascript');
-    rq.send();
-});" 
+    var k = e.getKeyIdentifier();
+    if (k.length > 1) {
+       console.log('keypress ' + e.getKeyIdentifier());
+       e.preventDefault();
+                         
+       var rq = new qx.io.remote.Request('/callback?sessId='+sessId+'&opcode=onkeypress&oid=~:*~a','GET', 'text/javascript');
+       rq.setParameter('keyId', e.getKeyIdentifier());
+       rq.setParameter('mods', e.getModifiers());
+       rq.send();
+    }
+});"
                   (oid self)))
-     #+chill-youneedtobespecific
+     #+chill-youneedtobespecificremovinglisteners
      (old-value
       ;;untested
       (qxfmt "clDict[~a].removeListener('keypress');" (oid self))))))
+
+(defobserver onkeyinput ()
+  (when new-value
+    (with-integrity (:client `(:post-make-qx ,self))
+      (qxfmt "
+clDict[~a].addListener('keyinput', function (e) {
+    console.log('keyinput ' + e.getChar());
+    e.preventDefault();
+    var rq = new qx.io.remote.Request('/callback?sessId='+sessId+'&opcode=onkeyinput&oid=~:*~a','GET','text/javascript');
+    rq.setParameter('char', e.getChar());
+    rq.setParameter('code', e.getCharCode());
+    rq.setParameter('mods', e.getModifiers());
+    rq.send();
+});" (oid self)))))
 
 (defmd qooxlisp-layouter (qx-widget qooxlisp-family)
   (layout nil :owning t))
@@ -122,47 +140,54 @@ clDict[~a].addListener('keypress', function(e) {
 (defmd qx-composite (qooxlisp-layouter)
   (qx-class "qx.ui.container.Composite" :allocation :class :cell nil))
 
-(export! onappear)
+(export! onappear html)
+
+(defparameter *set-html* "
+if (clDict[~a]!==undefined) {
+   console.log('plain html dict is '+clDict[~:*~a]);
+   var de = clDict[~:*~a].keepDE;
+   if (de!==undefined) {
+      de.innerHTML = ~s;
+      console.log('gethtml cb!!! just set inner to:' + de.innerHTML);
+   } else console.log('no DE for sethtml');
+} else console.log('no self in dictionary for set html');")
+
+(export! set-html)
+(defmethod set-html (self)
+  (when (html self)
+    (qxfmt *set-html* (oid self) (html self))))
+
+(defmethod gethtml (self) ;; for now assumed unvarying callback
+  (declare (ignore self))
+  (lambda (self req)
+    (declare (ignore req))
+    (set-html self)))
 
 (defmd qx-html (qx-widget)
   (qx-class "qx.ui.embed.Html" :allocation :class :cell nil)
   html
+  :background-color (c? (mprt :background-color-rule .focus)
+                      (if (eq self .focus) "white" "yellow"))
   onappear)
 
 (defobserver html ()
-  #+badidea
   (with-integrity (:client `(:post-make-qx ,self))
-    #+nodice
-    (qxfmt "clDict[~a].set(~a);"
-      (oid self)
-      (json$ (list :html
-               "<div style='font-size:18pt'>Problem #1: <span class='math'>\\sqrt{x^2-4ac}</span></div>\");")))
-    (qxfmt "var ce=clDict[~a].getContentElement();
-var de=ce.getDomElement();
-de.innerHtml=\"<div style='font-size:18pt'>Problem #1: <span class='math'>\\\\sqrt{x^2-4ac}</span></div>\";"
-      (oid self))
-    #+firefoxonly
-    (qxfmt "clDict[~a].setHtml(\"<div style='font-size:18pt'>Problem #1: <span class='math'>\\\\sqrt{x^2-4ac}</span></div>\");
-jsMath.ProcessBeforeShowing();"
-      (oid self))
-    #+not 
-    (if new-value
-        (qxfmtd "clDict[~a].setHtml('~s');" (oid self) new-value)
-      (qxfmt "clDict[~a].setHtml(\"\");" (oid self)))
-    (mprt :post-html qxl::*js-response*)))
+    ;; in case anyone is asking
+    (mprt :html-observer-fires new-value)
+    (set-html self)
+    ))
 
-#+test
-(json$ (list :html "<span>\\frac{2}{3}</span>"))
+(defmethod qxl::make-qx-instance :after ((self qx-html))
+  (with-integrity (:client `(:post-make-qx ,self))
+    ;; --- appear : pick up inner entities ---
+    (qxfmt "clDict[~a].addListener('appear', function(e) {
+       var oid = ~:*~a;
+       console.log('on-appear oid ' + oid);
+       var ce = clDict[oid].keepCE = clDict[oid].getContentElement();
+       console.log('appear Html qx content elem ' + ce);
+       var de = clDict[oid].keepDE = ce.getDomElement();
+       console.log('appear Html dom elt ' + de);
+       cbjs(~:*~d,'gethtml','appeared');
+});"  (oid self))))
 
-;;;(defobserver html ()
-;;;  (with-integrity (:client `(:post-make-qx ,self))
-;;;    (qxfmt "clDict[~a].setHtml(~a);
-;;;/*
-;;;var ce = clDict[~a].getContentElement();
-;;;this.debug('Html qx content ' + ce);
-;;;var de = ce.getDomElement();
-;;;this.debug('Html dom elt ' + de);
-;;;jsMath.ProcessBeforeShowing(de);
-;;;*/
-;;;" (oid self)(or new-value "null")(oid self) (oid self))))
   

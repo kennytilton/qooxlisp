@@ -31,6 +31,9 @@
            (declare (ignorable ws))
            ,@body)))))
 
+
+(defparameter *qxdocs* nil)
+
 (defparameter *js-response* nil)
 
 (defmacro with-js-response ((req ent) &body body)
@@ -38,22 +41,17 @@
      (net.aserve:with-http-response (,req ,ent :content-type "text/javascript")
        (net.aserve:with-http-body (,req ,ent)
          (let ((ws (net.aserve:websession-from-req ,req))
-               (*qxdoc* (qxl-request-session ,req)))
+               (session (qxl-request-session ,req)))
            (declare (ignorable ws))
-           #+notonbegin!!!
-           (progn
-             (assert *qxdoc* () "with-js-response sees no session ~a. Known: ~a"
-               (req-val ,req "sessId") (loop for id being the hash-keys of qxl::*qx-sessions*
-                                           collecting id))
-             (assert (typep *qxdoc* 'qxl-session)))
+           (mprt :with-js-response-session (when session (session-id session)) session)
            (setf *js-response* nil)
-           ,@body
+           ,@body ;; this populates *js-response*
            (print `(responding ,*js-response*))
-           (push *js-response* (responses *qxdoc*))
-           (qxl:whtml (:princ (format nil "(function () {~a})()" (or *js-response* "null;")))))))))
+           ;;(push *js-response* (responses session))
+           (qxl:whtml (:princ (format nil "(function () {~a})();" (or *js-response* "null;")))))))))
 
 (export! rq-raw)
-(defun rq-raw (r) (request-raw-request req))
+(defun rq-raw (r) (request-raw-request r))
 
 #+check
 (print *js-response*)
@@ -101,7 +99,6 @@
    (t x)))
 
 (defmacro mk-layout (model class &rest initargs) 
-  "NOP for now"
   `(make-instance ,class
      :oid (get-next-oid (session ,model))
      ,@initargs))

@@ -7,7 +7,7 @@
 (defpackage #:qooxlisp
   (:nicknames :qxl)
   (:use #:cells #:utils-kt #:cl #:excl #:net.aserve)
-  (:export #:*qxdoc* #:oid
+  (:export #:oid
     #:k-word #:whtml #:req-val
     #:with-plain-text-response
     #:with-html-response #:qxl-request-session
