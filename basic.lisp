@@ -83,7 +83,6 @@ clDict[~a].addListener('focus', function (e) {
        ))))
 
 (defobserver background-color ()
-  (mprt :background-color self new-value old-value)
   (when old-value
     (qxfmt "clDict[~a].setBackgroundColor('~(~a~)');" (oid self) new-value)))
 
@@ -109,7 +108,7 @@ clDict[~a].addListener('execute', function(e) {
 clDict[~a].addListener('keypress', function(e) {
     var k = e.getKeyIdentifier();
     if (k.length > 1) {
-       console.log('keypress ' + e.getKeyIdentifier());
+       //console.log('keypress ' + e.getKeyIdentifier());
        e.preventDefault();
                          
        var rq = new qx.io.remote.Request('/callback?sessId='+sessId+'&opcode=onkeypress&oid=~:*~a','GET', 'text/javascript');
@@ -129,7 +128,6 @@ clDict[~a].addListener('keypress', function(e) {
     (with-integrity (:client `(:post-make-qx ,self))
       (qxfmt "
 clDict[~a].addListener('keyinput', function (e) {
-    console.log('keyinput ' + e.getChar());
     e.preventDefault();
     var rq = new qx.io.remote.Request('/callback?sessId='+sessId+'&opcode=onkeyinput&oid=~:*~a','GET','text/javascript');
     rq.setParameter('char', e.getChar());
@@ -182,7 +180,7 @@ if (clDict[~a]!==undefined) {
 (defobserver html ()
   (with-integrity (:client `(:post-make-qx ,self))
     ;; in case anyone is asking
-    (mprt :html-observer-fires new-value)
+    ;;(mprt :html-observer-fires new-value)
     (set-html self)
     ))
 
@@ -191,11 +189,11 @@ if (clDict[~a]!==undefined) {
     ;; --- appear : pick up inner entities ---
     (qxfmt "clDict[~a].addListener('appear', function(e) {
        var oid = ~:*~a;
-       console.log('on-appear oid ' + oid);
+       ;;console.log('on-appear oid ' + oid);
        var ce = clDict[oid].keepCE = clDict[oid].getContentElement();
-       console.log('appear Html qx content elem ' + ce);
+       ;;console.log('appear Html qx content elem ' + ce);
        var de = clDict[oid].keepDE = ce.getDomElement();
-       console.log('appear Html dom elt ' + de);
+       ;;console.log('appear Html dom elt ' + de);
        cbjs(~:*~d,'gethtml','appeared');
 });"  (oid self))))
 

@@ -28,7 +28,7 @@
                      (warn "Invalid oid parameter ~s in callback req: ~a" (req-val req "oid")
                        (list (req-val req "sessId")(req-val req "opcode"))))
           (let ((opcode (qxl-sym (req-val req "opcode"))))
-            (mprt :callback opcode :self self :req (request-raw-request req))
+            ;(mprt :callback opcode :self self :req (request-raw-request req))
             (b-if cb (funcall opcode self)
               (funcall cb self req)
               (dwarn "Widget ~a oid ~a in session ~a has no handler for ~a callback " self (oid self) (session-id session) opcode)))

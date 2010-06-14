@@ -198,6 +198,20 @@ clDict[~a].addListener('changeSelection', function(e) {
   (qx-class "qx.ui.container.Scroll" :allocation :class :cell nil)
   )
 
+(defmd qx-tab-view (qx-widget qooxlisp-family)
+  (qx-class "qx.ui.tabview.TabView" :allocation :class :cell nil)
+  bar-position)
+
+(defmethod qx-configurations append ((self qx-tab-view))
+  (nconc (cfg bar-position)))
+
+(defmd qx-tab-page (qx-composite)
+  (qx-class "qx.ui.tabview.Page" :allocation :class :cell nil)
+  label icon)
+
+(defmethod qx-configurations append ((self qx-tab-page))
+  (nconc (cfg label)(cfg icon)))
+
 ;;; --- group boxes ------------------
 
 (defmd qx-group-box (qooxlisp-layouter)

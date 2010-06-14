@@ -47,15 +47,11 @@
   `(prog1 nil
      (net.aserve:with-http-response (,req ,ent :content-type "text/javascript")
        (net.aserve:with-http-body (,req ,ent)
-         (let ((ws (net.aserve:websession-from-req ,req))
-               (session (qxl-request-session ,req)))
-           (declare (ignorable ws))
-           (mprt :with-js-response-session (when session (session-id session)) session)
-           (setf *js-response* nil)
-           ,@body ;; this populates *js-response*
-           ;; (print `(responding ,*js-response*))
-           ;;(push *js-response* (responses session))
-           (qxl:whtml (:princ (format nil "(function () {~a})();" (or *js-response* "null;")))))))))
+         (setf *js-response* nil)
+         ,@body ;; this populates *js-response*
+         ;; (print `(responding ,*js-response*))
+         ;;(push *js-response* (responses session))
+         (qxl:whtml (:princ (format nil "(function () {~a})();" (or *js-response* "null;"))))))))
 
 (export! rq-raw)
 (defun rq-raw (r) (request-raw-request r))
@@ -127,6 +123,19 @@
      ,@iargs
      :kids (c? (the-kids ,@kids))))
 
+(export! tabview qx-tab-view vpage qx-tab-page)
+
+(defmacro tabview ((&rest iargs) &rest kids)
+  `(make-kid 'qx-tab-view
+     ,@iargs
+     :kids (c? (the-kids ,@kids))))
+
+(defmacro vpage ((&rest layout-iargs)(&rest iargs) &rest kids)
+  `(make-kid 'qx-tab-page
+     ,@iargs
+     :layout(c? (mk-layout self 'qx-vbox ,@layout-iargs))
+     :kids (c? (the-kids ,@kids))))
+
 (defmacro checkgroupbox ((&rest layo-iargs)(&rest iargs) &rest kids)
   ;;; unfinished....
   `(make-kid 'qx-check-group-box
@@ -134,16 +143,16 @@
      :layout (c? (mk-layout self 'qx-vbox ,@layo-iargs))
      :kids (c? (the-kids ,@kids))))
 
-(defmacro vbox ((&rest box-iargs)(&rest compo-iargs) &rest kids)
+(defmacro vbox ((&rest layout-iargs)(&rest compo-iargs) &rest kids)
   `(make-kid 'qx-composite
      ,@compo-iargs
-     :layout (c? (mk-layout self 'qx-vbox ,@box-iargs))
+     :layout (c? (mk-layout self 'qx-vbox ,@layout-iargs))
      :kids (c? (the-kids ,@kids))))
 
-(defmacro hbox ((&rest box-iargs)(&rest compo-iargs) &rest kids)
+(defmacro hbox ((&rest layout-iargs)(&rest compo-iargs) &rest kids)
   `(make-kid 'qx-composite
      ,@compo-iargs
-     :layout (c? (mk-layout self 'qx-hbox ,@box-iargs))
+     :layout (c? (mk-layout self 'qx-hbox ,@layout-iargs))
      :kids (c? (the-kids ,@kids))))
 
 (defmacro lbl (label-form &rest iargs)
