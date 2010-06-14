@@ -1,3 +1,13 @@
+;; -*- mode: Lisp; Syntax: Common-Lisp; Package: qooxlisp; -*-
+#|
+
+    qx-utils
+
+(See package.lisp for license and copyright notigification)
+
+|#
+
+
 (in-package :qxl)
 
 (defun k-word (s)
@@ -43,7 +53,7 @@
            (mprt :with-js-response-session (when session (session-id session)) session)
            (setf *js-response* nil)
            ,@body ;; this populates *js-response*
-           (print `(responding ,*js-response*))
+           ;; (print `(responding ,*js-response*))
            ;;(push *js-response* (responses session))
            (qxl:whtml (:princ (format nil "(function () {~a})();" (or *js-response* "null;")))))))))
 
@@ -112,6 +122,11 @@
      :layout (c? (mk-layout self 'qx-vbox ,@layo-iargs))
      :kids (c? (the-kids ,@kids))))
 
+(defmacro scroller ((&rest iargs) &rest kids)
+  `(make-kid 'qx-scroll
+     ,@iargs
+     :kids (c? (the-kids ,@kids))))
+
 (defmacro checkgroupbox ((&rest layo-iargs)(&rest iargs) &rest kids)
   ;;; unfinished....
   `(make-kid 'qx-check-group-box
@@ -134,6 +149,13 @@
 (defmacro lbl (label-form &rest iargs)
   `(make-kid 'qx-label
      :value ,label-form
+     ,@iargs))
+
+(export! rtf scroller qx-scroll)
+(defmacro rtf (label-form &rest iargs)
+  `(make-kid 'qx-label
+     :value ,label-form
+     :rich t
      ,@iargs))
 
 (defmacro radiobuttongroup (name (&rest iargs)(layout-class &rest layout-iargs) &rest kids)

@@ -1,18 +1,12 @@
-;; -*- mode: Lisp; Syntax: Common-Lisp; Package: cello; -*-
+;; -*- mode: Lisp; Syntax: Common-Lisp; Package: qooxlisp; -*-
 #|
 
-Copyright (C) 2004 by Kenneth William Tilton
+    control -- abstract control handling
 
-This library is free software; you can redistribute it and/or
-modify it under the terms of the Lisp Lesser GNU Public License
- (http://opensource.franz.com/preamble.html), known as the LLGPL.
-
-This library is distributed  WITHOUT ANY WARRANTY; without even 
-the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  
-
-See the Lisp Lesser GNU Public License for more details.
+(See package.lisp for license and copyright notigification)
 
 |#
+
 
 (in-package :qxl)
 (export! control enabled ^enabled ct-action-lambda sound ^sound

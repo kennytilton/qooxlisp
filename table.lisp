@@ -1,3 +1,12 @@
+;; -*- mode: Lisp; Syntax: Common-Lisp; Package: qooxlisp; -*-
+#|
+
+    table 
+
+(See package.lisp for license and copyright notigification)
+
+|#
+
 (in-package :qxl)
 
 (defmd qx-table-model-abstract (qx-object)

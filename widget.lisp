@@ -1,3 +1,12 @@
+;; -*- mode: Lisp; Syntax: Common-Lisp; Package: qooxlisp; -*-
+#|
+
+    widget
+
+(See package.lisp for license and copyright notigification)
+
+|#
+
 (in-package :qxl)
 
 (defmd qx-atom (qx-widget)
@@ -184,6 +193,10 @@ clDict[~a].addListener('changeSelection', function(e) {
                        (let ((nv (req-val req "value")))
                          (setf (^value) nv))))
   :value (c-in nil))
+
+(defmd qx-scroll (qx-widget qooxlisp-family)
+  (qx-class "qx.ui.container.Scroll" :allocation :class :cell nil)
+  )
 
 ;;; --- group boxes ------------------
 

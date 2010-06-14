@@ -1,3 +1,12 @@
+;; -*- mode: Lisp; Syntax: Common-Lisp; Package: qooxlisp; -*-
+#|
+
+    layout -- qooxdoo layout
+
+(See package.lisp for license and copyright notigification)
+
+|#
+
 (in-package :qxl)
 
 (defmd qx-layout-item (qx-object) ;; better name: qx-laid-out-item

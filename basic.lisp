@@ -1,3 +1,12 @@
+;; -*- mode: Lisp; Syntax: Common-Lisp; Package: qooxlisp; -*-
+#|
+
+    basic -- core widget support
+
+(See package.lisp for license and copyright notigification)
+
+|#
+
 (in-package :qxl)
 
 

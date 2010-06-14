@@ -5,10 +5,10 @@
 (define-project :name :qooxlisp
   :modules (list (make-instance 'module :name "package.lisp")
                  (make-instance 'module :name "qx-utils.lisp")
+                 (make-instance 'module :name "qooxlisp.lisp")
                  (make-instance 'module :name "session.lisp")
                  (make-instance 'module :name "basic.lisp")
                  (make-instance 'module :name "layout.lisp")
-                 (make-instance 'module :name "qooxlisp.lisp")
                  (make-instance 'module :name "table.lisp")
                  (make-instance 'module :name "widget.lisp")
                  (make-instance 'module :name "focus.lisp")
@@ -18,7 +18,7 @@
                   (make-instance 'project-module :name "../cl-json/cl-json" :show-modules
                                  nil))
   :libraries nil
-  :editable-files nil
+  :editable-files (list "qooxlisp.asd")
   :distributed-files nil
   :internally-loaded-files nil
   :project-package-name :qooxlisp

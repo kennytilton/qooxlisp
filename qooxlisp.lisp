@@ -1,3 +1,12 @@
+;; -*- mode: Lisp; Syntax: Common-Lisp; Package: qooxlisp; -*-
+#|
+
+    qooxlisp -- cells and callbacks
+
+(See package.lisp for license and copyright notigification)
+
+|#
+
 (in-package :qxl)
 
 
