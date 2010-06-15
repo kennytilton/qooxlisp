@@ -50,8 +50,13 @@
   background-color
   onkeypress
   onkeyinput
+  onclick
   (enabled t)
   (focusable nil :cell nil))
+
+(defmethod qx-configurations append ((self qx-widget))
+  (nconc
+   (cfg background-color)))
 
 (defmethod make-qx-instance :after ((self qx-widget))
   ;;>>> Make this dependent on some focusable flag, prolly a non-cell
@@ -76,11 +81,7 @@ clDict[~a].addListener('focus', function (e) {
     (with-integrity (:client `(:post-make-qx ,self))
       (qxfmt "clDict[~a].setDecorator(new qx.ui.decoration.~a);" (oid self)(decorator self)))))
        
-(defmethod qx-configurations append ((self qx-widget))
-  (nconc
-   (b-when x (background-color self)
-     (list (cons :background-color x)
-       ))))
+
 
 (defobserver background-color ()
   (when old-value
@@ -100,6 +101,16 @@ clDict[~a].addListener('execute', function(e) {
 });" 
                   (oid self))))))
 
+(defobserver onclick ()
+  (with-integrity (:client `(:post-make-qx ,self))
+    (cond
+     (new-value (qxfmt "
+clDict[~a].addListener('click', function(e) {
+    //consolelog('executing ~:*~a');
+    var rq = new qx.io.remote.Request('/callback?sessId='+sessId+'&opcode=onclick&oid=~:*~a','GET', 'text/javascript');
+    rq.send();
+});" 
+                  (oid self))))))
 
 (defobserver onkeypress ()
   (with-integrity (:client `(:post-make-qx ,self))

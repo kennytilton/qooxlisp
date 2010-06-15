@@ -10,6 +10,7 @@
 (in-package :qxl)
 
 (defmd qx-layout-item (qx-object) ;; better name: qx-laid-out-item
+  visibility
   add
   height min-height max-height
   width min-width max-width
@@ -21,6 +22,13 @@
   allow-shrink-x allow-shrink-y
   allow-stretch-x allow-stretch-y)
 
+(export! visible collapsed)
+(defun visible (self)
+  (equal (visibility self) "visible"))
+
+(defun collapsed (self)
+  (equal (visibility self) "excluded"))
+
 (defmacro cfg (f)
   (let ((x (gensym)))
     `(b-when ,x (,f self)
@@ -28,6 +36,7 @@
 
 (defmethod qx-configurations append ((self qx-layout-item))
   (nconc
+   (cfg visibility)
    (cfg height)(cfg min-height)(cfg max-height)
    (cfg width)(cfg min-width)(cfg max-width)
    (cfg margin)(cfg margin-left)(cfg margin-top)(cfg margin-right)(cfg margin-bottom)

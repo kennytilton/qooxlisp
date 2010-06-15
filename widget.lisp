@@ -123,9 +123,8 @@ clDict[~a].addListener('changeValue', function(e) {
   (qx-class "qx.ui.basic.Label" :allocation :class :cell nil)
   value
   rich
-  (allow-grow-x :js-false)
-  (allow-grow-y :js-false))
-
+  :allow-grow-x :js-false
+  :allow-grow-y :js-false)
 
 (defmethod qx-configurations append ((self qx-label))
   (nconc
@@ -133,8 +132,20 @@ clDict[~a].addListener('changeValue', function(e) {
    (cfg value)))
 
 (defobserver value ((self qx-label))
+  ;; I think we need this for when value changes vs. during image creation
+  ;; >>> prolly a good idea to figure this out
   (with-integrity (:client `(:post-make-qx ,self))
     (qxfmt "clDict[~a].setValue('~a');" (oid self) (or new-value ""))))
+
+(defmd qx-image (qx-widget)
+  (qx-class "qx.ui.basic.Image" :allocation :class :cell nil)
+  source
+  scale)
+
+(defmethod qx-configurations append ((self qx-image))
+  (nconc
+   (cfg source)
+   (cfg scale)))
 
 ;;; --- radio buttons --------------------------------
 

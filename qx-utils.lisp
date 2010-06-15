@@ -49,9 +49,12 @@
        (net.aserve:with-http-body (,req ,ent)
          (setf *js-response* nil)
          ,@body ;; this populates *js-response*
-         ;; (print `(responding ,*js-response*))
+         ;; (print `(,*js-response*))
          ;;(push *js-response* (responses session))
          (qxl:whtml (:princ (format nil "(function () {~a})();" (or *js-response* "null;"))))))))
+
+#+bbbbb
+(princ *js-response*)
 
 (export! rq-raw)
 (defun rq-raw (r) (request-raw-request r))
@@ -101,10 +104,15 @@
    ((string-equal x "false") nil)
    (t x)))
 
-(defmacro mk-layout (model class &rest initargs) 
+(defmacro mk-layout (model class &rest initargs) ;; >>> use make-layout
   `(make-instance ,class
      :oid (get-next-oid (session ,model))
      ,@initargs))
+
+(defun make-layout (model class initargs) 
+  (apply 'make-instance class
+    :oid (get-next-oid (session model))
+    initargs))
 
 #+xxxx
 (jsk$ :left 2 :top 3)
@@ -123,7 +131,7 @@
      ,@iargs
      :kids (c? (the-kids ,@kids))))
 
-(export! tabview qx-tab-view vpage qx-tab-page)
+(export! tabview qx-tab-view vpage qx-tab-page vboxn)
 
 (defmacro tabview ((&rest iargs) &rest kids)
   `(make-kid 'qx-tab-view
@@ -143,11 +151,29 @@
      :layout (c? (mk-layout self 'qx-vbox ,@layo-iargs))
      :kids (c? (the-kids ,@kids))))
 
+(defmd qxl-stack (qx-composite)
+  (layout-iargs nil :cell nil)
+  :layout (c? (make-layout self 'qx-vbox (layout-iargs self))))
+
+;;;(defmacro vbox ((&rest layout-iargs)(&rest compo-iargs) &rest kids)
+;;;  `(make-kid 'qxl-stack
+;;;     ,@compo-iargs
+;;;     :layout-iargs (list ,@layout-iargs)
+;;;     :kids (c? (the-kids ,@kids))))
+
 (defmacro vbox ((&rest layout-iargs)(&rest compo-iargs) &rest kids)
+  "vbox where kids are altered procedurally"
   `(make-kid 'qx-composite
      ,@compo-iargs
      :layout (c? (mk-layout self 'qx-vbox ,@layout-iargs))
-     :kids (c? (the-kids ,@kids))))
+     :kids (c-in (the-kids ,@kids))))
+
+(defmacro vboxn ((&rest layout-iargs)(&rest compo-iargs) &rest kids)
+  "vbox where kids are altered procedurally"
+  `(make-kid 'qx-composite
+     ,@compo-iargs
+     :layout (c? (mk-layout self 'qx-vbox ,@layout-iargs))
+     :kids (c-in (the-kids ,@kids))))
 
 (defmacro hbox ((&rest layout-iargs)(&rest compo-iargs) &rest kids)
   `(make-kid 'qx-composite
@@ -160,11 +186,16 @@
      :value ,label-form
      ,@iargs))
 
-(export! rtf scroller qx-scroll)
+(export! rtf scroller qx-scroll img qx-image qxl-stack)
 (defmacro rtf (label-form &rest iargs)
   `(make-kid 'qx-label
      :value ,label-form
      :rich t
+     ,@iargs))
+
+(defmacro img (url &rest iargs)
+  `(make-kid 'qx-image
+     :source ,url
      ,@iargs))
 
 (defmacro radiobuttongroup (name (&rest iargs)(layout-class &rest layout-iargs) &rest kids)
