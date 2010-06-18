@@ -22,17 +22,25 @@
   allow-shrink-x allow-shrink-y
   allow-stretch-x allow-stretch-y)
 
-(export! visible collapsed)
+
+
 (defun visible (self)
   (equal (visibility self) "visible"))
+
+(defun hidden (self)
+  (equal (visibility self) "hidden"))
 
 (defun collapsed (self)
   (equal (visibility self) "excluded"))
 
-(defmacro cfg (f)
-  (let ((x (gensym)))
-    `(b-when ,x (,f self)
-       (list (cons ,(intern f :keyword) ,x)))))
+(defun vis/not (b)
+  (if b "visible" "hidden"))
+
+(defmacro vis/collapsed (b)
+  (if b "visible" "excluded"))
+
+(export! visible collapsed hidden vis/not vis/collapsed)
+
 
 (defmethod qx-configurations append ((self qx-layout-item))
   (nconc

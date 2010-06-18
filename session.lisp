@@ -26,26 +26,27 @@
             (qxfmt "clDict[~a].add(clDict[~a],~a);" (oid self) (oid k) ao)
             (qxfmt "clDict[~a].add(clDict[~a]);" (oid self) (oid k))))))
 
-(defparameter *session-ct* 0)
-(defparameter *qx-sessions* (make-hash-table))
-
 (defmd qxl-session (qooxlisp-family)
   (session-id (incf *session-ct*) :cell nil)
   (oid 0 :cell nil)
   (dictionary (make-hash-table) :cell nil)
+  :registry? t
   (next-oid 1 :cell nil)
   (theme "qx.theme.Modern")
   (responses nil :cell nil)
   (focus (c-in nil))
+  keyboard-modifiers ;; not sure if this holdover gets kept
   )
 
 (defmethod initialize-instance :after ((self qxl-session) &key)
   (assert (null (gethash (session-id self) *qx-sessions*)))
   (setf (gethash (session-id self) *qx-sessions*) self))
 
-(export! .focus .focused)
-(define-symbol-macro .session (n^ qxl-session))
-(define-symbol-macro .focus (focus .session))
+(export! .focus .focused *web-session* ^session)
+
+
+(define-symbol-macro ^session (n^ qxl-session))
+(define-symbol-macro .focus (focus ^session))
 (define-symbol-macro .focused (eq self .focus))
 
 (defmethod session ((self qxl-session)) self)
@@ -84,3 +85,43 @@ sessId=~a;" (session-id self)))
                               (dfail "session-focus: oid ~s not in dictionary" oid))
                             (dfail "session-focus: No oid parameter: ~s" (rq-raw req)))
           (setf (focus session) new-focus))))))
+
+(export! qx-callback-js qx-callback-json make-qx-instance) ;;>>> maybe not once start-up inherits
+
+(defun qx-callback-js (req ent)
+  (with-js-response (req ent) 
+    (with-integrity ()
+      (b-if *web-session* (b-if sessId (parse-integer (req-val req "sessId") :junk-allowed t)
+                      (gethash sessId *qx-sessions*)
+                      (warn "Invalid sessId parameter ~s in callback req: ~a" (req-val req "sessId")
+                        (list (req-val req "opcode") (req-val req "oid"))))
+        (b-if self (b-if oid (parse-integer (req-val req "oid") :junk-allowed t)
+                     (gethash oid (dictionary *web-session*))
+                     (warn "Invalid oid parameter ~s in callback req: ~a" (req-val req "oid")
+                       (list (req-val req "sessId")(req-val req "opcode"))))
+          (let ((opcode (qxl-sym (req-val req "opcode"))))
+            ;(mprt :callback opcode :self self :req (request-raw-request req))
+            (b-if cb (funcall opcode self)
+              (funcall cb self req)
+              (dwarn "Widget ~a oid ~a in session ~a has no handler for ~a callback " self (oid self) (session-id *web-session*) opcode)))
+          (dwarn "Widget not found for oid ~a in session ~a for ~a callback" (oid self) (session-id *web-session*) (req-val req "opcode")))
+        (dwarn "Unknown session ID ~a in callback: ~a" (req-val req "sessId") 
+          (list (req-val req "opcode") (req-val req "oid")))))))
+
+(export! gethtml)
+
+(defun qx-callback-json (req ent)
+  (with-integrity ()
+    (with-json-response (req ent)
+      (b-if *web-session* (b-if sessId (parse-integer (req-val req "sessId") :junk-allowed t)
+                      (gethash sessId *qx-sessions*)
+                      (warn "Invalid sessId parameter ~s in callback req: ~a" (req-val req "sessId")
+                        (list (req-val req "opcode") (req-val req "oid"))))
+        (b-if self (b-if oid (parse-integer (req-val req "oid") :junk-allowed t)
+                     (gethash oid (dictionary *web-session*))
+                     (warn "Invalid oid parameter ~s in callback req: ~a" (req-val req "oid")
+                       (list (req-val req "sessId")(req-val req "opcode"))))
+          (funcall (qxl-sym (req-val req "opcode")) self req)
+          (dwarn "Widget not found for oid ~a in session ~a for ~a callback" (oid self) (session-id *web-session*) (req-val req "opcode")))
+        (dwarn "Unknown session ID ~a in callback: ~a" (req-val req "sessId") 
+          (list (req-val req "opcode") (req-val req "oid")))))))

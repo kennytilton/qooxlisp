@@ -195,7 +195,7 @@ allocated and added to the *CLASS-REGISTRY*."
                       (append superclasses (list 'fluid-object)))))
          (extant-class-etc
           (member superclasses *class-registry*
-                  :test #'equal :key #'class-direct-superclasses))
+                  :test #'equal :key #'mop:class-direct-superclasses))
          (extant-class (car extant-class-etc))
          (updated-class
           (ensure-fluid-class-with-slots

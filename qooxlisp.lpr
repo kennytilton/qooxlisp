@@ -15,8 +15,8 @@
                  (make-instance 'module :name "control.lisp"))
   :projects (list (make-instance 'project-module :name "../cells/cells" :show-modules
                                  nil)
-                  (make-instance 'project-module :name "../cl-json/cl-json" :show-modules
-                                 nil))
+                  (make-instance 'project-module :name "cl-json_0.4.0/cl-json"
+                                 :show-modules nil))
   :libraries nil
   :editable-files (list "qooxlisp.asd")
   :distributed-files nil

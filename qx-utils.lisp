@@ -10,6 +10,27 @@
 
 (in-package :qxl)
 
+(defconstant +qx-alt-key-mask+ 4)
+(defconstant +qx-shift-key-mask+ 1)
+(defconstant +qx-control-key-mask+ 2)
+(defconstant +qx-meta-key-mask+ 8)
+
+(defun qx-alt-key-p (x)
+  (logtest +qx-alt-key-mask+ (if (stringp x) (parse-integer x) x)))
+
+(defun qx-control-key-p (x)
+  (logtest +qx-control-key-mask+ (if (stringp x) (parse-integer x) x)))
+
+(defun qx-shift-key-p (x)
+  (logtest +qx-shift-key-mask+ (if (stringp x) (parse-integer x) x)))
+
+(export! qx-alt-key-p qx-control-key-p qx-shift-key-p)
+
+(defmacro cfg (f)
+  (let ((x (gensym)))
+    `(b-when ,x (,f self)
+       (list (cons ,(intern f :keyword) ,x)))))
+
 (defun k-word (s)
   (when s (if (consp s) (mapcar 'k-word s)
             (intern s :keyword))))
@@ -42,6 +63,7 @@
            ,@body)))))
 
 (defparameter *js-response* nil)
+(defparameter *ekojs* t)
 
 (defmacro with-js-response ((req ent) &body body)
   `(prog1 nil
@@ -49,7 +71,10 @@
        (net.aserve:with-http-body (,req ,ent)
          (setf *js-response* nil)
          ,@body ;; this populates *js-response*
-         ;; (print `(,*js-response*))
+         (when *ekojs*
+           (mprt :ekojs *js-response*)
+           ;;(mprt :ekojsrq (rq-raw ,req))
+           )
          ;;(push *js-response* (responses session))
          (qxl:whtml (:princ (format nil "(function () {~a})();" (or *js-response* "null;"))))))))
 
@@ -151,10 +176,6 @@
      :layout (c? (mk-layout self 'qx-vbox ,@layo-iargs))
      :kids (c? (the-kids ,@kids))))
 
-(defmd qxl-stack (qx-composite)
-  (layout-iargs nil :cell nil)
-  :layout (c? (make-layout self 'qx-vbox (layout-iargs self))))
-
 ;;;(defmacro vbox ((&rest layout-iargs)(&rest compo-iargs) &rest kids)
 ;;;  `(make-kid 'qxl-stack
 ;;;     ,@compo-iargs
@@ -167,6 +188,15 @@
      ,@compo-iargs
      :layout (c? (mk-layout self 'qx-vbox ,@layout-iargs))
      :kids (c-in (the-kids ,@kids))))
+
+(defmd qxl-stack (qx-composite)
+  layout-iargs
+  :layout (c? (make-layout self 'qx-vbox (^layout-iargs))))
+
+(export! qxl-row)
+(defmd qxl-row (qx-composite)
+  layout-iargs
+  :layout (c? (make-layout self 'qx-hbox (^layout-iargs))))
 
 (defmacro vboxn ((&rest layout-iargs)(&rest compo-iargs) &rest kids)
   "vbox where kids are altered procedurally"
