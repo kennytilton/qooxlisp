@@ -63,7 +63,7 @@
            ,@body)))))
 
 (defparameter *js-response* nil)
-(defparameter *ekojs* t)
+(defparameter *ekojs* nil)
 
 (defmacro with-js-response ((req ent) &body body)
   `(prog1 nil
@@ -81,7 +81,7 @@
 #+bbbbb
 (princ *js-response*)
 
-(export! rq-raw)
+(export! rq-raw *ekojs*)
 (defun rq-raw (r) (request-raw-request r))
 
 #+check
@@ -128,6 +128,14 @@
    ((string-equal x "true") t)
    ((string-equal x "false") nil)
    (t x)))
+
+(defstruct (qx-keypress (:conc-name kpr-))
+  mods key)
+
+(defstruct (qx-keyinput (:conc-name kin-))
+  mods char code)
+
+(export! qx-keypress qx-keyinput make-qx-keyinput make-qx-keypress kpr-key kpr-mods kin-mods kin-char kin-code)
 
 (defmacro mk-layout (model class &rest initargs) ;; >>> use make-layout
   `(make-instance ,class

@@ -29,7 +29,6 @@ add finalization for radio button (look at others, see if ICR can ne de-celled
 
 (defmd focuser ()
   (focus (c-in nil))
-  
   (edit-active (c-in nil))
   (insertion-pt (c-in 0))
   (sel-end (c-in nil))
@@ -40,10 +39,10 @@ add finalization for radio button (look at others, see if ICR can ne de-celled
 
 (export! ^focus focus .focus focus-find-first .focuser)
 
-;;;(defobserver focus ((self focuser))
-;;;  (when (and (null new-value) old-value)
-;;;            (break "focus nilling"))
-;;;  (TRC "focus-observe" self new-value old-value))
+(defobserver focus ((self focuser))
+  (when new-value
+    (mprt :focusing-on new-value)
+    (qxfmt "clDict[~a].focus();" (oid new-value))))
 
 (defun focuser (self)
   (u^ qxl-session))

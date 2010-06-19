@@ -27,6 +27,9 @@
 (defun visible (self)
   (equal (visibility self) "visible"))
 
+(defmacro ^visible ()
+  `(visible self))
+
 (defun hidden (self)
   (equal (visibility self) "hidden"))
 
@@ -37,9 +40,9 @@
   (if b "visible" "hidden"))
 
 (defmacro vis/collapsed (b)
-  (if b "visible" "excluded"))
+  `(if ,b "visible" "excluded"))
 
-(export! visible collapsed hidden vis/not vis/collapsed)
+(export! visible ^visible collapsed hidden vis/not vis/collapsed)
 
 
 (defmethod qx-configurations append ((self qx-layout-item))

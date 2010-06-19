@@ -76,6 +76,12 @@ clDict[~a].addListener('focus', function (e) {
     (with-integrity (:client `(:post-make-qx ,self))
       (qxfmt "clDict[~a].setEnabled(~a);" (oid self) (if new-value "true" "false")))))
 
+(defobserver visibility ()
+  (when old-value-boundp
+    (mprt :observe-vis new-value self)
+    (with-integrity (:client `(:post-make-qx ,self))
+      (qxfmt "clDict[~a].setVisibility('~a');" (oid self) new-value))))
+
 (defobserver decorator () ;; this one is not known to work yet
   (when new-value
     (with-integrity (:client `(:post-make-qx ,self))

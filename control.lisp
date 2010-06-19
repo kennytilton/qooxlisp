@@ -53,8 +53,8 @@
   nil)
 
 (defmacro ct-action-lambda (&body body)
-  `(lambda (self event)
-     (declare (ignorable self event))
+  `(lambda (self req)
+     (declare (ignorable self req))
      ,@body))
 
 (defmethod kb-selector (other) (declare (ignore other)) nil)
