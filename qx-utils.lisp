@@ -184,6 +184,13 @@
      :layout (c? (mk-layout self 'qx-vbox ,@layo-iargs))
      :kids (c? (the-kids ,@kids))))
 
+(defmacro radiogroupbox ((&rest layo-iargs)(&rest iargs) &rest kids)
+  ;;; unfinished....
+  `(make-kid 'qx-radio-group-box
+     ,@iargs
+     :layout (c? (mk-layout self 'qx-hbox ,@layo-iargs))
+     :kids (c? (the-kids ,@kids))))
+
 ;;;(defmacro vbox ((&rest layout-iargs)(&rest compo-iargs) &rest kids)
 ;;;  `(make-kid 'qxl-stack
 ;;;     ,@compo-iargs
@@ -240,7 +247,6 @@
   `(make-kid 'qx-radio-button-group
      :md-name ,name
      ,@iargs
-     
      :layout (mk-layout self ',layout-class ,@layout-iargs)
      :kids (c? (the-kids ,@kids))))
 
@@ -288,6 +294,8 @@
   `(make-kid 'qx-text-field
      :md-name ,name
      ,@iargs))
+
+(export! textfield)
 
 (defmacro button (label (&rest iargs) &key onexec)
   `(make-kid 'qx-button

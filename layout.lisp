@@ -22,7 +22,17 @@
   allow-shrink-x allow-shrink-y
   allow-stretch-x allow-stretch-y)
 
+(export! ^min-height min-height ^max-height max-height)
 
+(defobserver min-height ()
+  (when old-value-boundp
+    (with-integrity (:client `(:post-make-qx ,self))
+      (qxfmt "clDict[~a].setMinHeight(~a);" (oid self) new-value))))
+
+(defobserver max-height ()
+  (when old-value-boundp
+    (with-integrity (:client `(:post-make-qx ,self))
+      (qxfmt "clDict[~a].setMaxHeight(~a);" (oid self) new-value))))
 
 (defun visible (self)
   (equal (visibility self) "visible"))

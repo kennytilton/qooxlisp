@@ -29,7 +29,7 @@
 (defmethod make-qx-instance ((self qx-object))
   (with-integrity (:client `(:make-qx ,self))
     (when (qx-class self)
-      (qxfmt "clDict[~a] = new ~a(~{~a~^,~});" 
+      (qxfmt "clDict[~a] = new ~a(~{~a~^,~}); clDict[~@*~a].oid = ~@*~a;" 
         (oid self) (qx-class self)
         (constructor-args self))
       (b-when cfg (qx-configurations self)
@@ -101,7 +101,7 @@ clDict[~a].addListener('focus', function (e) {
     (cond
      (new-value (qxfmt "
 clDict[~a].addListener('execute', function(e) {
-    //consolelog('executing ~:*~a');
+    console.log('executing ~:*~a');
     var rq = new qx.io.remote.Request('/callback?sessId='+sessId+'&opcode=onexecute&oid=~:*~a','GET', 'text/javascript');
     rq.send();
 });" 
@@ -190,8 +190,7 @@ if (clDict[~a]!==undefined) {
 (defmd qx-html (qx-widget)
   (qx-class "qx.ui.embed.Html" :allocation :class :cell nil)
   html
-  :background-color (c? (mprt :background-color-rule .focus)
-                      (if (eq self .focus) "white" "yellow"))
+  :background-color (c? (if (eq self .focus) "white" "yellow"))
   onappear)
 
 (defobserver html ()

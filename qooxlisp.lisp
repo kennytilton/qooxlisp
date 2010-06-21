@@ -25,7 +25,7 @@
   (setf *qx-sessions* (make-hash-table)))
 
 (defparameter *qxl-client-task-priority*
-    '(:make-qx :layout :post-make-qx))
+    '(:make-qx :layout :post-make-qx :post-assembly))
 
 (defun qxl-user-queue-handler (user-q)
   #+qxldebug

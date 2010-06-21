@@ -43,10 +43,12 @@
      (new-value (qxfmt "
 clDict[~a].addListener('changeSelection', function(e) {
     var items = e.getData();
+    console.log('on-chg-sel items '+ items + ' while getSel says '+ clDict[~@*~a].getSelection());
     var sel = '';
     for (i = 0; i < items.length; ++i) {
        if (i > 0) sel = sel + '!';
-       sel = sel + items[i].getModel();
+       console.log('on-chg-sel will xmit item id '+ items[i].oid + ' which is '+items[i]);
+       sel = sel + items[i].oid;
     }
     var req = new qx.io.remote.Request('/callback','GET', 'text/javascript');
     req.setParameter('sessId', sessId);
@@ -153,32 +155,51 @@ clDict[~a].addListener('changeValue', function(e) {
   (qx-class "qx.ui.form.RadioButtonGroup" :allocation :class :cell nil)
   (onchangeselection (lambda (self req)
                        (let ((nv (req-val req "value")))
-                         (print `(:rbgroup ,nv))
-                         (setf (^value) nv)
-                         ;;(qxfmt "null" #+not "consolelog('nada');")
-                         ))))
+                         (b-if oid (parse-integer nv :junk-allowed t)
+                           (let ((sel (gethash oid (dictionary *web-session*))))
+                             (assert sel () "unknown oid in changesel ~a" oid)
+                             (mprt :rbgroup-chgsel-to sel (model sel))
+                             (if (equal (^value) (model sel))
+                                 (mprt :rbgroup-chgsel-suppressing-same (^value))
+                               (setf (^value) (model sel))))
+                           (warn "Invalid oid parameter ~s in onchgsel callback"  (req-val req "value")))))))
 
-(defobserver onchangeselection ((self qx-radio-button-group))
-  (with-integrity (:client `(:post-make-qx ,self))
-    (cond
-     (new-value (qxfmt "
-clDict[~a].addListener('changeSelection', function(e) {
-    var rb = e.getData()[0];
-    //consolelog('new sel='+rb+ ' listen '+clDict[~a]);
-    var md = 'null';
-    if (rb) md = rb.getModel();
-    //consolelog('new rb md ='+md);
-    (new qx.io.remote.Request('/callback?sessId='+sessId+'&opcode=onchangeselection&oid=~:*~a&value='+md,'GET', 'text/javascript')).send();
-});" (oid self)(oid self))))))
+(defobserver .value ((self qx-radio-button-group))
+  ;;; >>> this needs work to allow a multiple selection, which some of the code allows
+  (unless old-value-boundp
+    (with-integrity (:client `(:post-assembly ,self))
+      (mprt :qx-rbgroup-obs-value new-value old-value old-value-boundp)
+      (block nil
+        (fm-traverse self (lambda (k)
+                            (when (typep k 'qxl-radio-item)
+                              (when (equal new-value (model k))
+                                (qxfmt "
+var rg = clDict[~a];
+var oldsel = rg.getSelection()[0];
+var rb = clDict[~a];
+console.log('rbgroup sel set to '+ rb + ' from old '+ oldsel+ ' equality '+ (rb===oldsel));
 
-(defmd qx-radio-button (qx-button qooxlisp-control )
+if (rb !== oldsel) {
+   var sel = [];
+   sel.push(rb);
+   console.log('rbgroup set sel sets it '+sel+' '+rb.oid);
+   rg.setSelection(sel);
+}" (oid self)(oid k))
+                              (return))))
+        :global-search nil :skip-node self :opaque nil)))))
+
+
+(defmd qxl-radio-item (qooxlisp-control))
+
+(defmd qx-radio-button (qx-button qxl-radio-item)
   (qx-class "qx.ui.form.RadioButton" :allocation :class :cell nil)
   model)
 
+(defmethod qxl-model ((self qx-radio-button))
+  (model self))
+
 (defmethod qx-configurations append ((self qx-radio-button))
-  (nconc
-   (b-when x (model self)
-     (list (cons :model x)))))
+  (nconc (cfg model)))
 
 (defmd qx-toggle-button (qx-atom qooxlisp-control )
   (value (c-in nil))
@@ -223,35 +244,3 @@ clDict[~a].addListener('changeSelection', function(e) {
 (defmethod qx-configurations append ((self qx-tab-page))
   (nconc (cfg label)(cfg icon)))
 
-;;; --- group boxes ------------------
-
-(defmd qx-group-box (qooxlisp-layouter)
-  (qx-class "qx.ui.groupbox.GroupBox" :allocation :class :cell nil)
-  legend)
-
-(defmethod qx-configurations append ((self qx-group-box))
-  (nconc
-   (b-when x (legend self)
-     (list (cons :legend x)))))
-
-(defmd qx-check-group-box (qx-group-box)
-  (qx-class "qx.ui.groupbox.CheckGroupBox" :allocation :class :cell nil)
-  value
-  (onchangevalue (lambda (self req)
-                   (print :onchangevalue-fires)
-                   (let ((nv (req-val req "value")))
-                     (setf (^value) (cvtjs nv))))))
-
-(defmethod qx-configurations append ((self qx-check-group-box))
-  (nconc
-             (b-when x (value self)
-               (list (cons :value x)))))
-
-(defobserver value ((self qx-check-group-box))
-  (mprt :qx-check-group-box-observes-value new-value old-value)
-  (with-integrity (:client `(:post-make-qx ,self))
-    (qxfmt "clDict[~a].setValue(~a);"
-      (oid self) (if new-value "true" "false"))))
-
-(defobserver legend ((self qx-check-group-box))
-  )
