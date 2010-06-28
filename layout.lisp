@@ -10,7 +10,7 @@
 (in-package :qxl)
 
 (defmd qx-layout-item (qx-object) ;; better name: qx-laid-out-item
-  visibility
+  (visibility "visible")
   add
   height min-height max-height
   width min-width max-width
@@ -22,7 +22,7 @@
   allow-shrink-x allow-shrink-y
   allow-stretch-x allow-stretch-y)
 
-(export! ^min-height min-height ^max-height max-height)
+(export! ^min-height min-height ^max-height max-height visibility ^visibility)
 
 (defobserver min-height ()
   (when old-value-boundp

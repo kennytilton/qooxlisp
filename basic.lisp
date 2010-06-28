@@ -78,7 +78,6 @@ clDict[~a].addListener('focus', function (e) {
 
 (defobserver visibility ()
   (when old-value-boundp
-    (mprt :observe-vis new-value self)
     (with-integrity (:client `(:post-make-qx ,self))
       (qxfmt "clDict[~a].setVisibility('~a');" (oid self) new-value))))
 
@@ -196,7 +195,6 @@ if (clDict[~a]!==undefined) {
 (defobserver html ()
   (with-integrity (:client `(:post-make-qx ,self))
     ;; in case anyone is asking
-    ;;(mprt :html-observer-fires new-value)
     (set-html self)
     ))
 

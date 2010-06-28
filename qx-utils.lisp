@@ -72,8 +72,8 @@
          (setf *js-response* nil)
          ,@body ;; this populates *js-response*
          (when *ekojs*
-           (mprt :ekojs *js-response*)
-           ;;(mprt :ekojsrq (rq-raw ,req))
+           (trcx :ekojs *js-response*)
+           ;;(trcx :ekojsrq (rq-raw ,req))
            )
          ;;(push *js-response* (responses session))
          (qxl:whtml (:princ (format nil "(function () {~a})();" (or *js-response* "null;"))))))))
@@ -95,13 +95,25 @@
            ,@body)))))
 
 (defun qxfmt (fs &rest fa)
-  (progn ;; print 
-   (setf *js-response*
-     (conc$ *js-response* (apply 'format nil (conc$ "~&" fs "~%") fa)))))
+  (when (eq :deferred-to-ufb-1 fs)
+    (error "fshasit ~a" fs))
+  (let ((n (apply 'format nil (conc$ "~&" fs "~%") fa)))
+    (when (search "deferred-to-ufb" n :test 'string-equal)
+      (print `(:response-at-error ,*js-response*))
+      (error "JS got deferred ~a" (list* fs fa)))
+    (setf *js-response*
+      (conc$ *js-response* n))))
+
+#+save
+(defun qxfmt (fs &rest fa)
+  (setf *js-response*
+      (conc$ *js-response* (apply 'format nil (conc$ "~&" fs "~%") fa))))
+
+(search "deferred-to-ufb" "abc" :test 'string-equal)
 
 (defun qxfmtd (fs &rest fa)
   (let ((x (apply 'format nil (conc$ "~&" fs "~%") fa)))
-    (mprt :qxfmtd-adds x)
+    (trcx :qxfmtd-adds x)
     (setf *js-response*
       (conc$ *js-response* x))))
 

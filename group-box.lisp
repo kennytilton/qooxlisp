@@ -24,7 +24,6 @@
    (cfg value)))
 
 (defobserver value ((self qx-check-group-box))
-  (mprt :qx-check-group-box-observes-value new-value old-value)
   (with-integrity (:client `(:post-make-qx ,self))
     (qxfmt "clDict[~a].setValue(~a);"
       (oid self) (if new-value "true" "false"))))

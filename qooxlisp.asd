@@ -23,4 +23,5 @@
                (:file "table")
                (:file "widget")
                (:file "focus")
-               (:file "control")))
+               (:file "control")
+               (:file "group-box")))

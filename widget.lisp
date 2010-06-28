@@ -26,9 +26,7 @@
                        (print :generic-list-changesel-fires )
                        (let* ((nv (req-val req "value"))
                               (nvs (split-sequence #\! nv)))
-                         (mprt :onchgsel-a self :now nvs)
-                         (setf (^value) nvs)
-                         (mprt :onchgsel self :now nvs))))
+                         (setf (^value) nvs))))
   spacing)
 
 (split-sequence #\! "aaa!bbb")
@@ -72,8 +70,7 @@ clDict[~a].addListener('changeSelection', function(e) {
   (onchangevalue (lambda (self req)
                    (print :onchangevalue-fires)
                    (let ((nv (req-val req "value")))
-                     (setf (^value) nv)
-                     (mprt :onchgvalu self :now nv))))
+                     (setf (^value) nv))))
   :value (c-in nil))
 
 (defobserver onchangevalue ()
@@ -89,8 +86,7 @@ clDict[~a].addListener('changeValue', function(e) {
   (onchangevalue (lambda (self req)
                    (print :onchangevalue-fires)
                    (let ((nv (req-val req "value")))
-                     (setf (^value) nv)
-                     (mprt :onchgvalu self :now nv))))
+                     (setf (^value) nv))))
   :value (c-in nil))
 
 (defmd qx-text-field (qx-abstract-field)
@@ -158,9 +154,7 @@ clDict[~a].addListener('changeValue', function(e) {
                          (b-if oid (parse-integer nv :junk-allowed t)
                            (let ((sel (gethash oid (dictionary *web-session*))))
                              (assert sel () "unknown oid in changesel ~a" oid)
-                             (mprt :rbgroup-chgsel-to sel (model sel))
-                             (if (equal (^value) (model sel))
-                                 (mprt :rbgroup-chgsel-suppressing-same (^value))
+                             (unless (equal (^value) (model sel))
                                (setf (^value) (model sel))))
                            (warn "Invalid oid parameter ~s in onchgsel callback"  (req-val req "value")))))))
 
@@ -168,7 +162,6 @@ clDict[~a].addListener('changeValue', function(e) {
   ;;; >>> this needs work to allow a multiple selection, which some of the code allows
   (unless old-value-boundp
     (with-integrity (:client `(:post-assembly ,self))
-      (mprt :qx-rbgroup-obs-value new-value old-value old-value-boundp)
       (block nil
         (fm-traverse self (lambda (k)
                             (when (typep k 'qxl-radio-item)
@@ -221,7 +214,6 @@ if (rb !== oldsel) {
 (defmd qx-select-box (qx-abstract-select-box)
   (qx-class "qx.ui.form.SelectBox" :allocation :class :cell nil)
   (onchangeselection (lambda (self req)
-                       (mprt :default-qx-select-boxonchangeselection (req-val req "value"))
                        (let ((nv (req-val req "value")))
                          (setf (^value) nv))))
   :value (c-in nil))

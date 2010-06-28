@@ -88,10 +88,8 @@ sessId=~a;" (session-id self)))
 
 (export! qx-callback-js qx-callback-json make-qx-instance) ;;>>> maybe not once start-up inherits
 
-
-        
 (defun qx-callback-js (req ent)
-  (let ((*ekojs* t)) ;; qx-callback-js
+  (let ((*ekojs* nil)) ;; qx-callback-js
     (with-js-response (req ent) 
       (top-level.debug::with-auto-zoom-and-exit ("aa-callback-js.txt" :exit nil)
         (b-if *web-session* (b-if sessId (parse-integer (req-val req "sessId") :junk-allowed t)
@@ -103,7 +101,7 @@ sessId=~a;" (session-id self)))
                        (warn "Invalid oid parameter ~s in callback req: ~a" (req-val req "oid")
                          (list (req-val req "sessId")(req-val req "opcode"))))
             (let ((opcode (qxl-sym (req-val req "opcode"))))
-              ;(mprt :s *web-session* :callback opcode :self self :req (request-raw-request req))
+              ;(trcx :s *web-session* :callback opcode :self self :req (request-raw-request req))
               (with-integrity ()
                 (b-if cb (funcall opcode self)
                   (funcall cb self req)

@@ -41,7 +41,7 @@ add finalization for radio button (look at others, see if ICR can ne de-celled
 
 (defobserver focus ((self focuser))
   (when new-value
-    (mprt :focusing-on new-value)
+    (trcx :focusing-on new-value)
     (qxfmt "clDict[~a].focus();" (oid new-value))))
 
 (defun focuser (self)
