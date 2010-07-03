@@ -94,3 +94,31 @@
 (defmd qx-vbox (qx-hv-box)
   (qx-class "qx.ui.layout.VBox" :allocation :class :cell nil))
 
+(export! qx-flow)
+(defmd qx-flow (qx-layout-abstract)
+  (qx-class "qx.ui.layout.Flow" :allocation :class :cell nil)
+  spacing-x spacing-y align-x align-y reversed)
+
+(defmethod qx-configurations append ((self qx-flow))
+  (nconc
+   (cfg align-x)(cfg align-y)
+   (cfg reversed)
+   (cfg spacing-x)(cfg spacing-y)))
+
+
+;;;      var scroller = new qx.ui.container.Scroll();
+;;;      win.add(scroller);
+;;;
+;;;      var container = new qx.ui.container.Composite(new qx.ui.layout.Flow()).set({
+;;;        allowShrinkY: false
+;;;      });
+;;;      scroller.add(container);
+;;;
+;;;      for (var i=0; i<30; i++)
+;;;      {
+;;;        container.add(new qx.ui.basic.Atom("item #" + (i+1), "icon/48/devices/computer.png").set({
+;;;          iconPosition: "top",
+;;;          width: 60,
+;;;          padding: 5
+;;;        }));
+;;;      }

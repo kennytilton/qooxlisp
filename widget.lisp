@@ -96,7 +96,7 @@ clDict[~a].addListener('changeValue', function(e) {
 
 (defmd qx-list-item (qx-atom)
   (qx-class "qx.ui.form.ListItem" :allocation :class :cell nil)
-  model)
+  model) ;; >>> bad idea? Use value? Why is model sent to client? Most Lisp objects won't go there
 
 (defmethod qx-configurations append ((self qx-list-item))
   (nconc
@@ -119,7 +119,7 @@ clDict[~a].addListener('changeValue', function(e) {
 
 (defmd qx-label (qx-widget)
   (qx-class "qx.ui.basic.Label" :allocation :class :cell nil)
-  value
+  text$
   rich
   :allow-grow-x :js-false
   :allow-grow-y :js-false)
@@ -127,9 +127,9 @@ clDict[~a].addListener('changeValue', function(e) {
 (defmethod qx-configurations append ((self qx-label))
   (nconc
    (cfg rich)
-   (cfg value)))
+   (cfg value text$)))
 
-(defobserver value ((self qx-label))
+(defobserver text$ ((self qx-label))
   ;; I think we need this for when value changes vs. during image creation
   ;; >>> prolly a good idea to figure this out
   (with-integrity (:client `(:post-make-qx ,self))
@@ -235,4 +235,18 @@ if (rb !== oldsel) {
 
 (defmethod qx-configurations append ((self qx-tab-page))
   (nconc (cfg label)(cfg icon)))
+
+;;; --------------- selector ------------------------------------
+
+(export! qxl-selector selection ^selection .selector .selection
+  selected-key ^selected-key multiple-choice? toggle?)
+
+(defmd qxl-selector ()
+  selection
+  selected-key
+  multiple-choice?
+  toggle?)
+
+(define-symbol-macro .selector (n^ qxl-selector))
+(define-symbol-macro .selection (selection .selector))
 

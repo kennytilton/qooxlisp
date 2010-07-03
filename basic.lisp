@@ -52,7 +52,10 @@
   onkeyinput
   onclick
   (enabled t)
-  (focusable nil :cell nil))
+  (focusable nil :cell nil)
+  tool-tip)
+
+(export! tool-tip)
 
 (defmethod qx-configurations append ((self qx-widget))
   (nconc

@@ -24,11 +24,24 @@
 (defun qx-shift-key-p (x)
   (logtest +qx-shift-key-mask+ (if (stringp x) (parse-integer x) x)))
 
+(export! oid-to-object oid$-to-object)
+
+(defun oid-to-object (oid &optional caller)
+  (or (gethash oid (dictionary *web-session*))
+    (error "no item for oid ~a, caller ~a" oid caller)))
+
+(defun oid$-to-object (oid$ &optional caller)
+  (b-if oid (parse-integer oid$ :junk-allowed t)
+    (oid-to-object oid caller)
+    (error "oid NAN ~a, caller ~a" oid$ caller)))
+
 (export! qx-alt-key-p qx-control-key-p qx-shift-key-p)
 
-(defmacro cfg (f)
+(defmacro cfg (f &optional (qxl-alias f))
+  ;; alias needed because, eg, Cells uses value for the model associated with any widget
+  ;; while the qooxdoo 'value' is a labels displayed string, the qxl 'text$'
   (let ((x (gensym)))
-    `(b-when ,x (,f self)
+    `(b-when ,x (,qxl-alias self)
        (list (cons ,(intern f :keyword) ,x)))))
 
 (defun k-word (s)
@@ -220,10 +233,15 @@
   layout-iargs
   :layout (c? (make-layout self 'qx-vbox (^layout-iargs))))
 
-(export! qxl-row)
+(export! qxl-row qxl-flow)
+
 (defmd qxl-row (qx-composite)
   layout-iargs
   :layout (c? (make-layout self 'qx-hbox (^layout-iargs))))
+
+(defmd qxl-flow (qx-composite)
+  layout-iargs
+  :layout (c? (make-layout self 'qx-flow (^layout-iargs))))
 
 (defmacro vboxn ((&rest layout-iargs)(&rest compo-iargs) &rest kids)
   "vbox where kids are altered procedurally"
@@ -238,15 +256,21 @@
      :layout (c? (mk-layout self 'qx-hbox ,@layout-iargs))
      :kids (c? (the-kids ,@kids))))
 
+(defmacro flow ((&rest layout-iargs)(&rest compo-iargs) &rest kids)
+  `(make-kid 'qx-composite
+     ,@compo-iargs
+     :layout (c? (mk-layout self 'qx-flow ,@layout-iargs))
+     :kids (c? (the-kids ,@kids))))
+
 (defmacro lbl (label-form &rest iargs)
   `(make-kid 'qx-label
-     :value ,label-form
+     :text$ ,label-form
      ,@iargs))
 
-(export! rtf scroller qx-scroll img qx-image qxl-stack)
+(export! rtf scroller qx-scroll img qx-image qxl-stack flow qx-flow)
 (defmacro rtf (label-form &rest iargs)
   `(make-kid 'qx-label
-     :value ,label-form
+     :text$ ,label-form
      :rich t
      ,@iargs))
 
@@ -279,6 +303,8 @@
     :md-name ,name
      ,@iargs
      :kids (c? (the-kids ,@kids))))
+
+(export! qxlist)
 
 (defmacro qxlist (name (&rest iargs) &body kids)
   `(make-kid 'qx-list
