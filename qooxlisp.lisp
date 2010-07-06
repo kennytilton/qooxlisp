@@ -14,11 +14,7 @@
 
 (defun dfail (&rest x) (apply 'error x))
 
-(defparameter *session-ct* 0)
 
-(defvar *web-session*)
-
-(defparameter *qx-sessions* (make-hash-table))
 
 (defun qx-reset ()
   (cells-reset 'qxl-user-queue-handler)

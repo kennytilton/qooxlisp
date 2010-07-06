@@ -39,11 +39,6 @@ add finalization for radio button (look at others, see if ICR can ne de-celled
 
 (export! ^focus focus .focus focus-find-first .focuser)
 
-(defobserver focus ((self focuser))
-  (when new-value
-    (trcx :focusing-on new-value)
-    (qxfmt "clDict[~a].focus();" (oid new-value))))
-
 (defun focuser (self)
   (u^ qxl-session))
 
@@ -51,18 +46,13 @@ add finalization for radio button (look at others, see if ICR can ne de-celled
   
 (defmethod (setf focus) :around (new-focus self) ;; better be Focuser
   (let ((curr-focus (slot-value self 'focus)))
-    (trc nil "setf focus sees new" new-focus :old curr-focus :focuser self)
+    (trcx :setf-focus new-focus curr-focus :focuser self)
     (unless (eql new-focus curr-focus)
       (focus-lose curr-focus new-focus)
       (focus-gain new-focus))
     (call-next-method)))
 
-(defun focus-on-dbg (self new-focus dbg)
-  (declare (ignorable dbg))
-  (trc nil "dbg focus by" dbg :on new-focus :self self)
-  (setf .focus new-focus))
-
-(export! focused-on ^focused-on focus-on-dbg)
+(export! focused-on ^focused-on)
 
 (defmodel focus ()
   ((focus-thickness :cell nil :initarg :focus-thickness
@@ -103,7 +93,7 @@ add finalization for radio button (look at others, see if ICR can ne de-celled
                                        focus)
                                    .cache))))))
 
-(export! focus-handle-keysym)
+(export! focus-handle-keysym )
 
 (defgeneric focus-handle-keysym (self keysym)
   (:method :around (self keysym)
@@ -130,13 +120,20 @@ add finalization for radio button (look at others, see if ICR can ne de-celled
       (focus-find-first self)
       (focus-find-first self :tab-stop-only nil)))
 
-(export! focus-on)
+(export! focus-on focus-clear)
+
+(defun focus-clear (self)
+  (b-when fr .focuser
+    (b-when f (focus fr)
+      (qxfmt "clDict[~a].blur();" (oid f)))))
 
 (defmethod focus-on (self &optional focuser)
   (c-assert (or self focuser))
-  #+xxx (trc "focus.on self, focuser" self focuser .focuser (focus-state .focuser))
+  (trc "focus.on self, focuser" self (oid self) focuser .focuser)
   ;; (break "focus.on self, focuser")
-  (setf (focus (or focuser .focuser)) self))
+  (qxfmt "clDict[~a].focus();" (oid self))
+  ;; stop here, let qx-side 'focus' event come back in as 'focusOn'
+  #+oskool (setf (focus (or focuser .focuser)) self))
 
 (defgeneric focus-gain (self)
   (:method (self) (declare (ignore self)))

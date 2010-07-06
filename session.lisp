@@ -47,7 +47,7 @@
 
 (define-symbol-macro ^session (n^ qxl-session))
 (define-symbol-macro .focus (focus ^session))
-(define-symbol-macro .focused (eq self .focus))
+(define-symbol-macro .focused (^focused-on))
 
 (defmethod session ((self qxl-session)) self)
 
@@ -74,6 +74,7 @@ sessId=~a;" (session-id self)))
 (export! session-focus)
 
 (defun session-focus (req ent)
+  ;; this guy handles focusOn event from qooxdoo so it is cool to setf the focus
   (with-js-response (req ent)
     (with-integrity ()
       (b-when session (b-if sessId (parse-integer (req-val req "sessId") :junk-allowed t)
@@ -89,7 +90,7 @@ sessId=~a;" (session-id self)))
 (export! qx-callback-js qx-callback-json make-qx-instance) ;;>>> maybe not once start-up inherits
 
 (defun qx-callback-js (req ent)
-  (let ((*ekojs* nil)) ;; qx-callback-js
+  (let ((*ekojs* t)) ;; qx-callback-js
     (with-js-response (req ent) 
       (top-level.debug::with-auto-zoom-and-exit ("aa-callback-js.txt" :exit nil)
         (b-if *web-session* (b-if sessId (parse-integer (req-val req "sessId") :junk-allowed t)

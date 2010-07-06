@@ -41,20 +41,18 @@
      (new-value (qxfmt "
 clDict[~a].addListener('changeSelection', function(e) {
     var items = e.getData();
-    console.log('on-chg-sel items '+ items + ' while getSel says '+ clDict[~@*~a].getSelection());
     var sel = '';
     for (i = 0; i < items.length; ++i) {
        if (i > 0) sel = sel + '!';
-       console.log('on-chg-sel will xmit item id '+ items[i].oid + ' which is '+items[i]);
        sel = sel + items[i].oid;
     }
     var req = new qx.io.remote.Request('/callback','GET', 'text/javascript');
     req.setParameter('sessId', sessId);
-    req.setParameter('oid', ~a);
+    req.setParameter('oid', ~@*~a);
     req.setParameter('opcode', 'onchangeselection');
     req.setParameter('value',sel);
     req.send();
-});" (oid self)(oid self))))))
+});" (oid self))))))
 
 (defmethod qx-configurations append ((self qx-list))
   (nconc
@@ -170,12 +168,10 @@ clDict[~a].addListener('changeValue', function(e) {
 var rg = clDict[~a];
 var oldsel = rg.getSelection()[0];
 var rb = clDict[~a];
-console.log('rbgroup sel set to '+ rb + ' from old '+ oldsel+ ' equality '+ (rb===oldsel));
 
 if (rb !== oldsel) {
    var sel = [];
    sel.push(rb);
-   console.log('rbgroup set sel sets it '+sel+' '+rb.oid);
    rg.setSelection(sel);
 }" (oid self)(oid k))
                               (return))))
@@ -222,6 +218,18 @@ if (rb !== oldsel) {
   (qx-class "qx.ui.container.Scroll" :allocation :class :cell nil)
   )
 
+(defmd qx-stack (qx-widget qooxlisp-family) ;; oops, too close to qxl-stack, which is really a vbox
+  ;; this is actually an overlay
+  (qx-class "qx.ui.container.Stack" :allocation :class :cell nil)
+  selection
+  )
+
+(defobserver selection ((self qx-stack))
+  (with-integrity (:client `(:post-make-qx ,self))
+    (cond
+     (new-value (qxfmt "clDict[~a].setSelection([clDict[~a]]);" (oid self)(oid new-value)))
+     (old-value (qxfmt "clDict[~a].setSelection(null);" (oid self)(oid new-value))))))
+                        
 (defmd qx-tab-view (qx-widget qooxlisp-family)
   (qx-class "qx.ui.tabview.TabView" :allocation :class :cell nil)
   bar-position)

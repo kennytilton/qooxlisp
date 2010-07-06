@@ -53,9 +53,17 @@
   onclick
   (enabled t)
   (focusable nil :cell nil)
+  selectedp
+  selected-key
+  kb-selector
   tool-tip)
 
-(export! tool-tip)
+(defun selected-match (sought sel &key (test 'eql))
+  (if (consp sel)
+      (member sought sel :test test)
+    (funcall test sought sel)))
+
+(export! qx-widget tool-tip selectedp ^selectedp selected-match selected-key ^selected-key)
 
 (defmethod qx-configurations append ((self qx-widget))
   (nconc
@@ -67,7 +75,7 @@
     (when (focusable self)
       (qxfmt "
 clDict[~a].addListener('focus', function (e) {
-    console.log('focus cb this is '+this+' oid '+~:*~d);
+    this.debug('sending focusOn');
     var rq = new qx.io.remote.Request('/focusOn?sessId='+sessId+'&oid=~:*~a'
                                       ,'GET'
                                       , 'text/javascript');
@@ -84,13 +92,13 @@ clDict[~a].addListener('focus', function (e) {
     (with-integrity (:client `(:post-make-qx ,self))
       (qxfmt "clDict[~a].setVisibility('~a');" (oid self) new-value))))
 
-(defobserver decorator () ;; this one is not known to work yet
-  (when new-value
+(defobserver decorator () 
+  (when (or new-value old-value)
     (with-integrity (:client `(:post-make-qx ,self))
-      (qxfmt "clDict[~a].setDecorator(new qx.ui.decoration.~a);" (oid self)(decorator self)))))
+      (if new-value
+          (qxfmt "clDict[~a].setDecorator('~a');" (oid self) new-value)
+        (qxfmt "clDict[~a].setDecorator(null);" (oid self) )))))
        
-
-
 (defobserver background-color ()
   (when old-value
     (qxfmt "clDict[~a].setBackgroundColor('~(~a~)');" (oid self) new-value)))
@@ -103,7 +111,6 @@ clDict[~a].addListener('focus', function (e) {
     (cond
      (new-value (qxfmt "
 clDict[~a].addListener('execute', function(e) {
-    console.log('executing ~:*~a');
     var rq = new qx.io.remote.Request('/callback?sessId='+sessId+'&opcode=onexecute&oid=~:*~a','GET', 'text/javascript');
     rq.send();
 });" 
@@ -126,8 +133,8 @@ clDict[~a].addListener('click', function(e) {
      (new-value (qxfmt "
 clDict[~a].addListener('keypress', function(e) {
     var k = e.getKeyIdentifier();
+    this.debug('keypress ' + k);
     if (k.length > 1) {
-       //console.log('keypress ' + e.getKeyIdentifier());
        e.preventDefault();
                          
        var rq = new qx.io.remote.Request('/callback?sessId='+sessId+'&opcode=onkeypress&oid=~:*~a','GET', 'text/javascript');
@@ -150,6 +157,7 @@ clDict[~a].addListener('keyinput', function (e) {
     e.preventDefault();
     var rq = new qx.io.remote.Request('/callback?sessId='+sessId+'&opcode=onkeyinput&oid=~:*~a','GET','text/javascript');
     rq.setParameter('char', e.getChar());
+    this.debug('keyinput(pded) '+ e.getChar());
     rq.setParameter('code', e.getCharCode());
     rq.setParameter('mods', e.getModifiers());
     rq.send();
@@ -170,13 +178,8 @@ clDict[~a].addListener('keyinput', function (e) {
 
 (defparameter *set-html* "
 if (clDict[~a]!==undefined) {
-   console.log('plain html dict is '+clDict[~:*~a]);
    var de = clDict[~:*~a].keepDE;
-   if (de!==undefined) {
-      de.innerHTML = ~s;
-      console.log('gethtml cb!!! just set inner to:' + de.innerHTML);
-   } else console.log('no DE for sethtml');
-} else console.log('no self in dictionary for set html');")
+   if (de!==undefined) {de.innerHTML = ~s;}}")
 
 (export! set-html)
 (defmethod set-html (self)
@@ -192,7 +195,6 @@ if (clDict[~a]!==undefined) {
 (defmd qx-html (qx-widget)
   (qx-class "qx.ui.embed.Html" :allocation :class :cell nil)
   html
-  :background-color (c? (if (eq self .focus) "white" "yellow"))
   onappear)
 
 (defobserver html ()
@@ -206,11 +208,8 @@ if (clDict[~a]!==undefined) {
     ;; --- appear : pick up inner entities ---
     (qxfmt "clDict[~a].addListener('appear', function(e) {
        var oid = ~:*~a;
-       ;;console.log('on-appear oid ' + oid);
        var ce = clDict[oid].keepCE = clDict[oid].getContentElement();
-       ;;console.log('appear Html qx content elem ' + ce);
        var de = clDict[oid].keepDE = ce.getDomElement();
-       ;;console.log('appear Html dom elt ' + de);
        cbjs(~:*~d,'gethtml','appeared');
 });"  (oid self))))
 

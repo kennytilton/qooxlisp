@@ -15,6 +15,22 @@
 (defconstant +qx-control-key-mask+ 2)
 (defconstant +qx-meta-key-mask+ 8)
 
+(defparameter +red+ "red")
+(defparameter +blue+ "blue")
+(defparameter +white+ "white")
+(defparameter +gray+ "gray")
+(defparameter +black+ "black")
+(defparameter +yellow+ "yellow")
+(defparameter +green+ "green")
+
+(export! +red+ +blue+ +white+ +gray+ +black+ +yellow+ +green+)
+
+(defparameter *session-ct* 0)
+
+(defvar *web-session*)
+
+(defparameter *qx-sessions* (make-hash-table))
+
 (defun qx-alt-key-p (x)
   (logtest +qx-alt-key-mask+ (if (stringp x) (parse-integer x) x)))
 
@@ -85,7 +101,7 @@
          (setf *js-response* nil)
          ,@body ;; this populates *js-response*
          (when *ekojs*
-           (trcx :ekojs *js-response*)
+           (format t "ekojs:~%~s" *js-response*)
            ;;(trcx :ekojsrq (rq-raw ,req))
            )
          ;;(push *js-response* (responses session))
@@ -189,7 +205,17 @@
      ,@iargs
      :kids (c? (the-kids ,@kids))))
 
-(export! tabview qx-tab-view vpage qx-tab-page vboxn)
+(defmacro stack ((&rest iargs) &rest kids)
+  `(make-kid 'qx-stack
+     ,@iargs
+     :kids (c? (the-kids ,@kids))))
+
+(defmacro stackn ((&rest iargs) &rest kids)
+  `(make-kid 'qx-stack
+     ,@iargs
+     :kids (c?n (the-kids ,@kids)))) ;; c-in would not set self correctly for kids' parent
+
+(export! tabview qx-tab-view vpage qx-tab-page vboxn stack qx-stack stackn)
 
 (defmacro tabview ((&rest iargs) &rest kids)
   `(make-kid 'qx-tab-view

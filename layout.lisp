@@ -22,7 +22,11 @@
   allow-shrink-x allow-shrink-y
   allow-stretch-x allow-stretch-y)
 
-(export! ^min-height min-height ^max-height max-height visibility ^visibility)
+(export! height ^height ^min-height min-height ^max-height max-height visibility ^visibility
+   ^min-height min-height ^max-height max-height)
+
+(export! width ^width ^min-width min-width ^max-width max-width  
+  ^min-width min-width ^max-width max-width)
 
 (defobserver min-height ()
   (when old-value-boundp
