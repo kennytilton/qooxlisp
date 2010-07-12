@@ -14,7 +14,8 @@
                  (make-instance 'module :name "focus.lisp")
                  (make-instance 'module :name "control.lisp")
                  (make-instance 'module :name "group-box.lisp"))
-  :projects (list (make-instance 'project-module :name "../cells/cells" :show-modules t)
+  :projects (list (make-instance 'project-module :name "../cells/cells" :show-modules
+                                 nil)
                   (make-instance 'project-module :name "cl-json_0.4.0/cl-json"
                                  :show-modules nil))
   :libraries nil

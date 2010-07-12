@@ -255,11 +255,18 @@
      :layout (c? (mk-layout self 'qx-vbox ,@layout-iargs))
      :kids (c-in (the-kids ,@kids))))
 
+(defmacro vbox? ((&rest layout-iargs)(&rest compo-iargs) &rest kids)
+  "vbox where kids are altered procedurally"
+  `(make-kid 'qx-composite
+     ,@compo-iargs
+     :layout (c? (mk-layout self 'qx-vbox ,@layout-iargs))
+     :kids (c? (the-kids ,@kids))))
+
 (defmd qxl-stack (qx-composite)
   layout-iargs
   :layout (c? (make-layout self 'qx-vbox (^layout-iargs))))
 
-(export! qxl-row qxl-flow)
+(export! qxl-row qxl-flow vbox?)
 
 (defmd qxl-row (qx-composite)
   layout-iargs

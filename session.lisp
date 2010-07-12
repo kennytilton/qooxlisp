@@ -90,7 +90,7 @@ sessId=~a;" (session-id self)))
 (export! qx-callback-js qx-callback-json make-qx-instance) ;;>>> maybe not once start-up inherits
 
 (defun qx-callback-js (req ent)
-  (let ((*ekojs* t)) ;; qx-callback-js
+  (let ((*ekojs* nil)) ;; qx-callback-js
     (with-js-response (req ent) 
       (top-level.debug::with-auto-zoom-and-exit ("aa-callback-js.txt" :exit nil)
         (b-if *web-session* (b-if sessId (parse-integer (req-val req "sessId") :junk-allowed t)

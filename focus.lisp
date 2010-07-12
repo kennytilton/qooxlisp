@@ -46,7 +46,7 @@ add finalization for radio button (look at others, see if ICR can ne de-celled
   
 (defmethod (setf focus) :around (new-focus self) ;; better be Focuser
   (let ((curr-focus (slot-value self 'focus)))
-    (trcx :setf-focus new-focus curr-focus :focuser self)
+    ;; (trcx :setf-focus new-focus curr-focus :focuser self)
     (unless (eql new-focus curr-focus)
       (focus-lose curr-focus new-focus)
       (focus-gain new-focus))
