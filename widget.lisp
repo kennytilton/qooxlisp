@@ -22,8 +22,7 @@
   (qx-class "qx.ui.form.List" :allocation :class :cell nil)
   selection-mode ;; single (default), multi, additive, or one
   (onchangeselection (lambda (self req)
-                       (print :generic-list-changesel-fires (req-val req "value"))
-                       (print :generic-list-changesel-fires )
+                       (print (list :generic-list-changesel-fires (req-val req "value")))
                        (let* ((nv (req-val req "value"))
                               (nvs (split-sequence #\! nv)))
                          (setf (^value) nvs))))
@@ -232,7 +231,15 @@ if (rb !== oldsel) {
                         
 (defmd qx-tab-view (qx-widget qooxlisp-family)
   (qx-class "qx.ui.tabview.TabView" :allocation :class :cell nil)
-  bar-position)
+  bar-position
+  :value (c?n (ekx :start-sel car (^kids)))
+  (onchangeselection (lambda (self req)
+                       (print (list :generic-tabview-changesel-fires (req-val req "value")))
+                       
+                       (let* ((nv (req-val req "value"))
+                              (nvs (split-sequence #\! nv))
+                              (page-id (parse-integer (car nvs))))
+                         (setf (^value) (ekx :tabview-sel-page oid-to-object page-id))))))
 
 (defmethod qx-configurations append ((self qx-tab-view))
   (nconc (cfg bar-position)))

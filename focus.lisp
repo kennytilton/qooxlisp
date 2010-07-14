@@ -129,7 +129,7 @@ add finalization for radio button (look at others, see if ICR can ne de-celled
 
 (defmethod focus-on (self &optional focuser)
   (c-assert (or self focuser))
-  (trc "focus.on self, focuser" self (oid self) focuser .focuser)
+  ;; (trc "focus.on self, focuser" self (oid self) focuser .focuser)
   ;; (break "focus.on self, focuser")
   (qxfmt "clDict[~a].focus();" (oid self))
   ;; stop here, let qx-side 'focus' event come back in as 'focusOn'

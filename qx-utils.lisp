@@ -104,6 +104,7 @@
            (format t "ekojs:~%~s" *js-response*)
            ;;(trcx :ekojsrq (rq-raw ,req))
            )
+         ;; (format t "~&js response size ~a~%> " (length *js-response*))
          ;;(push *js-response* (responses session))
          (qxl:whtml (:princ (format nil "(function () {~a})();" (or *js-response* "null;"))))))))
 
@@ -226,7 +227,8 @@
   `(make-kid 'qx-tab-page
      ,@iargs
      :layout(c? (mk-layout self 'qx-vbox ,@layout-iargs))
-     :kids (c? (the-kids ,@kids))))
+     :kids (c? (when (eq self (value (u^ qx-tab-view)))
+                 (the-kids ,@kids)))))
 
 (defmacro checkgroupbox ((&rest layo-iargs)(&rest iargs) &rest kids)
   ;;; unfinished....

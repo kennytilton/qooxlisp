@@ -48,6 +48,7 @@
 (defmd qx-widget (qx-layout-item)
   decorator
   background-color
+  onkeydown
   onkeypress
   onkeyinput
   onclick
@@ -75,7 +76,6 @@
     (when (focusable self)
       (qxfmt "
 clDict[~a].addListener('focus', function (e) {
-    this.debug('sending focusOn');
     var rq = new qx.io.remote.Request('/focusOn?sessId='+sessId+'&oid=~:*~a'
                                       ,'GET'
                                       , 'text/javascript');
@@ -121,11 +121,24 @@ clDict[~a].addListener('execute', function(e) {
     (cond
      (new-value (qxfmt "
 clDict[~a].addListener('click', function(e) {
-    //consolelog('executing ~:*~a');
     var rq = new qx.io.remote.Request('/callback?sessId='+sessId+'&opcode=onclick&oid=~:*~a','GET', 'text/javascript');
     rq.send();
 });" 
                   (oid self))))))
+
+(defobserver onkeydown ()
+  (with-integrity (:client `(:post-make-qx ,self))
+    (cond
+     (new-value (qxfmt "
+clDict[~a].addListener('keydown', function(e) {
+    var k = e.getKeyIdentifier();
+    if (k=='Backspace') e.preventDefault();
+                         
+    var rq = new qx.io.remote.Request('/callback?sessId='+sessId+'&opcode=onkeydown&oid=~:*~a','GET', 'text/javascript');
+    rq.setParameter('keyId', e.getKeyIdentifier());
+    rq.setParameter('mods', e.getModifiers());
+    rq.send();
+});" (oid self))))))
 
 (defobserver onkeypress ()
   (with-integrity (:client `(:post-make-qx ,self))
@@ -133,17 +146,12 @@ clDict[~a].addListener('click', function(e) {
      (new-value (qxfmt "
 clDict[~a].addListener('keypress', function(e) {
     var k = e.getKeyIdentifier();
-    this.debug('keypress ' + k);
-    if (k.length > 1) {
-       e.preventDefault();
-                         
-       var rq = new qx.io.remote.Request('/callback?sessId='+sessId+'&opcode=onkeypress&oid=~:*~a','GET', 'text/javascript');
-       rq.setParameter('keyId', e.getKeyIdentifier());
-       rq.setParameter('mods', e.getModifiers());
-       rq.send();
-    }
-});"
-                  (oid self)))
+    var rq = new qx.io.remote.Request('/callback?sessId='+sessId+'&opcode=onkeypress&oid=~:*~a','GET', 'text/javascript');
+    rq.setParameter('keyId', k);
+    rq.setParameter('mods', e.getModifiers());
+    rq.send();
+});" (oid self)))
+     
      #+chill-youneedtobespecificremovinglisteners
      (old-value
       ;;untested
@@ -154,10 +162,9 @@ clDict[~a].addListener('keypress', function(e) {
     (with-integrity (:client `(:post-make-qx ,self))
       (qxfmt "
 clDict[~a].addListener('keyinput', function (e) {
-    e.preventDefault();
+    if (e.getChar()=='/') e.preventDefault();
     var rq = new qx.io.remote.Request('/callback?sessId='+sessId+'&opcode=onkeyinput&oid=~:*~a','GET','text/javascript');
     rq.setParameter('char', e.getChar());
-    this.debug('keyinput(pded) '+ e.getChar());
     rq.setParameter('code', e.getCharCode());
     rq.setParameter('mods', e.getModifiers());
     rq.send();

@@ -54,6 +54,7 @@
 (defmethod session (self)
   (u^ qxl-session))
 
+
 (defmethod make-qx-instance :after ((self qxl-session))
   (qxfmt "
 clDict[0] = qx.core.Init.getApplication().getRoot();
@@ -72,6 +73,7 @@ sessId=~a;" (session-id self)))
     (incf (next-oid doc))))
 
 (export! session-focus)
+
 
 (defun session-focus (req ent)
   ;; this guy handles focusOn event from qooxdoo so it is cool to setf the focus
