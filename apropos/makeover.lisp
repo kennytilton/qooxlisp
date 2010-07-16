@@ -39,7 +39,7 @@
                                   (make-kid 'qx-list-item
                                     :model (package-name pkg)
                                     :label (package-name pkg)))))
-        (loop for pkg in (subseq (list-all-packages) 0 5)
+        (loop for pkg in (subseq (list-all-packages) 0 #+testing  5)
             collecting
               (make-kid 'qx-list-item
                 :model (package-name pkg)

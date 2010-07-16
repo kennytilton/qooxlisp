@@ -71,14 +71,14 @@
                                    :enabled (c? (not (value (fm-other :all-packages))))
                                    :onchangeselection (lambda (self req)
                                                         (let ((nv (req-val req "value")))
-                                                          (mprt :pkgsel nv (find-package nv))
+                                                          (trcx :pkgsel nv (find-package nv))
                                                           (setf (^value) (find-package nv)))))
           (loop for pkg in (b-if syms (syms-unfiltered (u^ qxl-session))
                              (loop with pkgs
                                  for symi in syms
                                  do (pushnew (symbol-info-pkg symi) pkgs)
                                  finally (return pkgs))
-                             (subseq (list-all-packages) 0 4))
+                             (subseq (list-all-packages) 0 #+testing 4))
               collecting (listitem (package-name pkg)))))))
 
 
@@ -109,7 +109,7 @@
     ;; next three are for data model delegate
     :cb-row-count (lambda (self req)
                     (declare (ignore req))
-                    ;(mprt :load-row-count-says (length (sym-info (u^ qxl-session))))
+                    ;(trcx :load-row-count-says (length (sym-info (u^ qxl-session))))
                     (length (sym-info (u^ qxl-session))))
     :cb-load-row-data 'sym-get
     :cb-sort-row-data 'sym-sort

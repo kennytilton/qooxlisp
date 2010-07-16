@@ -18,7 +18,7 @@
 
 (defmd qx-table-model-remote (qx-table-model-abstract)
   (qx-class "ide.TableModelQXL" :cell nil)
-  :constructor-args (c? (list (oid (table self))
+  :constructor-args (c? (list 1000042 ;;(oid (table self))
                           (block-size (table self)))))
 
 (defmd qx-table (qx-widget)
@@ -30,25 +30,25 @@
   cb-row-count cb-load-row-data cb-sort-row-data)
 
 (defun loadrowcount (self req)
+  (trcx :loadrowcount-entry self)
   (prog1 nil
     (whtml
      (:princ
       (json:encode-json-to-string
-       (funcall (cb-row-count self) self req))))))
+       (funcall (cb-row-count (table self)) (table self) req))))))
 
 (defun loadrowdata (self req)
   (prog1 nil
     (whtml
      (:princ
       (json:encode-json-to-string
-       (funcall (cb-load-row-data self) self req))))))
+       (funcall (cb-load-row-data (table self)) (table self) req))))))
 
 (defun sortrowdata (self) ;; js response so a little different
-  (cb-sort-row-data self))
+  (cb-sort-row-data (table self)))
 
 (defmd qxl-table-remote (qx-table)
   :table-model (c? (make-instance 'qx-table-model-remote
-                     :oid (get-next-oid (session self))
                      :table self)))
 
 (defobserver table-model ()

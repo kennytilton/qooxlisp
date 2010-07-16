@@ -87,6 +87,7 @@ qx.Class.define("ide.Application",
       qx.ui.table.cellrenderer.Boolean;
       qx.ui.form.List;
       qx.ui.form.ListItem;
+      // var x = new ide.TableModelQXL(7,100);
       // in effect, start the repl...
       (new qx.io.remote.Request("/begin","GET", "text/javascript")).send();
     }

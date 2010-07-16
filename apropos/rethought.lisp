@@ -79,13 +79,13 @@ Try \"apropos\" to see elements used in this specific example. Packages, by the 
                              (print :pkg-filter-kt-changesel-fires)
                              (let* ((nv (req-val req "value"))
                                     (nvs (split-sequence #\! nv)))
-                               (mprt :pkg-filter-kt-changesel-sees :nv nv :nvs nvs)
+                               (trcx :pkg-filter-kt-changesel-sees :nv nv :nvs nvs)
                                (setf (^value) (delete nil
                                                 (loop for pkg$ in nvs
                                                     for pkg = (unless (string-equal "" pkg$)
                                                                 (find-package pkg$))
                                                       
-                                                    do (mprt :pkgfound pkg$ pkg)
+                                                    do (trcx :pkgfound pkg$ pkg)
                                                     when (find-package pkg$)
                                                     collect pkg))))))
       (loop for pkg in (b-if syms (syms-unfiltered (u^ qxl-session))
@@ -93,7 +93,7 @@ Try \"apropos\" to see elements used in this specific example. Packages, by the 
                              for symi in syms
                              do (pushnew (symbol-info-pkg symi) pkgs)
                              finally (return pkgs))
-                         (subseq (list-all-packages) 0 20))
+                         (subseq (list-all-packages) 0 #+testing 4))
           collecting
             (make-kid 'qx-list-item
               :model (package-name pkg)

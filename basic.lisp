@@ -14,8 +14,9 @@
   (oid nil :cell nil)
   constructor-args)
 
+#-its-alive!
 (defmethod initialize-instance :after ((self qx-object) &key oid fm-parent)
-  (unless (typep self 'qxl-session)
+  (unless (typep self '(or qxl-session qx-table-model-abstract))
     (assert (or oid fm-parent) () "No fm-parent at i-i for ~a" self)))
 
 (defmethod md-awaken :before ((self qx-object))
@@ -33,6 +34,7 @@
         (oid self) (qx-class self)
         (constructor-args self))
       (b-when cfg (qx-configurations self)
+        
         (qxfmt "clDict[~a].set(~a);" (oid self)(json$ cfg))))))
           
 (defgeneric qx-configurations (self)
@@ -52,8 +54,11 @@
   onkeypress
   onkeyinput
   onclick
+  onappear
+  onfocusin
   (enabled t)
-  (focusable nil :cell nil)
+  (focusable nil :cell nil) ;; qx default is false for widget so no need for init value :js-false
+  (focus-grab nil :cell nil)
   selectedp
   selected-key
   kb-selector
@@ -68,7 +73,9 @@
 
 (defmethod qx-configurations append ((self qx-widget))
   (nconc
-   (cfg background-color)))
+   (cfg background-color)
+   (cfg focusable)
+   (cfg enabled)))
 
 (defmethod make-qx-instance :after ((self qx-widget))
   ;;>>> Make this dependent on some focusable flag, prolly a non-cell
@@ -80,7 +87,11 @@ clDict[~a].addListener('focus', function (e) {
                                       ,'GET'
                                       , 'text/javascript');
     rq.send();
-    });" (oid self)))))
+    });" (oid self)(oid self))))
+  (with-integrity (:client `(:post-assembly ,self))
+    (when (focus-grab self)
+      (focus-on self)))
+    )
 
 (defobserver enabled ()
   (when (or (null new-value) old-value-boundp) ;; only needed if off or was off
@@ -123,8 +134,27 @@ clDict[~a].addListener('execute', function(e) {
 clDict[~a].addListener('click', function(e) {
     var rq = new qx.io.remote.Request('/callback?sessId='+sessId+'&opcode=onclick&oid=~:*~a','GET', 'text/javascript');
     rq.send();
-});" 
-                  (oid self))))))
+});" (oid self))))))
+
+(defobserver onappear ()
+  (with-integrity (:client `(:post-make-qx ,self))
+    (cond
+     (new-value (unless old-value
+                  (qxfmt "
+clDict[~a].addListener('appear', function(e) {
+    var rq = new qx.io.remote.Request('/callback?sessId='+sessId+'&opcode=onappear&oid=~:*~a','GET', 'text/javascript');
+    rq.send();
+});" (oid self)))))))
+
+(defobserver onfocusin ()
+  (with-integrity (:client `(:post-make-qx ,self))
+    (cond
+     (new-value (unless old-value
+                  (qxfmt "
+clDict[~a].addListener('focusin', function(e) {
+    var rq = new qx.io.remote.Request('/callback?sessId='+sessId+'&opcode=onfocusin&oid=~:*~a','GET', 'text/javascript');
+    rq.send();
+});" (oid self)(oid self)))))))
 
 (defobserver onkeydown ()
   (with-integrity (:client `(:post-make-qx ,self))
@@ -201,8 +231,7 @@ if (clDict[~a]!==undefined) {
 
 (defmd qx-html (qx-widget)
   (qx-class "qx.ui.embed.Html" :allocation :class :cell nil)
-  html
-  onappear)
+  html)
 
 (defobserver html ()
   (with-integrity (:client `(:post-make-qx ,self))

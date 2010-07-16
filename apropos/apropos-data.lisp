@@ -27,7 +27,7 @@
                       :exported? (funcall eor (exportedp sym)))))))
 
 (defun symbol-info-filtered (syms type exported-only-p selected-pkg-p selected-pkg)
-  (mprt :symbol-info-filtered-sees selected-pkg-p selected-pkg)
+  (trcx :symbol-info-filtered-sees selected-pkg-p selected-pkg)
   (loop for sym in syms
       when (and
             (or (not exported-only-p) (or (eq t (symbol-info-exported? sym))
@@ -67,6 +67,6 @@
 
 (defun sym-sort (self req)
   (prog1 nil
-    (setf (sym-sort-spec (u^ qxl-session))
+    (setf (sym-sort-spec (upper (table self) qxl-session))
       (list (req-val req "key")(req-val req "order")))))
 

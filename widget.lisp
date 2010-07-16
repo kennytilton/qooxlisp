@@ -232,14 +232,14 @@ if (rb !== oldsel) {
 (defmd qx-tab-view (qx-widget qooxlisp-family)
   (qx-class "qx.ui.tabview.TabView" :allocation :class :cell nil)
   bar-position
-  :value (c?n (ekx :start-sel car (^kids)))
+  :value (c?n (car (^kids)))
   (onchangeselection (lambda (self req)
                        (print (list :generic-tabview-changesel-fires (req-val req "value")))
                        
                        (let* ((nv (req-val req "value"))
                               (nvs (split-sequence #\! nv))
                               (page-id (parse-integer (car nvs))))
-                         (setf (^value) (ekx :tabview-sel-page oid-to-object page-id))))))
+                         (setf (^value) (oid-to-object page-id))))))
 
 (defmethod qx-configurations append ((self qx-tab-view))
   (nconc (cfg bar-position)))

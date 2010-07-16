@@ -1,4 +1,4 @@
-;; -*- lisp-version: "8.2 [64-bit Windows] (Jun 7, 2010 16:49)"; cg: "1.134"; -*-
+;; -*- lisp-version: "8.2 [64-bit Windows] (Jan 25, 2010 15:11)"; cg: "1.134"; -*-
 
 (in-package :cg-user)
 
@@ -14,7 +14,7 @@
   :projects (list (make-instance 'project-module :name "../qooxlisp.lpr" :show-modules
                                  t))
   :libraries nil
-  :editable-files nil
+  :editable-files (list "../ide/source/index.html")
   :distributed-files (list "../ide/source/class/ide/Application.js"
                            "../ide/source/class/ide/TableModelQXL.js")
   :internally-loaded-files nil
