@@ -9,6 +9,7 @@
 
 (in-package :qxl)
 
+
 (defmd qx-table-model-abstract (qx-object)
   ;; columns are defined by table and supplied from its columns observer
   (table nil :cell nil))

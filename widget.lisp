@@ -17,6 +17,11 @@
    (b-when x (label self)
      (list (cons :label x)))))
 
+(defobserver label ((self qx-atom))
+  (when old-value
+    (with-integrity (:client `(:post-make-qx ,self))
+      (qxfmt "clDict[~a].setLabel('~a');" (oid self) (or new-value "")))))
+
 (defmd qx-list (qooxlisp-control qx-widget qooxlisp-family)
   :value (c-in nil)
   (qx-class "qx.ui.form.List" :allocation :class :cell nil)
@@ -89,7 +94,10 @@ clDict[~a].addListener('changeValue', function(e) {
 (defmd qx-text-field (qx-abstract-field)
   (qx-class "qx.ui.form.TextField" :allocation :class :cell nil))
 
+(defmd qx-password-field (qx-text-field)
+  (qx-class "qx.ui.form.PasswordField" :allocation :class :cell nil))
 
+(export! qx-text-field qx-password-field)
 
 (defmd qx-list-item (qx-atom)
   (qx-class "qx.ui.form.ListItem" :allocation :class :cell nil)
@@ -111,6 +119,8 @@ clDict[~a].addListener('changeValue', function(e) {
 
 (defmd qx-button (qooxlisp-control qx-atom)
   (qx-class "qx.ui.form.Button" :allocation :class :cell nil))
+
+
 
 ;;; --- label --------------------------------------
 
@@ -148,6 +158,7 @@ clDict[~a].addListener('changeValue', function(e) {
   (qx-class "qx.ui.form.RadioButtonGroup" :allocation :class :cell nil)
   (onchangeselection (lambda (self req)
                        (let ((nv (req-val req "value")))
+                         (trcx :rbgroupchgsel nv)
                          (b-if oid (parse-integer nv :junk-allowed t)
                            (let ((sel (gethash oid (dictionary *web-session*))))
                              (assert sel () "unknown oid in changesel ~a" oid)

@@ -5,7 +5,6 @@ qx.Class.define("ide.TableModelQXL", {
         this.base(arguments);
         // todo: add some assertions in re params
         //this.oid = oid;
-        console.log("constructing tablemodelqxl blocksz ");
         this.setBlockSize(blocksize);
 
         this.addListener('metaDataChanged', function(e){
@@ -28,8 +27,7 @@ qx.Class.define("ide.TableModelQXL", {
     members: {
         _loadRowCount: function(){
     			var req = new qx.io.remote.Request("/cbjson", "GET", "application/json");
-                        console.log("loading row count under oid "+this.oid);
-    			this.buildReq(req,'loadrowcount');
+                        this.buildReq(req,'loadrowcount');
     			//req.setTimeout(2000);
     			req.addListener("completed", function(response){					
     				var result = response.getContent();
@@ -59,7 +57,7 @@ qx.Class.define("ide.TableModelQXL", {
             }, this);
             req.send();
         }, buildReq: function(req, opcode){
-            console.log('sending request '+opcode+' sess: '+sessId+' oid '+ this.oid);
+            //console.log('sending request '+opcode+' sess: '+sessId+' oid '+ this.oid);
             req.setParameter('sessId', sessId);
 	    req.setParameter('oid', this.oid);
 	    req.setParameter('opcode', opcode);

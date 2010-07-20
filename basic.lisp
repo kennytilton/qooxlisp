@@ -9,14 +9,14 @@
 
 (in-package :qxl)
 
-
 (defmd qx-object ()
   (oid nil :cell nil)
   constructor-args)
 
 #-its-alive!
 (defmethod initialize-instance :after ((self qx-object) &key oid fm-parent)
-  (unless (typep self '(or qxl-session qx-table-model-abstract))
+  (unless (or (typep self 'qxl-session)
+            (typep self 'qx-table-model-abstract))
     (assert (or oid fm-parent) () "No fm-parent at i-i for ~a" self)))
 
 (defmethod md-awaken :before ((self qx-object))
@@ -62,14 +62,16 @@
   selectedp
   selected-key
   kb-selector
-  tool-tip)
+  tool-tip
+  ps3 ;; persistence; name held over from S3
+  )
 
 (defun selected-match (sought sel &key (test 'eql))
   (if (consp sel)
       (member sought sel :test test)
     (funcall test sought sel)))
 
-(export! qx-widget tool-tip selectedp ^selectedp selected-match selected-key ^selected-key)
+(export! ps3 qx-widget tool-tip selectedp ^selectedp selected-match selected-key ^selected-key)
 
 (defmethod qx-configurations append ((self qx-widget))
   (nconc

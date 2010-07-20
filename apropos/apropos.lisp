@@ -42,7 +42,6 @@
         (let ((*web-session* nil))
           (with-integrity ()
             (qxfmt "
-console.log('console log works');
 function cbjs (oid,opcode,data) {
 	var req = new qx.io.remote.Request('/callback','GET', 'text/javascript');
 	req.setParameter('sessId', sessId);

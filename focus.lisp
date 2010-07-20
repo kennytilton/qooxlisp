@@ -128,7 +128,7 @@ add finalization for radio button (look at others, see if ICR can ne de-celled
       (qxfmt "clDict[~a].blur();" (oid f)))))
 
 (defmethod focus-on (self)
-  (assert self)
+  (assert self () "focus on null self")
   ;;(qxfmt "console.log('focus on ~a ('+clDict[~a]+') from lisp: '+clDict[~a]);" (oid self)(oid self)(oid self))
   (qxfmt "clDict[~a].focus();" (oid self)))
 
