@@ -164,7 +164,7 @@ clDict[~a].addListener('focusin', function(e) {
      (new-value (qxfmt "
 clDict[~a].addListener('keydown', function(e) {
     var k = e.getKeyIdentifier();
-    if (k=='Backspace') e.preventDefault();
+    e.preventDefault();
                          
     var rq = new qx.io.remote.Request('/callback?sessId='+sessId+'&opcode=onkeydown&oid=~:*~a','GET', 'text/javascript');
     rq.setParameter('keyId', e.getKeyIdentifier());

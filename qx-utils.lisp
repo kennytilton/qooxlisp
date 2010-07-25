@@ -132,7 +132,8 @@
       (print `(:response-at-error ,*js-response*))
       (error "JS got deferred ~a" (list* fs fa)))
     (setf *js-response*
-      (conc$ *js-response* n))))
+      (conc$ *js-response* n)))
+  (values))
 
 #+save
 (defun qxfmt (fs &rest fa)

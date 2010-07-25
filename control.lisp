@@ -28,13 +28,12 @@
   
   (key-evt nil :cell :ephemeral)
   (enabled t)
-  (user-errors :initarg :user-errors :accessor user-errors :initform nil)
-  tool-tip
   
+  tool-tip
   
   (kb-selector nil :cell nil))
 
-(defmethod user-errors (other) (declare (ignore other)))
+
 
 (defmethod do-double-click ((self control) )
   (b-when a (^double-click-action)

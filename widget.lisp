@@ -245,8 +245,6 @@ if (rb !== oldsel) {
   bar-position
   :value (c?n (car (^kids)))
   (onchangeselection (lambda (self req)
-                       (print (list :generic-tabview-changesel-fires (req-val req "value")))
-                       
                        (let* ((nv (req-val req "value"))
                               (nvs (split-sequence #\! nv))
                               (page-id (parse-integer (car nvs))))

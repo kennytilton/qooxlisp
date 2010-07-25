@@ -77,7 +77,7 @@ sessId=~a;" (session-id self)))
 
 (defun session-focus (req ent)
   ;; this guy handles focusOn event from qooxdoo so it is cool to setf the focus
-  (trcx :session-focus-entry!!!!!!!)
+  ;;(trcx :session-focus-entry!!!!!!!)
   (with-js-response (req ent)
     (with-integrity ()
       (b-when session (b-if sessId (parse-integer (req-val req "sessId") :junk-allowed t)
@@ -88,7 +88,7 @@ sessId=~a;" (session-id self)))
                             (or (gethash oid (dictionary session))
                               (dfail "session-focus: oid ~s not in dictionary" oid))
                             (dfail "session-focus: No oid parameter: ~s" (rq-raw req)))
-          (trcx :focusOn-sets-session-focus session new-focus)
+          ;;(trcx :focusOn-sets-session-focus session new-focus)
           (setf (focus session) new-focus))))))
 
 (export! qx-callback-js qx-callback-json make-qx-instance) ;;>>> maybe not once start-up inherits
