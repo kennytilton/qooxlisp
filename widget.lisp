@@ -33,17 +33,18 @@
                          (setf (^value) nvs))))
   spacing)
 
-(split-sequence #\! "aaa!bbb")
-
 (defobserver .kids ((self qx-list))
   (with-cc :newlist
     (setf (^value) nil)))
 
 (defobserver onchangeselection () ;; unspecialized, hoping all selections are lists
-  (with-integrity (:client `(:post-make-qx ,self))
-    (cond
-     (new-value (qxfmt "
-clDict[~a].addListener('changeSelection', function(e) {
+  (typecase self
+    (qx-radio-button-group-ex
+     
+     (with-integrity (:client `(:post-assembly ,self))
+       (cond
+        (new-value (qxfmt "
+clDict[~a].grouper.addListener('changeSelection', function(e) {
     var items = e.getData();
     var sel = '';
     for (i = 0; i < items.length; ++i) {
@@ -57,6 +58,25 @@ clDict[~a].addListener('changeSelection', function(e) {
     req.setParameter('value',sel);
     req.send();
 });" (oid self))))))
+    (otherwise
+     
+     (with-integrity (:client `(:post-make-qx ,self))
+       (cond
+        (new-value (qxfmt "
+clDict[~a].addListener('changeSelection', function(e) {
+    var items = e.getData();
+    var sel = '';
+    for (i = 0; i < items.length; ++i) {
+       if (i > 0) sel = sel + '!';
+       sel = sel + items[i].oid;
+    }
+    var req = new qx.io.remote.Request('/callback','GET', 'text/javascript');
+    req.setParameter('sessId', sessId);
+    req.setParameter('oid', ~@*~a);
+    req.setParameter('opcode', 'onchangeselection');
+    req.setParameter('value',sel);
+    req.send();
+});" (oid self))))))))
 
 (defmethod qx-configurations append ((self qx-list))
   (nconc
@@ -158,7 +178,6 @@ clDict[~a].addListener('changeValue', function(e) {
   (qx-class "qx.ui.form.RadioButtonGroup" :allocation :class :cell nil)
   (onchangeselection (lambda (self req)
                        (let ((nv (req-val req "value")))
-                         (trcx :rbgroupchgsel nv)
                          (b-if oid (parse-integer nv :junk-allowed t)
                            (let ((sel (gethash oid (dictionary *web-session*))))
                              (assert sel () "unknown oid in changesel ~a" oid)
@@ -188,14 +207,37 @@ if (rb !== oldsel) {
         :global-search nil :skip-node self :opaque nil)))))
 
 
+(defmd qx-radio-button-group-ex (qooxlisp-control qooxlisp-layouter)
+  (qx-class "qx.ui.container.Composite" :allocation :class :cell nil)
+  (onchangeselection (lambda (self req)
+                       (let ((nv (req-val req "value")))
+                         (b-if oid (parse-integer nv :junk-allowed t)
+                           (let ((sel (gethash oid (dictionary *web-session*))))
+                             (assert sel () "unknown oid in changesel ~a" oid)
+                             (unless (equal (^value) (model sel))
+                               (setf (^value) (model sel))))
+                           (warn "Invalid oid parameter ~s in onchgsel callback"  (req-val req "value")))))))
+
+(export! qx-radio-button-group-ex legend)
+
+(defmethod make-qx-instance :after ((self qx-radio-button-group-ex))
+  (b-when items (fm-collect-if self (lambda (x) (typep x 'qxl-radio-item)))
+    (with-integrity (:client `(:post-make-qx ,self))
+      (qxfmt "
+var nada = [];
+clDict[~a].grouper = new qx.ui.form.RadioGroup(~{clDict[~a]~^,~});
+clDict[~a].grouper.setAllowEmptySelection(true);
+clDict[~a].grouper.setSelection(nada);
+"
+        (oid self) (mapcar 'oid items)(oid self)(oid self)))))
+
+;;; clDict[~a].grouper.setAllowEmptySelection(true);
+
 (defmd qxl-radio-item (qooxlisp-control))
 
 (defmd qx-radio-button (qx-button qxl-radio-item)
   (qx-class "qx.ui.form.RadioButton" :allocation :class :cell nil)
   model)
-
-(defmethod qxl-model ((self qx-radio-button))
-  (model self))
 
 (defmethod qx-configurations append ((self qx-radio-button))
   (nconc (cfg model)))

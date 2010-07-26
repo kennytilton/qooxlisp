@@ -6,7 +6,9 @@
   (qx-class "qx.ui.groupbox.GroupBox" :allocation :class :cell nil)
   legend)
 
-
+(defmethod qx-configurations append ((self qx-group-box))
+  (nconc
+   (cfg legend)))
 
 ;;;(defmethod qx-configurations append ((self qx-group-box))
 ;;;  )
@@ -30,10 +32,14 @@
 
 (defmd qx-radio-group-box (qxl-radio-item qx-group-box)
   (qx-class "qx.ui.groupbox.RadioGroupBox" :allocation :class :cell nil)
-  model) ;; trying to fix qooxddo radio group box
+  (model  (c? (^value))) ;; trying to fix qooxddo radio group box
+  appearance) 
 
-(defmethod qxl-model ((self qx-radio-group-box))
-  (model self))
+(defmethod qx-configurations append ((self qx-radio-group-box))
+  (nconc
+   (cfg appearance)))
+
+(export! qx-radio-group-box appearance)
 
 (defobserver legend ((self qx-radio-group-box))
   (when new-value
