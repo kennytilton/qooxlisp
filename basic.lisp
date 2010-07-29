@@ -165,9 +165,8 @@ clDict[~a].addListener('focusin', function(e) {
 clDict[~a].addListener('keydown', function(e) {
     var k = e.getKeyIdentifier();
     e.preventDefault();
-                         
     var rq = new qx.io.remote.Request('/callback?sessId='+sessId+'&opcode=onkeydown&oid=~:*~a','GET', 'text/javascript');
-    rq.setParameter('keyId', e.getKeyIdentifier());
+    rq.setParameter('keyId', k);
     rq.setParameter('mods', e.getModifiers());
     rq.send();
 });" (oid self))))))
@@ -178,6 +177,7 @@ clDict[~a].addListener('keydown', function(e) {
      (new-value (qxfmt "
 clDict[~a].addListener('keypress', function(e) {
     var k = e.getKeyIdentifier();
+    e.preventDefault();
     var rq = new qx.io.remote.Request('/callback?sessId='+sessId+'&opcode=onkeypress&oid=~:*~a','GET', 'text/javascript');
     rq.setParameter('keyId', k);
     rq.setParameter('mods', e.getModifiers());

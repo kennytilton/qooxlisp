@@ -24,4 +24,5 @@
                (:file "table")
                (:file "focus")
                (:file "control")
-               (:file "group-box")))
+               (:file "group-box")
+               (:file "radio")))

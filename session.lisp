@@ -13,11 +13,10 @@
 
 (defobserver .kids ((self qooxlisp-family))
   ;; the problem here is that as each item gets deleted from, say, a select box,
-  ;; a changeSelection event fires. Might need to hack qooxdoo itself to
+  ;; a changeSelection event fires. Might need to muck with qooxdoo itself to
   ;; grok setf of children. todo: m/b
   
   (with-integrity (:client `(:post-make-qx ,self))
-    ;(print (list "kidsing!!!!!!!!!!!!!!!!!" self old-value new-value))
     (loop for k in (set-difference old-value new-value)
         do (qxfmt "clDict[~a].remove(clDict[~a]);" (oid self)(oid k)))
     (loop for k in (set-difference new-value old-value) do 

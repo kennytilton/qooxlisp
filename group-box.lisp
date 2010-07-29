@@ -30,19 +30,3 @@
     (qxfmt "clDict[~a].setValue(~a);"
       (oid self) (if new-value "true" "false"))))
 
-(defmd qx-radio-group-box (qxl-radio-item qx-group-box)
-  (qx-class "qx.ui.groupbox.RadioGroupBox" :allocation :class :cell nil)
-  (model  (c? (^value))) ;; trying to fix qooxddo radio group box
-  appearance) 
-
-(defmethod qx-configurations append ((self qx-radio-group-box))
-  (nconc
-   (cfg appearance)))
-
-(export! qx-radio-group-box appearance)
-
-(defobserver legend ((self qx-radio-group-box))
-  (when new-value
-    (with-integrity (:client `(:post-make-qx ,self))
-      (qxfmt "clDict[~a].setLegend('~a');"
-        (oid self) new-value))))
