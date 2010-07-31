@@ -114,7 +114,9 @@ clDict[~a].addListener('focus', function (e) {
        
 (defobserver background-color ()
   (when old-value
-    (qxfmt "clDict[~a].setBackgroundColor('~(~a~)');" (oid self) new-value)))
+    (if new-value
+        (qxfmt "clDict[~a].setBackgroundColor('~(~a~)');" (oid self) new-value)
+      (qxfmt "clDict[~a].setBackgroundColor(null);" (oid self) ))))
 
 (defmd qooxlisp-control () ;; qooxlisp- indicates this is a Lisp-side only class
   onexecute)
@@ -164,7 +166,6 @@ clDict[~a].addListener('focusin', function(e) {
      (new-value (qxfmt "
 clDict[~a].addListener('keydown', function(e) {
     var k = e.getKeyIdentifier();
-    e.preventDefault();
     var rq = new qx.io.remote.Request('/callback?sessId='+sessId+'&opcode=onkeydown&oid=~:*~a','GET', 'text/javascript');
     rq.setParameter('keyId', k);
     rq.setParameter('mods', e.getModifiers());

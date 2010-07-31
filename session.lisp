@@ -35,14 +35,14 @@
   (responses nil :cell nil)
   (focus (c-in nil))
   keyboard-modifiers ;; not sure if this holdover gets kept
+  engine ;; needed to sort out key events
   )
 
 (defmethod initialize-instance :after ((self qxl-session) &key)
   (assert (null (gethash (session-id self) *qx-sessions*)))
   (setf (gethash (session-id self) *qx-sessions*) self))
 
-(export! .focus .focused *web-session* ^session)
-
+(export! .focus .focused *web-session* ^session engine ^engine)
 
 (define-symbol-macro ^session (n^ qxl-session))
 (define-symbol-macro .focus (focus ^session))
@@ -76,7 +76,7 @@ sessId=~a;" (session-id self)))
 
 (defun session-focus (req ent)
   ;; this guy handles focusOn event from qooxdoo so it is cool to setf the focus
-  ;;(trcx :session-focus-entry!!!!!!!)
+  (trcx :session-focus-entry!!!!!!! (req-val req "sessId") (req-val req "oid"))
   (with-js-response (req ent)
     (with-integrity ()
       (b-when session (b-if sessId (parse-integer (req-val req "sessId") :junk-allowed t)
@@ -87,7 +87,7 @@ sessId=~a;" (session-id self)))
                             (or (gethash oid (dictionary session))
                               (dfail "session-focus: oid ~s not in dictionary" oid))
                             (dfail "session-focus: No oid parameter: ~s" (rq-raw req)))
-          ;;(trcx :focusOn-sets-session-focus session new-focus)
+          (trcx :focusOn-sets-session-focus session new-focus)
           (setf (focus session) new-focus))))))
 
 (export! qx-callback-js qx-callback-json make-qx-instance) ;;>>> maybe not once start-up inherits
