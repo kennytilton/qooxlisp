@@ -169,13 +169,17 @@ clDict[~a].addListener('keydown', function(e) {
     var rq = new qx.io.remote.Request('/callback?sessId='+sessId+'&opcode=onkeydown&oid=~:*~a','GET', 'text/javascript');
     rq.setParameter('keyId', k);
     rq.setParameter('mods', e.getModifiers());
+        if (jsMath.TeX==undefined)
+           rq.setParameter('tex','no');
+        else
+           rq.setParameter('tex','yes');
     rq.send();
 });" (oid self))))))
 
 (defobserver onkeypress ()
   (with-integrity (:client `(:post-make-qx ,self))
     (cond
-     (new-value (qxfmt "
+     ((functionp new-value) (qxfmt "
 clDict[~a].addListener('keypress', function(e) {
     var k = e.getKeyIdentifier();
     e.preventDefault();
@@ -183,6 +187,11 @@ clDict[~a].addListener('keypress', function(e) {
     rq.setParameter('keyId', k);
     rq.setParameter('mods', e.getModifiers());
     rq.send();
+});" (oid self)))
+
+     (new-value (qxfmt "
+clDict[~a].addListener('keypress', function(e) {
+    e.preventDefault();
 });" (oid self)))
      
      #+chill-youneedtobespecificremovinglisteners
