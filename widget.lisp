@@ -210,6 +210,7 @@ clDict[~a].addListener('changeValue', function(e) {
   )
 
 (defobserver selection ((self qx-stack))
+  (trcx sel-observer new-value self)
   (with-integrity (:client `(:post-make-qx ,self))
     (cond
      (new-value (qxfmt "clDict[~a].setSelection([clDict[~a]]);" (oid self)(oid new-value)))
@@ -222,8 +223,15 @@ clDict[~a].addListener('changeValue', function(e) {
   (onchangeselection (lambda (self req)
                        (let* ((nv (req-val req "value"))
                               (nvs (split-sequence #\! nv))
-                              (page-id (parse-integer (car nvs))))
-                         (setf (^value) (oid-to-object page-id))))))
+                              (page-id (parse-integer (car nvs)))
+                              )
+                         (trcx tabview-onchangesel page-id )
+                         (b-when page (oid-to-object page-id)
+                           (qxfmt "qx.bom.History.getInstance().addToHistory('~a', '~a');"
+                             (md-name page) (label page))
+                           (setf (^value) page))))))
+
+
 
 (defmethod qx-configurations append ((self qx-tab-view))
   (nconc (cfg bar-position)))

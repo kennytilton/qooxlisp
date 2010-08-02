@@ -35,14 +35,15 @@
   (responses nil :cell nil)
   (focus (c-in nil))
   keyboard-modifiers ;; not sure if this holdover gets kept
-  engine ;; needed to sort out key events
+  (engine nil :cell nil)
+  (browser nil :cell nil)
   )
 
 (defmethod initialize-instance :after ((self qxl-session) &key)
   (assert (null (gethash (session-id self) *qx-sessions*)))
   (setf (gethash (session-id self) *qx-sessions*) self))
 
-(export! .focus .focused *web-session* ^session engine ^engine)
+(export! .focus .focused *web-session* ^session engine browser)
 
 (define-symbol-macro ^session (n^ qxl-session))
 (define-symbol-macro .focus (focus ^session))
