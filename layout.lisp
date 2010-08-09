@@ -39,15 +39,18 @@
       (qxfmt "clDict[~a].setMaxHeight(~a);" (oid self) new-value))))
 
 (defun visible (self)
+  (assert self () "visi self")
   (equal (visibility self) "visible"))
 
 (defmacro ^visible ()
   `(visible self))
 
 (defun hidden (self)
+  (assert self () "hid self")
   (equal (visibility self) "hidden"))
 
 (defun collapsed (self)
+  (assert self () "collaps self")
   (equal (visibility self) "excluded"))
 
 (defun vis/not (b)

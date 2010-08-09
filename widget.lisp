@@ -140,7 +140,8 @@ clDict[~a].addListener('changeValue', function(e) {
 ;;; --- button --------------------------------------
 
 (defmd qx-button (qooxlisp-control qx-atom)
-  (qx-class "qx.ui.form.Button" :allocation :class :cell nil))
+  (qx-class "qx.ui.form.Button" :allocation :class :cell nil)
+  :allow-grow-x :js-false :allow-grow-y :js-false)
 
 
 
@@ -227,8 +228,9 @@ clDict[~a].addListener('changeValue', function(e) {
                               )
                          (trcx tabview-onchangesel page-id )
                          (b-when page (oid-to-object page-id)
-                           (qxfmt "qx.bom.History.getInstance().addToHistory('~a', '~a');"
-                             (md-name page) (label page))
+                           (when (bookmark? page)
+                             (qxfmt "qx.bom.History.getInstance().addToHistory('~a', '~a');"
+                               (md-name page) (label page)))
                            (setf (^value) page))))))
 
 
@@ -238,7 +240,8 @@ clDict[~a].addListener('changeValue', function(e) {
 
 (defmd qx-tab-page (qx-composite)
   (qx-class "qx.ui.tabview.Page" :allocation :class :cell nil)
-  label icon)
+  label icon
+  (bookmark? nil :cell nil))
 
 (defmethod qx-configurations append ((self qx-tab-page))
   (nconc (cfg label)(cfg icon)))

@@ -20,7 +20,7 @@
     (assert (or oid fm-parent) () "No fm-parent at i-i for ~a" self)))
 
 (defmethod md-awaken :before ((self qx-object))
-  (unless (oid self)
+  (unless (slot-value self 'oid)
     (let ((s (session self)))
       (assert s () "No session for ~a, par ~a, usess ~a" self (fm-parent self) (u^ qxl-session))
       (setf (oid self) (get-next-oid s))
@@ -56,13 +56,17 @@
   onclick
   onappear
   onfocusin
+  (onblur nil #+not (lambda (self req)
+            (declare (ignorable self req))
+            (trcx :blurring self)
+            (setf (focus (n^ qxl-session)) nil)))
   (enabled t)
   (focusable nil :cell nil) ;; qx default is false for widget so no need for init value :js-false
   (focus-grab nil :cell nil)
   selectedp
   selected-key
   kb-selector
-  tool-tip
+  tool-tip-text
   ps3 ;; persistence; name held over from S3
   )
 
@@ -71,13 +75,15 @@
       (member sought sel :test test)
     (funcall test sought sel)))
 
-(export! ps3 qx-widget tool-tip selectedp ^selectedp selected-match selected-key ^selected-key)
+(export! ps3 qx-widget tool-tip-text selectedp ^selectedp selected-match selected-key ^selected-key
+  background-color ^background-color)
 
 (defmethod qx-configurations append ((self qx-widget))
   (nconc
    (cfg background-color)
    (cfg focusable)
-   (cfg enabled)))
+   (cfg enabled)
+   (cfg tool-tip-text)))
 
 (defmethod make-qx-instance :after ((self qx-widget))
   ;;>>> Make this dependent on some focusable flag, prolly a non-cell
@@ -160,6 +166,16 @@ clDict[~a].addListener('focusin', function(e) {
     rq.send();
 });" (oid self)(oid self)))))))
 
+(defobserver onblur ()
+  (with-integrity (:client `(:post-make-qx ,self))
+    (cond
+     (new-value (unless old-value
+                  (qxfmt "
+clDict[~a].addListener('blur', function(e) {
+    var rq = new qx.io.remote.Request('/callback?sessId='+sessId+'&opcode=onblur&oid=~:*~a','GET', 'text/javascript');
+    rq.send();
+});" (oid self)(oid self)))))))
+
 (defobserver onkeydown ()
   (with-integrity (:client `(:post-make-qx ,self))
     (cond
@@ -228,7 +244,9 @@ clDict[~a].addListener('keyinput', function (e) {
 (defparameter *set-html* "
 if (clDict[~a]!==undefined) {
    var de = clDict[~:*~a].keepDE;
-   if (de!==undefined) {de.innerHTML = ~s;}}")
+   var ih = ~s;
+   if (de!==undefined) {
+      de.innerHTML = ih;}}")
 
 (export! set-html)
 (defmethod set-html (self)

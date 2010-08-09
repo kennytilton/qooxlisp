@@ -229,6 +229,7 @@
      :md-name ,name
      ,@iargs
      :register? t
+     :bookmark? t
      :layout(c? (mk-layout self 'qx-vbox ,@layout-iargs))
      :kids (c? (when (eq self (value (u^ qx-tab-view)))
                  (the-kids ,@kids)))))
@@ -267,6 +268,13 @@
      :layout (c? (mk-layout self 'qx-vbox ,@layout-iargs))
      :kids (c? (the-kids ,@kids))))
 
+(defmacro hbox? ((&rest layout-iargs)(&rest compo-iargs) &rest kids)
+  "vbox where kids are altered procedurally"
+  `(make-kid 'qx-composite
+     ,@compo-iargs
+     :layout (c? (mk-layout self 'qx-hbox ,@layout-iargs))
+     :kids (c? (the-kids ,@kids))))
+
 (defmacro grid ((&rest layout-iargs)(&rest compo-iargs) &rest kids)
   "vbox where kids are altered procedurally"
   `(make-kid 'qx-composite
@@ -278,7 +286,7 @@
   layout-iargs
   :layout (c? (make-layout self 'qx-vbox (^layout-iargs))))
 
-(export! qxl-row qxl-flow vbox? grid)
+(export! qxl-row qxl-flow vbox? grid hbox?)
 
 (defmd qxl-row (qx-composite)
   layout-iargs

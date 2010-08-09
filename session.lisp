@@ -19,8 +19,10 @@
   (with-integrity (:client `(:post-make-qx ,self))
     (loop for k in (set-difference old-value new-value)
         do (qxfmt "clDict[~a].remove(clDict[~a]);" (oid self)(oid k)))
-    (loop for k in (set-difference new-value old-value) do 
-          ;;(qxfmt "consolelog('adding: to '+ ~a + ' the new ' + ~a);" pa new)
+    (loop for k in (set-difference new-value old-value)
+        do 
+          ;(qxfmt "consolelog('adding: to '+ ~a + ' the new ' + ~a);" pa new)
+          (assert (oid k) () "No OID for k ~a of fam ~a" k self)
           (b-if ao (add-ops k)
             (qxfmt "clDict[~a].add(clDict[~a],~a);" (oid self) (oid k) ao)
             (qxfmt "clDict[~a].add(clDict[~a]);" (oid self) (oid k))))))
@@ -38,6 +40,18 @@
   (engine nil :cell nil)
   (browser nil :cell nil)
   )
+
+(defmethod oid :around (self)
+  (or (call-next-method)
+    (progn
+      (describe self)
+      (warn "null oid from ~a oid-sv ~a ascendants ~a " self (slot-value self 'oid) (parentage self))
+      nil)))
+
+(defun parentage (self)
+  (when self
+    (cons (fm-parent self)
+      (parentage (fm-parent self)))))
 
 (defmethod initialize-instance :after ((self qxl-session) &key)
   (assert (null (gethash (session-id self) *qx-sessions*)))
