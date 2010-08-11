@@ -13,6 +13,9 @@
   (oid nil :cell nil)
   constructor-args)
 
+(defmethod print-object ((self qx-object) s)
+  (format s "~a[~a]" (md-name self)(slot-value self 'oid)))
+
 #-its-alive!
 (defmethod initialize-instance :after ((self qx-object) &key oid fm-parent)
   (unless (or (typep self 'qxl-session)
@@ -68,6 +71,7 @@
   kb-selector
   tool-tip-text
   ps3 ;; persistence; name held over from S3
+  selectable
   )
 
 (defun selected-match (sought sel &key (test 'eql))
@@ -83,6 +87,7 @@
    (cfg background-color)
    (cfg focusable)
    (cfg enabled)
+   (cfg selectable)
    (cfg tool-tip-text)))
 
 (defmethod make-qx-instance :after ((self qx-widget))

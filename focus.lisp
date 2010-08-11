@@ -127,11 +127,8 @@ add finalization for radio button (look at others, see if ICR can ne de-celled
 (export! focus-on focus-clear)
 
 (defun focus-clear (self)
-  (trcx :focus-clear .focuser)
   (b-when fr .focuser
-    (trcx :focus-clear (focus fr))
     (b-when f (focus fr)
-      (trcx :blurring f)
       (setf (focus fr) nil) ;; new 8/8/10
       (qxfmt "clDict[~a].blur();" (oid f)))))
 

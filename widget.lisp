@@ -226,7 +226,6 @@ clDict[~a].addListener('changeValue', function(e) {
                               (nvs (split-sequence #\! nv))
                               (page-id (parse-integer (car nvs)))
                               )
-                         (trcx tabview-onchangesel page-id )
                          (b-when page (oid-to-object page-id)
                            (when (bookmark? page)
                              (qxfmt "qx.bom.History.getInstance().addToHistory('~a', '~a');"
