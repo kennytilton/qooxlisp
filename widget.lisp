@@ -211,11 +211,12 @@ clDict[~a].addListener('changeValue', function(e) {
   )
 
 (defobserver selection ((self qx-stack))
-  (trcx sel-observer new-value self)
   (with-integrity (:client `(:post-make-qx ,self))
     (cond
-     (new-value (qxfmt "clDict[~a].setSelection([clDict[~a]]);" (oid self)(oid new-value)))
-     (old-value (qxfmt "clDict[~a].setSelection(null);" (oid self))))))
+     (new-value (trcx qx-stack-sets-sel new-value)
+       (qxfmt "clDict[~a].setSelection([clDict[~a]]);" (oid self)(oid new-value)))
+     (old-value (trcx qx-stack-clears-sel new-value)
+       (qxfmt "clDict[~a].setSelection(null);" (oid self))))))
                         
 (defmd qx-tab-view (qx-widget qooxlisp-family)
   (qx-class "qx.ui.tabview.TabView" :allocation :class :cell nil)
@@ -232,8 +233,6 @@ clDict[~a].addListener('changeValue', function(e) {
                                (md-name page) (label page)))
                            (setf (^value) page))))))
 
-
-
 (defmethod qx-configurations append ((self qx-tab-view))
   (nconc (cfg bar-position)))
 
@@ -241,6 +240,11 @@ clDict[~a].addListener('changeValue', function(e) {
   (qx-class "qx.ui.tabview.Page" :allocation :class :cell nil)
   label icon
   (bookmark? nil :cell nil))
+
+(defobserver label ((self qx-tab-page))
+  (when old-value
+    (with-integrity (:client `(:post-make-qx ,self))
+      (qxfmt "clDict[~a].setLabel('~a');" (oid self) (or new-value "")))))
 
 (defmethod qx-configurations append ((self qx-tab-page))
   (nconc (cfg label)(cfg icon)))

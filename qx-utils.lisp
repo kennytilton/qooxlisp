@@ -217,7 +217,7 @@
      ,@iargs
      :kids (c?n (the-kids ,@kids)))) ;; c-in would not set self correctly for kids' parent
 
-(export! tabview qx-tab-view vpage  vpagex qx-tab-page vboxn stack qx-stack stackn)
+(export! tabview qx-tab-view vpage  vpagex qx-tab-page vboxn stack qx-stack stackn vpagex-once vpagex!)
 
 (defmacro tabview ((&rest iargs) &rest kids)
   `(make-kid 'qx-tab-view
@@ -232,6 +232,25 @@
      :bookmark? t
      :layout(c? (mk-layout self 'qx-vbox ,@layout-iargs))
      :kids (c? (when (eq self (value (u^ qx-tab-view)))
+                 (the-kids ,@kids)))))
+
+(defmacro vpagex! ((&rest layout-iargs)(name &rest iargs) &rest kids)
+  `(make-kid 'qx-tab-page
+     :md-name ,name
+     ,@iargs
+     :register? t
+     :bookmark? t
+     :layout(c? (mk-layout self 'qx-vbox ,@layout-iargs))
+     :kids (c? (the-kids ,@kids))))
+
+(defmacro vpagex-once ((&rest layout-iargs)(name &rest iargs) &rest kids)
+  `(make-kid 'qx-tab-page
+     :md-name ,name
+     ,@iargs
+     :register? t
+     :bookmark? t
+     :layout(c? (mk-layout self 'qx-vbox ,@layout-iargs))
+     :kids (c?once (when (eq self (value (u^ qx-tab-view)))
                  (the-kids ,@kids)))))
 
 (defmacro vpage ((&rest layout-iargs)( &rest iargs) &rest kids)
