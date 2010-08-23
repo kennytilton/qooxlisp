@@ -14,11 +14,13 @@
 
 (defun dfail (&rest x) (apply 'error x))
 
-
+(defparameter *warned-dead* (make-hash-table))
 
 (defun qx-reset ()
   (cells-reset 'qxl-user-queue-handler)
-  (setf *qx-sessions* (make-hash-table)))
+  (print :clearing-sessions!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!)
+  (setf *qx-sessions* (make-hash-table)
+    *warned-dead* (make-hash-table)))
 
 (defparameter *qxl-client-task-priority*
     '(:make-qx :layout :post-make-qx :post-assembly))

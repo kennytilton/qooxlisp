@@ -33,7 +33,8 @@
   
   (kb-selector nil :cell nil))
 
-
+(defmethod not-to-be :after ((self control))
+  (kb-manager-checkout self))
 
 (defmethod do-double-click ((self control) )
   (b-when a (^double-click-action)

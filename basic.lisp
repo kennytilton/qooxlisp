@@ -53,26 +53,50 @@
 (defmd qx-widget (qx-layout-item)
   decorator
   background-color
-  onkeydown
+  (onkeydown nil #+chill (lambda (self req)
+               
+               (let* ((key (req-val req "keyId"))
+                      (mods (parse-integer (req-val req "mods"))))
+                 (print (list :onkeydown self key mods :fini)))))
   onkeypress
   onkeyinput
   onclick
+  ondblclick
   onappear
-  onfocusin
-  (onblur nil #+not (lambda (self req)
+  onfocusin 
+  (onblur (lambda (self req)
             (declare (ignorable self req))
-            (trcx :blurring self)
-            (setf (focus (n^ qxl-session)) nil)))
+            (b-if s (n^ qxl-session)
+              (progn
+                (setf (focus s) nil))
+              (trcx :blur-no-sess self))))
   (enabled t)
   (focusable nil :cell nil) ;; qx default is false for widget so no need for init value :js-false
   (focus-grab nil :cell nil)
   selectedp
   selected-key
   kb-selector
+  onexecute ;; likely to need refactoring, or kb-selector moves to qooxlisp-control
   tool-tip-text
   ps3 ;; persistence; name held over from S3
   selectable
   )
+
+(defmd kb-manager ()
+  (kb-controls (make-hash-table :test 'equal) :cell nil))
+
+(defmethod not-to-be :after ((self qx-widget))
+  (kb-manager-checkout self))
+
+(defun kb-control-match (self key mods)
+  (let ((chord (list key mods)))
+    (b-when m (n^ kb-manager)
+      (gethash chord (kb-controls m)))))
+
+(defun kb-manager-checkout (self)
+  (b-when chord (kb-selector self)
+    (b-when m (n^ kb-manager)
+      (remhash chord (kb-controls m)))))
 
 (defun selected-match (sought sel &key (test 'eql))
   (if (consp sel)
@@ -80,7 +104,7 @@
     (funcall test sought sel)))
 
 (export! ps3 qx-widget tool-tip-text selectedp ^selectedp selected-match selected-key ^selected-key
-  background-color ^background-color)
+  background-color ^background-color kb-manager kb-control-match)
 
 (defmethod qx-configurations append ((self qx-widget))
   (nconc
@@ -93,6 +117,12 @@
 (defmethod make-qx-instance :after ((self qx-widget))
   ;;>>> Make this dependent on some focusable flag, prolly a non-cell
   (with-integrity (:client `(:post-make-qx ,self))
+    (b-when s (kb-selector self)
+      (b-when m (n^ kb-manager)
+        (b-if x (gethash s (kb-controls m))
+            (break "chord ~a for ~a already registered as ~a in manager ~a" s self x m)
+          (setf (gethash s (kb-controls m)) self))))
+
     (when (focusable self)
       (qxfmt "
 clDict[~a].addListener('focus', function (e) {
@@ -129,6 +159,8 @@ clDict[~a].addListener('focus', function (e) {
         (qxfmt "clDict[~a].setBackgroundColor('~(~a~)');" (oid self) new-value)
       (qxfmt "clDict[~a].setBackgroundColor(null);" (oid self) ))))
 
+(export! onexecute)
+
 (defmd qooxlisp-control () ;; qooxlisp- indicates this is a Lisp-side only class
   onexecute)
 
@@ -148,6 +180,15 @@ clDict[~a].addListener('execute', function(e) {
      (new-value (qxfmt "
 clDict[~a].addListener('click', function(e) {
     var rq = new qx.io.remote.Request('/callback?sessId='+sessId+'&opcode=onclick&oid=~:*~a','GET', 'text/javascript');
+    rq.send();
+});" (oid self))))))
+
+(defobserver ondblclick ()
+  (with-integrity (:client `(:post-make-qx ,self))
+    (cond
+     (new-value (qxfmt "
+clDict[~a].addListener('dblclick', function(e) {
+    var rq = new qx.io.remote.Request('/callback?sessId='+sessId+'&opcode=ondblclick&oid=~:*~a','GET', 'text/javascript');
     rq.send();
 });" (oid self))))))
 
@@ -245,6 +286,7 @@ clDict[~a].addListener('keyinput', function (e) {
   (qx-class "qx.ui.container.Composite" :allocation :class :cell nil))
 
 (export! onappear html)
+
 
 (defparameter *set-html* "
 if (clDict[~a]!==undefined) {

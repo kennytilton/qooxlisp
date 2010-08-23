@@ -42,6 +42,8 @@
   (engine nil :cell nil)
   (browser nil :cell nil)
   (stopped nil :cell nil)
+  (touched (get-universal-time) :cell nil)
+  (cb-timeout (lambda (self)(print `(,self :timeout))) :cell nil)
   )
 
 (defun qxl-session-stopped ()
@@ -51,7 +53,7 @@
 (defun qxl-session-stop (why)
   (if *web-session*
       (progn
-        (setf (stopped *web-session*) t)
+        (setf (stopped *web-session*) why)
         (print `(:qxl-session-stopped-because ,why)))
     (print `(:qxl-session-stop-sees-no-*web-session* ,why))))
 
@@ -69,6 +71,7 @@
 
 (defmethod initialize-instance :after ((self qxl-session) &key)
   (assert (null (gethash (session-id self) *qx-sessions*)))
+  (trc "new session!!!" (session-id self) self (hash-table-count *qx-sessions*))
   (setf (gethash (session-id self) *qx-sessions*) self))
 
 (export! .focus .focused *web-session* ^session engine browser qxl-session-stopped qxl-session-stop)
@@ -103,6 +106,25 @@ sessId=~a;" (session-id self)))
 (export! session-focus)
 
 
+(defmacro watching-stopped (session-form &body body)
+  (let ((session (gensym)))
+    `(let ((,session ,session-form))
+       (setf (touched ,session) (get-universal-time))
+       (loop for sess being the hash-values of *qx-sessions*
+           for touched = (touched sess)
+           if (null touched) do (setf (touched sess) (get-universal-time))
+           else when (> (- (get-universal-time) (touched sess)) 5)
+           do (trc "timeout" (get-universal-time) :vs (touched sess))
+             (remhash (session-id sess) *qx-sessions*)
+             (funcall (cb-timeout sess) sess)
+             
+             (not-to-be sess))
+       (case (stopped ,session)
+         ((nil)
+          ,@body)
+         (otherwise
+          (qx-alert "server session has aborted. Please reload the page."))))))
+
 (defun session-focus (req ent)
   ;; this guy handles focusOn event from qooxdoo so it is cool to setf the focus
   (with-js-response (req ent)
@@ -111,27 +133,28 @@ sessId=~a;" (session-id self)))
                               (or (gethash sessId *qx-sessions*)
                                 (dfail "session-focus: Unknown session ID ~a in ~s" sessId (rq-raw req)))
                               (dfail "session-focus: No sessId parameter: ~s" (rq-raw req)))
-        (if (stopped *web-session*)
-            (qx-alert "server session has aborted. Please reload the page.")
-          
+        (watching-stopped *web-session*
           (b-when new-focus (b-if oid (parse-integer (req-val req "oid") :junk-allowed t)
                               (or (gethash oid (dictionary *web-session*))
                                 (dfail "session-focus: oid ~s not in dictionary" oid))
                               (dfail "session-focus: No oid parameter: ~s" (rq-raw req)))
+            (trcx session-focus new-focus *web-session*)
             (setf (focus *web-session*) new-focus)))))))
 
 (export! qx-callback-js qx-callback-json make-qx-instance qx-alert) ;;>>> maybe not once start-up inherits
+
+
 
 (defun qx-callback-js (req ent)
   (let ((*ekojs* nil)) ;; qx-callback-js
     (with-js-response (req ent) 
       (top-level.debug::with-auto-zoom-and-exit ("aa-callback-js.txt" :exit nil)
-        (b-if *web-session* (b-if sessId (parse-integer (req-val req "sessId") :junk-allowed t)
-                              (gethash sessId *qx-sessions*)
-                              (warn "Invalid sessId parameter ~s in callback req: ~a" (req-val req "sessId")
-                                (list (req-val req "opcode") (req-val req "oid"))))
-          (if (stopped *web-session*)
-              (qx-alert "server session has aborted. Please reload the page.")
+        (let ((sessId (parse-integer (req-val req "sessId") :junk-allowed t)))
+          (b-if *web-session* (if sessId
+                                  (gethash sessId *qx-sessions*)
+                                (warn "Invalid sessId parameter ~s in callback req: ~a" (req-val req "sessId")
+                                  (list (req-val req "opcode") (req-val req "oid"))))
+          (watching-stopped *web-session*
             (b-if self (b-if oid (parse-integer (req-val req "oid") :junk-allowed t)
                          (gethash oid (dictionary *web-session*))
                          (warn "Invalid oid parameter ~s in callback req: ~a" (req-val req "oid")
@@ -145,9 +168,15 @@ sessId=~a;" (session-id self)))
                     (funcall cb self req)
                     (dwarn "Widget ~a oid ~a in session ~a has no handler for ~a callback " self (oid self) (session-id *web-session*) opcode))))
               (dwarn "Widget not found for oid ~a in session ~a for ~a callback" (oid self) (session-id *web-session*) (req-val req "opcode"))))
-          (dwarn "Unknown session ID ~a in callback: ~a" (req-val req "sessId") 
-            (list (req-val req "opcode") (req-val req "oid"))))))))
-
+          (flet ((do-warn ()
+                   (setf (gethash sessId *warned-dead*) (get-universal-time))
+                   (dwarn "Session not found for oid ~a" sessId )
+                   (qx-alert "Algebra session no longer active. Please reload page")))
+            (b-if warn-time (gethash sessId *warned-dead*)
+              (when (> (- (get-universal-time) warn-time) 10)
+                (do-warn))
+              (do-warn)))))))))
+  
 (defun qx-alert (s)
   (trcx qx-alert s )
   (qxfmt "alert('~a');" (js-escape s)))
@@ -165,9 +194,9 @@ sessId=~a;" (session-id self)))
   (with-integrity ()
     (with-json-response (req ent)
       (b-if *web-session* (b-if sessId (parse-integer (req-val req "sessId") :junk-allowed t)
-                      (gethash sessId *qx-sessions*)
+                            (gethash sessId *qx-sessions*)
                             (error "Invalid sessId parameter ~s in callback req: ~a" (req-val req "sessId")
-                        (list (req-val req "opcode") (req-val req "oid"))))
+                              (list (req-val req "opcode") (req-val req "oid"))))
         (b-if self (b-if oid (parse-integer (req-val req "oid") :junk-allowed t)
                      (gethash oid (dictionary *web-session*))
                      (error "Invalid oid parameter ~s in callback req: ~a" (req-val req "oid")
