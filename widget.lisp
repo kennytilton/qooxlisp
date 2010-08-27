@@ -57,6 +57,8 @@ clDict[~a].grouper.addListener('changeSelection', function(e) {
     req.setParameter('oid', ~@*~a);
     req.setParameter('opcode', 'onchangeselection');
     req.setParameter('value',sel);
+    req.addListener('timeout',function () {alert('Timeout waiting on server');});
+	
     req.send();
     }
 });" (oid self))))))
@@ -245,6 +247,10 @@ clDict[~a].addListener('changeValue', function(e) {
   (when old-value
     (with-integrity (:client `(:post-make-qx ,self))
       (qxfmt "clDict[~a].setLabel('~a');" (oid self) (or new-value "")))))
+
+(defobserver icon ((self qx-tab-page))
+  (with-integrity (:client `(:post-make-qx ,self))
+      (qxfmt "clDict[~a].setIcon('~a');" (oid self) (or new-value ""))))
 
 (defmethod qx-configurations append ((self qx-tab-page))
   (nconc (cfg label)(cfg icon)))

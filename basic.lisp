@@ -77,6 +77,7 @@
   selected-key
   kb-selector
   onexecute ;; likely to need refactoring, or kb-selector moves to qooxlisp-control
+  (timeout 5000 :cell nil)
   tool-tip-text
   ps3 ;; persistence; name held over from S3
   selectable
@@ -162,7 +163,8 @@ clDict[~a].addListener('focus', function (e) {
 (export! onexecute)
 
 (defmd qooxlisp-control () ;; qooxlisp- indicates this is a Lisp-side only class
-  onexecute)
+  onexecute
+  (timeout 5000 :cell nil))
 
 (defobserver onexecute ()
   (with-integrity (:client `(:post-make-qx ,self))
@@ -170,9 +172,11 @@ clDict[~a].addListener('focus', function (e) {
      (new-value (qxfmt "
 clDict[~a].addListener('execute', function(e) {
     var rq = new qx.io.remote.Request('/callback?sessId='+sessId+'&opcode=onexecute&oid=~:*~a','GET', 'text/javascript');
+    rq.setTimeout(~a);
+    rq.addListener('timeout',function () {alert('Timeout waiting on server');});
     rq.send();
 });" 
-                  (oid self))))))
+                  (oid self)(timeout self))))))
 
 (defobserver onclick ()
   (with-integrity (:client `(:post-make-qx ,self))
@@ -189,8 +193,10 @@ clDict[~a].addListener('click', function(e) {
      (new-value (qxfmt "
 clDict[~a].addListener('dblclick', function(e) {
     var rq = new qx.io.remote.Request('/callback?sessId='+sessId+'&opcode=ondblclick&oid=~:*~a','GET', 'text/javascript');
+    rq.setTimeout(~a);
+    rq.addListener('timeout',function () {alert('Timeout waiting on server');});
     rq.send();
-});" (oid self))))))
+});" (oid self)(timeout self))))))
 
 (defobserver onappear ()
   (with-integrity (:client `(:post-make-qx ,self))
