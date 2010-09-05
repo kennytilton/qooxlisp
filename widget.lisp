@@ -104,14 +104,20 @@ clDict[~a].addListener('changeSelection', function(e) {
     (cond
      (new-value (qxfmt "
 clDict[~a].addListener('changeValue', function(e) {
-    (new qx.io.remote.Request('/callback?sessId='+sessId+'&opcode=onchangevalue&oid=~:*~a&value='+e.getData(),'GET', 'text/javascript')).send();
+    var rq = new qx.io.remote.Request('/callback','GET','text/javascript');
+    rq.setParameter('sessId', sessId);
+    rq.setParameter('opcode', 'onchangevalue');
+    rq.setParameter('oid',~:*~a);
+    rq.setParameter('value', e.getData());
+    rq.send();
 });" (oid self))))))
+
 
 (defmd qx-abstract-field (qx-widget)
   (qx-class "qx.ui.form.AbstractField" :allocation :class :cell nil)
   (onchangevalue (lambda (self req)
-                   (print :onchangevalue-fires)
                    (let ((nv (req-val req "value")))
+                     (trcx widget-chg-value nv)
                      (setf (^value) nv))))
   :value (c-in nil))
 
@@ -190,6 +196,7 @@ clDict[~a].addListener('changeValue', function(e) {
 (defmethod qx-configurations append ((self qx-toggle-button))
   (nconc
    (b-when x (value self)
+     (trc "qx-toggle-button config value" x self)
      (list (cons :value x)))))
   
 (defmd qx-check-box (qx-toggle-button )

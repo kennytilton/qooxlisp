@@ -217,7 +217,7 @@
      ,@iargs
      :kids (c?n (the-kids ,@kids)))) ;; c-in would not set self correctly for kids' parent
 
-(export! tabview qx-tab-view vpage  vpagex qx-tab-page vboxn stack qx-stack stackn vpagex-once vpagex!)
+(export! tabview qx-tab-view vpage  vpagex qx-tab-page vboxn hboxn stack qx-stack stackn vpagex-once vpagex!)
 
 (defmacro tabview ((&rest iargs) &rest kids)
   `(make-kid 'qx-tab-view
@@ -273,21 +273,28 @@
 ;;;     :layout-iargs (list ,@layout-iargs)
 ;;;     :kids (c? (the-kids ,@kids))))
 
-(defmacro vbox ((&rest layout-iargs)(&rest compo-iargs) &rest kids)
+(defmacro vboxn ((&rest layout-iargs)(&rest compo-iargs) &rest kids)
   "vbox where kids are altered procedurally"
   `(make-kid 'qx-composite
      ,@compo-iargs
      :layout (c? (mk-layout self 'qx-vbox ,@layout-iargs))
      :kids (c-in (the-kids ,@kids))))
 
-(defmacro vbox? ((&rest layout-iargs)(&rest compo-iargs) &rest kids)
+(defmacro vbox ((&rest layout-iargs)(&rest compo-iargs) &rest kids)
   "vbox where kids are altered procedurally"
   `(make-kid 'qx-composite
      ,@compo-iargs
      :layout (c? (mk-layout self 'qx-vbox ,@layout-iargs))
      :kids (c? (the-kids ,@kids))))
 
-(defmacro hbox? ((&rest layout-iargs)(&rest compo-iargs) &rest kids)
+(defmacro hboxn ((&rest layout-iargs)(&rest compo-iargs) &rest kids)
+  "hbox where kids are altered procedurally"
+  `(make-kid 'qx-composite
+     ,@compo-iargs
+     :layout (c? (mk-layout self 'qx-hbox ,@layout-iargs))
+     :kids (c-in (the-kids ,@kids))))
+
+(defmacro hbox ((&rest layout-iargs)(&rest compo-iargs) &rest kids)
   "vbox where kids are altered procedurally"
   `(make-kid 'qx-composite
      ,@compo-iargs
@@ -305,7 +312,7 @@
   layout-iargs
   :layout (c? (make-layout self 'qx-vbox (^layout-iargs))))
 
-(export! qxl-row qxl-flow vbox? grid hbox?)
+(export! qxl-row qxl-flow vbox grid)
 
 (defmd qxl-row (qx-composite)
   layout-iargs
@@ -315,18 +322,6 @@
   layout-iargs
   :layout (c? (make-layout self 'qx-flow (^layout-iargs))))
 
-(defmacro vboxn ((&rest layout-iargs)(&rest compo-iargs) &rest kids)
-  "vbox where kids are altered procedurally"
-  `(make-kid 'qx-composite
-     ,@compo-iargs
-     :layout (c? (mk-layout self 'qx-vbox ,@layout-iargs))
-     :kids (c-in (the-kids ,@kids))))
-
-(defmacro hbox ((&rest layout-iargs)(&rest compo-iargs) &rest kids)
-  `(make-kid 'qx-composite
-     ,@compo-iargs
-     :layout (c? (mk-layout self 'qx-hbox ,@layout-iargs))
-     :kids (c? (the-kids ,@kids))))
 
 (defmacro flow ((&rest layout-iargs)(&rest compo-iargs) &rest kids)
   `(make-kid 'qx-composite

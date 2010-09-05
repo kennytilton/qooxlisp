@@ -15,19 +15,39 @@
   ;; the problem here is that as each item gets deleted from, say, a select box,
   ;; a changeSelection event fires. Might need to muck with qooxdoo itself to
   ;; grok setf of children. todo: m/b
-  
-  (with-integrity (:client `(:post-make-qx ,self))
-    (loop for k in (set-difference old-value new-value)
-        do ;; (trcx :remove self k cz::*data-pulse-id*)
-          (qxfmt "clDict[~a].remove(clDict[~a]);" (oid self)(oid k)))
-    (loop for k in (set-difference new-value old-value)
-        do 
-          ;;(trcx :add self k cz::*data-pulse-id*)
-          ;; (qxfmt "console.log('adding: to '+ ~a + ' the new ' + ~a);" (oid self) (oid k))
-          (assert (oid k) () "No OID for k ~a of fam ~a" k self)
-          (b-if ao (add-ops k)
-            (qxfmt "clDict[~a].add(clDict[~a],~a);" (oid self) (oid k) ao)
-            (qxfmt "clDict[~a].add(clDict[~a]);" (oid self) (oid k))))))
+  (let ((why cz::*observe-why*))
+    (when new-value (assert (fm-parent (car new-value))() "pa 1"))
+    (when new-value (assert (eq self (fm-parent (car new-value)))() "pa 1.a self ~a pa ~a" self (fm-parent (car new-value))))
+    (with-integrity (:client `(:post-make-qx ,self))
+      (when new-value 
+        (unless (fm-parent (car new-value))
+          ;(describe (car new-value))
+          (trcx :no-new-par why new-value old-value)
+          (trc "heritage self" (fm-heritage self))
+          (break "no parent for kid ~a of self ~a" (car new-value) self)))
+      (when new-value (assert (eq self (fm-parent (car new-value)))() "pa 2.a"))
+      (loop for k in (set-difference old-value new-value)
+          when (oid k) ;; possibly dumped very early? can't hurt
+          do ;; (trcx :remove self k cz::*data-pulse-id*)
+            (qxfmt "clDict[~a].remove(clDict[~a]);" (oid self)(oid k)))
+      (loop for k in (set-difference new-value old-value)
+          do 
+            ;;(trcx :add self k cz::*data-pulse-id*)
+            ;; (qxfmt "console.log('adding: to '+ ~a + ' the new ' + ~a);" (oid self) (oid k))
+            (unless (oid k)
+              (trc ":no-oid!!!" why cz::*just-do-it-q* new-value old-value)
+              (loop for p = (fm-parent k) then (fm-parent p)
+                  while p do (trc "No OID parent" p (oid p)))
+              (describe k)
+              
+              (error "null oid from ~a oid-sv ~a ascendants ~a justdoit: ~a observe-cuz: ~a"
+                k (slot-value k 'oid) (parentage k) cz::*just-do-it-q* why)
+              )
+            (assert (oid k) () "No OID for k ~a of fam ~a" k self)
+            
+            (b-if ao (add-ops k)
+              (qxfmt "clDict[~a].add(clDict[~a],~a);" (oid self) (oid k) ao)
+              (qxfmt "clDict[~a].add(clDict[~a]);" (oid self) (oid k)))))))
 
 (defmd qxl-session (focuser qooxlisp-family)
   (session-id (incf *session-ct*) :cell nil)
@@ -60,8 +80,9 @@
 (defmethod oid :around (self)
   (or (call-next-method)
     (progn
-      (describe self)
-      (warn "null oid from ~a oid-sv ~a ascendants ~a " self (slot-value self 'oid) (parentage self))
+      ;;(describe self)
+      (warn "null oid from ~a oid-sv ~a ascendants ~a justdoit: ~a observe-cuz: ~a"
+        self (slot-value self 'oid) (parentage self) cz::*just-do-it-q* cz::*observe-why*)
       nil)))
 
 (defun parentage (self)
@@ -105,6 +126,7 @@ sessId=~a;" (session-id self)))
 
 (export! session-focus)
 
+(defparameter *untouched-max* 1800)
 
 (defmacro watching-stopped (session-form &body body)
   (let ((session (gensym)))
@@ -113,7 +135,7 @@ sessId=~a;" (session-id self)))
        (loop for sess being the hash-values of *qx-sessions*
            for touched = (touched sess)
            if (null touched) do (setf (touched sess) (get-universal-time))
-           else when (> (- (get-universal-time) (touched sess)) 5)
+           else when (> (- (get-universal-time) (touched sess)) *untouched-max*)
            do (trc "timeout" (get-universal-time) :vs (touched sess))
              (remhash (session-id sess) *qx-sessions*)
              (funcall (cb-timeout sess) sess)
