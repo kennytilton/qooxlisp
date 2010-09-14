@@ -1,4 +1,4 @@
-;; -*- lisp-version: "8.2 [64-bit Windows] (Jan 25, 2010 15:11)"; cg: "1.134"; -*-
+;; -*- lisp-version: "8.2 [64-bit Windows] (Sep 7, 2010 10:06)"; cg: "1.134"; -*-
 
 (in-package :cg-user)
 
@@ -15,8 +15,7 @@
                  (make-instance 'module :name "control.lisp")
                  (make-instance 'module :name "group-box.lisp")
                  (make-instance 'module :name "radio.lisp"))
-  :projects (list (make-instance 'project-module :name "../cells/cells" :show-modules
-                                 nil)
+  :projects (list (make-instance 'project-module :name "../cells/cells" :show-modules t)
                   (make-instance 'project-module :name "cl-json_0.4.0/cl-json"
                                  :show-modules nil))
   :libraries nil

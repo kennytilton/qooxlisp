@@ -117,7 +117,6 @@ clDict[~a].addListener('changeValue', function(e) {
   (qx-class "qx.ui.form.AbstractField" :allocation :class :cell nil)
   (onchangevalue (lambda (self req)
                    (let ((nv (req-val req "value")))
-                     (trcx widget-chg-value nv)
                      (setf (^value) nv))))
   :value (c-in nil))
 
@@ -222,7 +221,7 @@ clDict[~a].addListener('changeValue', function(e) {
 (defobserver selection ((self qx-stack))
   (with-integrity (:client `(:post-make-qx ,self))
     (cond
-     (new-value (trcx qx-stack-sets-sel new-value)
+     (new-value (trcx qx-stack-sets-sel self new-value)
        (qxfmt "clDict[~a].setSelection([clDict[~a]]);" (oid self)(oid new-value)))
      (old-value (trcx qx-stack-clears-sel new-value)
        (qxfmt "clDict[~a].setSelection(null);" (oid self))))))
@@ -236,6 +235,7 @@ clDict[~a].addListener('changeValue', function(e) {
                               (nvs (split-sequence #\! nv))
                               (page-id (parse-integer (car nvs)))
                               )
+                         
                          (b-when page (oid-to-object page-id)
                            (when (bookmark? page)
                              (qxfmt "qx.bom.History.getInstance().addToHistory('~a', '~a');"
@@ -249,6 +249,8 @@ clDict[~a].addListener('changeValue', function(e) {
   (qx-class "qx.ui.tabview.Page" :allocation :class :cell nil)
   label icon
   (bookmark? nil :cell nil))
+
+(export! bookmark?)
 
 (defobserver label ((self qx-tab-page))
   (when old-value

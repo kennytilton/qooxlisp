@@ -64,11 +64,12 @@
   ondblclick
   onappear
   onfocusin 
-  (onblur (lambda (self req)
+  (onblur nil #+overkillthatmessedupsomething (lambda (self req)
             (declare (ignorable self req))
             (b-if s (n^ qxl-session)
               (progn
-                (setf (focus s) nil))
+                ;(trcx qx-widget-onblur self)
+                )
               (trcx :blur-no-sess self))))
   (enabled t)
   (focusable nil :cell nil) ;; qx default is false for widget so no need for init value :js-false
@@ -171,13 +172,23 @@ clDict[~a].addListener('focus', function (e) {
     (cond
      (new-value (qxfmt "
 clDict[~a].addListener('execute', function(e) {
-    var rq = new qx.io.remote.Request('/callback?sessId='+sessId+'&opcode=onexecute&oid=~:*~a','GET', 'text/javascript');
+    var rq = new qx.io.remote.Request('/callback','GET', 'text/javascript');
+    rq.setParameter('sessId',sessId);
+    rq.setParameter('oid',~:*~a);
+    rq.setParameter('opcode','onexecute');
     rq.setTimeout(~a);
     rq.addListener('timeout',function () {alert('Timeout waiting on server');});
+    console.log('send onexecute');
     rq.send();
 });" 
-                  (oid self)(timeout self))))))
+                  (oid self)  (timeout self))))))
+#|
+    
+    rq.setTimeout(~a);
+    rq.addListener('timeout',function () {alert('Timeout waiting on server');});
 
+    console.log('send onexecute');
+|#
 (defobserver onclick ()
   (with-integrity (:client `(:post-make-qx ,self))
     (cond
@@ -228,21 +239,35 @@ clDict[~a].addListener('blur', function(e) {
     rq.send();
 });" (oid self)(oid self)))))))
 
+
 (defobserver onkeydown ()
   (with-integrity (:client `(:post-make-qx ,self))
     (cond
      (new-value (qxfmt "
 clDict[~a].addListener('keydown', function(e) {
+    var oid = ~:*~a;
     var k = e.getKeyIdentifier();
-    var rq = new qx.io.remote.Request('/callback?sessId='+sessId+'&opcode=onkeydown&oid=~:*~a','GET', 'text/javascript');
+    e.stopPropagation();
+    var rq = new qx.io.remote.Request('/callback?opcode=onkeydown','GET', 'text/javascript');
+    rq.setParameter('sessId',sessId);
+    rq.setParameter('oid',oid);
     rq.setParameter('keyId', k);
     rq.setParameter('mods', e.getModifiers());
         if (jsMath.TeX==undefined)
            rq.setParameter('tex','no');
         else
            rq.setParameter('tex','yes');
+    if (k=='Enter') {
+       if (clDict[oid].timeoutset==undefined) {
+           clDict[oid].timeoutset=true;
+           rq.addListener('timeout',function () {alert('Timeout by widget '+oid+' on keyDown waiting on server');});
+       }
+    }
+    console.log('send onkeydown '+k);
     rq.send();
 });" (oid self))))))
+
+;;     console.log('send onkeydown '+k);
 
 (defobserver onkeypress ()
   (with-integrity (:client `(:post-make-qx ,self))
@@ -254,18 +279,28 @@ clDict[~a].addListener('keypress', function(e) {
     var rq = new qx.io.remote.Request('/callback?sessId='+sessId+'&opcode=onkeypress&oid=~:*~a','GET', 'text/javascript');
     rq.setParameter('keyId', k);
     rq.setParameter('mods', e.getModifiers());
+    console.log('keypress listener 1 sends '+ k);
     rq.send();
 });" (oid self)))
 
+     ;; Next guy keeps firefox from popping up a search prompt
+     ;; and ie from browsing back on backspace
+     ;; but then possibly made it necessary to hit Enter or PageDown
+     ;; twice before beg noticed on IE... 
+     
      (new-value (qxfmt "
 clDict[~a].addListener('keypress', function(e) {
-    e.preventDefault();
+     e.preventDefault();
+    console.log('keypress just prevents default on keypress '+ e.getKeyIdentifier());
 });" (oid self)))
-     
+
      #+chill-youneedtobespecificremovinglisteners
      (old-value
       ;;untested
       (qxfmt "clDict[~a].removeListener('keypress');" (oid self))))))
+
+;;     console.log('send onkeypress '+k);
+;;      console.log('keypress just prevent default '+e.getKeyIdentifier());
 
 (defobserver onkeyinput ()
   (when new-value
@@ -277,8 +312,11 @@ clDict[~a].addListener('keyinput', function (e) {
     rq.setParameter('char', e.getChar());
     rq.setParameter('code', e.getCharCode());
     rq.setParameter('mods', e.getModifiers());
+    console.log('keyinput listener sends '+ e.getChar());
     rq.send();
 });" (oid self)))))
+
+;;     console.log('send onkeyinput '+ e.getChar());
 
 (defmd qooxlisp-layouter (qx-widget qooxlisp-family)
   (layout nil :owning t))

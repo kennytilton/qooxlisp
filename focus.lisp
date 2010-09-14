@@ -46,7 +46,7 @@ add finalization for radio button (look at others, see if ICR can ne de-celled
   
 (defmethod (setf focus) :around (new-focus self) ;; better be Focuser
   (let ((curr-focus (slot-value self 'focus)))
-    ;; (trcx :setf-focus new-focus curr-focus :focuser self)
+    ;(trcx :setf-focus new-focus curr-focus self)
     (unless (eql new-focus curr-focus)
       (focus-lose curr-focus new-focus)
       (focus-gain new-focus))
@@ -129,18 +129,19 @@ add finalization for radio button (look at others, see if ICR can ne de-celled
 (defun focus-clear (self)
   (b-when fr .focuser
     (b-when f (focus fr)
-      (trcx focus-clear self)
+      ;(trcx focus-clear self)
       (setf (focus fr) nil) ;; new 8/8/10
       (qxfmt "clDict[~a].blur();" (oid f)))))
 
 (defmethod focus-on (self)
+  (trcx focus-on-called self)
   (when self
     (qxfmt "clDict[~a].focus();" (oid self))))
 
 (defgeneric focus-gain (self)
   (:method (self) (declare (ignore self)))
   (:method ((self focus))
-    (trc nil "setting focused-on true" self)
+    ;(trc "focus-gain setting focused-on true" self)
     (setf (^focused-on) t)))
 
 (defgeneric focus-lose (self new-focus)
@@ -150,6 +151,7 @@ add finalization for radio button (look at others, see if ICR can ne de-celled
   (:method :around ((self focus) new-focus)
     (declare (ignore new-focus))
     (when (call-next-method)
+      ;(trc "focus-lose setting focused-on nil" self)
       (setf (^focused-on) nil))))
 
 ;________________________________ I d l i n g _______________________
