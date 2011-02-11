@@ -72,9 +72,9 @@ Get qooxlisp
 Now create a top-level directory called "devel" and execute:
 
  cd \devel
- git clone http://github.com/kennytilton/utils-kt
- git clone http://github.com/kennytilton/cells
- git clone http://github.com/kennytilton/qooxlisp
+ git clone https://github.com/kennytilton/utils-kt.git
+ git clone https://github.com/kennytilton/cells.git
+ git clone https://github.com/kennytilton/qooxlisp.git
 
 [I am still learning git, but I will look at merging the
 latest qooxlisp work back into the master branch.]
