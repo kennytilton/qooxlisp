@@ -72,13 +72,20 @@
   (defun qxl-sym (s)
     (intern (ecase case (:modern s)(:ansi (string-upcase s))) :qxl)))
 
+
+#+nil
 (defmacro whtml (&body body)
   `(catch 'excl::printer-error
      (net.html.generator:html ,@body)))
 
+#+nil
 (defun req-val (req tag)
   (net.aserve:request-query-value tag req))
 
+(defun req-val (req tag)
+  (backend-request-value *backend* req tag))
+
+#+nil ;; henrik: seems unused, if not could easily be move to backend 
 (defmacro with-plain-text-response ((req ent) &body body)
   `(prog1 nil
      (net.aserve:with-http-response (,req ,ent :content-type "text/plain")
@@ -87,6 +94,7 @@
            (declare (ignorable ws ns))
            ,@body)))))
 
+#+nil ;; henrik: seems unused, if not could easily be move to backend 
 (defmacro with-html-response ((req ent) &body body)
   `(prog1 nil
      (net.aserve:with-http-response (,req ,ent :content-type "text/html")
@@ -98,8 +106,37 @@
 (defparameter *js-response* nil)
 (defparameter *ekojs* nil)
 
+#+nil
 (defmacro with-js-response ((req ent) &body body)
   `(prog1 nil
+     (backend-js-response *backend* ,req ,ent
+                          (lambda ()
+                            (setf *js-response* nil)
+                            ,@body ;; this populates *js-response*
+                            (when *ekojs*
+                              (format t "ekojs:~%~s" *js-response*)
+                              ;;(trcx :ekojsrq (rq-raw ,req))
+                              )
+                            ;; (format t "~&js response size ~a~%> " (length *js-response*))
+                            ;;(push *js-response* (responses session))
+                            (format nil "(function () {~a})();" (or *js-response* "null;"))))))
+(defmacro with-js-response ((req ent) &body body)
+  `(backend-js-response *backend* ,req ,ent
+                       (lambda ()
+                         (setf *js-response* nil)
+                         ,@body ;; this populates *js-response*
+                         (when *ekojs*
+                           (format t "ekojs:~%~s" *js-response*)
+                           ;;(trcx :ekojsrq (rq-raw ,req))
+                           )
+                         ;; (format t "~&js response size ~a~%> " (length *js-response*))
+                         ;;(push *js-response* (responses session))
+                         (format nil "(function () {~a})();" (or *js-response* "null;")))))
+     
+#+nil
+(defmacro with-js-response ((req ent) &body body)
+  `(prog1 nil
+
      (net.aserve:with-http-response (,req ,ent :content-type "text/javascript")
        (net.aserve:with-http-body (,req ,ent)
          (setf *js-response* nil)
@@ -120,6 +157,7 @@
 
 #+check
 (print *js-response*)
+#+nil
 (defmacro with-json-response ((req ent) &body body)
   `(prog1 nil
      (net.aserve:with-http-response (,req ,ent :content-type "application/json")
@@ -127,6 +165,21 @@
          (let ((ws nil #+nahhh (net.aserve:websession-from-req ,req)))
            (declare (ignorable ws))
            ,@body)))))
+
+#+nil
+(defmacro with-json-response ((req ent) &body body)
+  `(prog1 nil
+     (backend-json-response *backend* ,req ,ent
+                            (lambda ()
+                              (let ((ws nil #+nahhh (net.aserve:websession-from-req ,req)))
+                                (declare (ignorable ws))
+                                ,@body)))))
+(defmacro with-json-response ((req ent) &body body)
+  `(backend-json-response *backend* ,req ,ent
+                         (lambda ()
+                           (let ((ws nil #+nahhh (net.aserve:websession-from-req ,req)))
+                             (declare (ignorable ws))
+                             ,@body))))
 
 (defun qxfmt (fs &rest fa)
   (when (eq :deferred-to-ufb-1 fs)
@@ -152,6 +205,7 @@
     (setf *js-response*
       (conc$ *js-response* x))))
 
+#+nil ;;Henrik: seems unused, if not should be moved to backend 
 (defmacro ml$ (&rest x)
   (let ((s (gensym)))
     `(with-output-to-string (,s)

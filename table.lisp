@@ -30,6 +30,7 @@
   ;; callbacks from table data model:
   cb-row-count cb-load-row-data cb-sort-row-data)
 
+#+nil
 (defun loadrowcount (self req)
   (trcx :loadrowcount-entry self)
   (prog1 nil
@@ -38,12 +39,30 @@
       (json:encode-json-to-string
        (funcall (cb-row-count (table self)) (table self) req))))))
 
+
+(defun loadrowcount (self req)
+  (trcx :loadrowcount-entry self)
+  (prog1 nil
+    (render-unescaped-response
+     *backend*
+     (json:encode-json-to-string
+       (funcall (cb-row-count (table self)) (table self) req)))))
+
+#+nil
 (defun loadrowdata (self req)
   (prog1 nil
     (whtml
      (:princ
       (json:encode-json-to-string
        (funcall (cb-load-row-data (table self)) (table self) req))))))
+
+
+(defun loadrowdata (self req)
+  (prog1 nil
+    (render-unescaped-response
+     *backend*
+     (json:encode-json-to-string
+       (funcall (cb-load-row-data (table self)) (table self) req)))))
 
 (defun sortrowdata (self) ;; js response so a little different
   (cb-sort-row-data (table self)))

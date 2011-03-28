@@ -1,21 +1,24 @@
 (in-package :qooxlisp)
 
 (defun serve-apropos (&optional (port 8000))
-  (when *wserver* (shutdown))
+  (shutdown-backend *backend*)
   (qx-reset)
-  (net.aserve:start :debug nil :port port)
-  (net.aserve::debug-off :all)
+  (start-backend *backend* :port port)
+  (backend-debug-off *backend*)
   (flet ((pfl (p f)
-           (publish-file :port port
+           (backend-publish-file *backend*
+             :port port
              :path p
              :file f))
          (pdr (p d)
-           (publish-directory :port port
+           (backend-publish-directory *backend*
+             :port port
              :prefix p
              :destination d))
 
          (pfn (p fn)
-           (publish :path p :function fn)))
+           (backend-publish-function *backend*
+            :path p :function fn)))
     
     (pdr "/qx/" "/devel/qx/")
     (pfn "/begin" 'qx-begin) ;; <=== qx-begin (below) gets customized

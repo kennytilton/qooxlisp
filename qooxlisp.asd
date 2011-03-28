@@ -13,13 +13,19 @@
   :long-description "qooxlisp: qooxdoo and Common Lisp, with Cells Inside(tm)"
   :version "1.0"
   :serial t
-  :depends-on (:utils-kt :cells :cl-json)
+  :depends-on (:utils-kt :cells :cl-json
+                         #-allegro :hunchentoot)
   :components ((:file "package")
+               (:file "backend")
+               #+allegro
+               (:file "aserve")
+               #-allegro
+               (:file "hunch")
                (:file "qx-utils")
                (:file "qooxlisp")
                (:file "session")
+               (:file "basic")               
                (:file "widget")
-               (:file "basic")
                (:file "layout")
                (:file "table")
                (:file "focus")

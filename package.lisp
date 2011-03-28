@@ -19,15 +19,18 @@
 ;;; FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS 
 ;;; IN THE SOFTWARE.
 
+#+allegro
 (eval-when (compile load eval)
   (require :aserve)
   (require :webactions)
-  (require :pxml)
-  )
+  (require :pxml))
 
 (defpackage #:qooxlisp
   (:nicknames :qxl)
-  (:use #:cells #:utils-kt #:cl #:excl #:net.aserve)
+  #-allegro
+  (:use #:cells #:utils-kt #:cl)
+  #+allegro
+  (:use #:cells #:utils-kt #:cl #:excl #:net.aserve)  
   (:export #:oid
     #:k-word #:whtml #:req-val
     #:with-plain-text-response
