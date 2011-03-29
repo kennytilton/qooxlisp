@@ -24,6 +24,7 @@
 (defmethod backend-publish-file ((backend hunchentoot-backend)
                                  &key port path file)
   (declare (ignore port)) ;; We expect that we only use one port
+  (assert (probe-file file))
   (add-dispatcher
    (hunchentoot:create-static-file-dispatcher-and-handler path file)))
 

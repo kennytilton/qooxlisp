@@ -26,7 +26,9 @@
     (pfn "/cbjson" 'qx-callback-json)
 
     (let* ((src-build "build")
-           (app-root "/devel/qooxlisp/ide") ;; <=== just change this
+           (app-root (merge-pathnames
+                      (make-pathname :directory '(:relative "ide"))
+                      (asdf:system-source-directory 'qooxlisp)))
            (app-source (format nil "~a/~a/" app-root src-build)))
       (flet ((src-ext (x)
                (format nil "~a~a" app-source x)))
@@ -38,13 +40,12 @@
 
 (defun qx-begin (req ent)
   (ukt::stop-check :qx-begin)
-  ;(trace md-awaken make-qx-instance)
-  (let ((*ekojs* nil)) ;; qx-begin
-    (with-js-response (req ent)
-      (top-level.debug::with-auto-zoom-and-exit ("aabegin-zoo.txt" :exit nil)
-        (let ((*web-session* nil))
-          (with-integrity ()
-            (qxfmt "
+                                        ;(trace md-awaken make-qx-instance)
+  (let ((*ekojs* nil))                  ;; qx-begin
+    (flet ((init-application ()
+             (let ((*web-session* nil))
+               (with-integrity ()
+                 (qxfmt "
 function cbjs (oid,opcode,data) {
 	var req = new qx.io.remote.Request('/callback','GET', 'text/javascript');
 	req.setParameter('sessId', sessId);
@@ -55,7 +56,13 @@ function cbjs (oid,opcode,data) {
 }
 clDict[0] = qx.core.Init.getApplication().getRoot();
 sessId=~a;" (session-id (setf *web-session*
-                          (make-instance 'apropos-session-kt))))))))))
+                              (make-instance 'apropos-session-kt))))))))
+      (with-js-response (req ent)
+        #+allegro
+        (top-level.debug::with-auto-zoom-and-exit ("aabegin-zoo.txt" :exit nil)
+          (init-application))
+        #-allegro
+        (init-application)))))
 
 
 (defmd apropos-session (qxl-session) ;; abstract class
