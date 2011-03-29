@@ -62,7 +62,9 @@
   ;; while the qooxdoo 'value' is a labels displayed string, the qxl 'text$'
   (let ((x (gensym)))
     `(b-when ,x (,qxl-alias self)
-       (list (cons ,(intern f :keyword) ,x)))))
+       ;(list (cons ,(intern f :keyword) ,x)) ;; Does not work on sbcl: f is not a string
+       (list (cons ,(intern (symbol-name f) :keyword) ,x))
+       )))
 
 (defun k-word (s)
   (when s (if (consp s) (mapcar 'k-word s)
