@@ -7,7 +7,7 @@
 (defclass qooxlisp-server-backend ()
   ())
 
-(defvar *default-backend-classname*)
+(defvar *default-backend-classname* nil)
 
 (defun make-backend ()
   (make-instance *default-backend-classname*))
