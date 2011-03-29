@@ -5,7 +5,7 @@ The free AllegroCL Trial version may not have enough oomph for
 the included starter app Apropos. On one occasion it said it was
 out of memory and I was toast. So I exited ACL and came back in
 and all went well. If you run into this and bouncing does not help,
-a port to Hunchentoot and non-trial Lisps will be needed.
+try another lisp.
 
 Not sure what is going on, but often trying to access the 
 Apropos example in Chrome or Safari the server will be seen
@@ -41,12 +41,13 @@ on Windows I found I had to reboot to get PATH mods into action.
 ----------------------
 In a hurry? Start here
 ----------------------
-Next you need AllegroCL (which includes AllegroServe, the web server):
+Next you need AllegroCL (which includes AllegroServe, the web server),
+or Steel Bank Common Lisp and Hunchentoot. Maybe other Lisps work too?
 
+Allegro:
   http://www.franz.com/downloads/clp/survey
-   
-A port to OtherCL and OtherServe (or OtherToot) should be 
-ridiculously easy but is left as an exercise. Contribs welcome.
+Sbcl:
+ http://www.sbcl.org/
 
 --------------------------------------------
 Get a browser that can handle console.log();
@@ -79,22 +80,18 @@ Now create a top-level directory called "devel" and execute:
 [I am still learning git, but I will look at merging the
 latest qooxlisp work back into the master branch.]
 
-If you want to put the projects somewhere else there are paths 
-in the lisp source (see function serve-apropos) which you will 
-have to change so AllegroServe can find the files.
-
 [Note: qooxlisp also needs cl-json but as a convenience (and to work in the
 ACL project file I use) I have duplicated the needed code under qooxlisp. 
 You can safely use a direct copy of cl-json (http://www.cliki.net/cl-json) 
 if you like, but then you need to ASDF load it somehow and eliminate the
 cl-json project from the qooxlisp project (referring to the ACL project manager).]
 
+Allegro
+-------
+
 Now fire up the AllegroCL trial and open the apropos project:
 
    'File>Open Project...' and look for \devel\qooxlisp\qooxlisp.lpr
-
-As mentioned above, edit apropos.lisp and modify the paths to the qooxdoo stuff 
-in function serve-apropos to match your set-up.
 
 Run the project (first 'Tools>Compile Project' then 'Run>Run Project') to 
 start up Allegroserve serving apropos on port 8000 (easy enough to change) then
@@ -112,6 +109,12 @@ every keystroke which was fun but the exercise I set myself was to recreate
 the IDE apropos dialog as closely as possible so I defeated that.) 
 
 Speaking of which, in the ACL IDE you can see/use the dialog: Windows>Apropos. 
+
+Sbcl
+----
+Install Hunchentoot with quicklisp or other mean.
+From the shell in qooxlisp directory, run:
+sbcl --load easy-load.lisp
 
 ----------
 Problems?
