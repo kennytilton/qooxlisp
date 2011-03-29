@@ -107,7 +107,8 @@
         <li><a href="#DEFAULT-OPERATION">The default encoder / decoder</a></li>
         <li><a href="#CLOS-DECODER">The CLOS decoder</a>
           <ul><li><a href="#PROPERTIES-OF-FLUID-OBJECTS">Properties of fluid objects</a></li></ul>
-          <ul><li><a href="#SECURITY-CONSIDERATIONS">Security considerations</a></li></ul></li>
+        </li>
+        <li><a href="#SECURITY-CONSIDERATIONS">Security considerations</a></li>
         <li><a href="#DECODER-CUSTOMIZATION">Customizing the decoder</a></li>
         <li><a href="#STREAMING-API">Customizing the encoder</a></li>
         <li><a href="#CAMEL-CASE-TRANSLATION">Camel case translation</a></li>
@@ -157,12 +158,14 @@ darcs get http://common-lisp.net/project/cl-json/darcs/cl-json
 <ul>
 <li>2006 First version by Henrik Hjelte.</li>
 <li>2007-2008 Stable version 0.3.1, no known bugs.</li>
-<li></li>
 <li>2009 Major update by Boris Smilga, adding lots of features. Version 0.4.0</li>
+<li>aug 2009 safe-json-intern and simplified-camel-case-to-lisp. Not released yet, in darcs repo.</li>
+<li>dec 2009 New alternative encoder, the explicit sexp-encoder. Not released yet, in darcs repo. Not documented below, but with testcases.</li>
+
 </ul>
 
 <h3>Status</h3>
-<p>No know bugs.</p>
+<p>One known bug (see testmisc.lisp (test json-bind-in-bind-bug)).</p>
 <p>A bit faster decoder performance in 0.3 version, a darcs repo is available (<a href="http://common-lisp.net/project/cl-json/darcs/cl-json-03-branch" title="Premature optimization is the root of all evil">old version</a>).</p>
 
   <h2 class="section"><a name="USER-GUIDE"></a> User Guide </h2>
@@ -760,6 +763,11 @@ Run <span class='arg-name'>body</span> in a dynamic environment where <span clas
 
 <p>By using multiple methods with carefully adjusted specializers and qualifiers the user shall be able to create arbitrarily sophisticated security policies.</p>
 
+<p><code class="api-name">JSON-INTERN</code> is the default function for translating json-keys to values. The default json-intern is not safe. Interns of many 
+unique symbols could potentially use a lot of memory.
+An attack could exploit this by submitting something that is passed
+through cl-json that has many very large, unique symbols. You may
+want to use the function <code class="api-name">SAFE-JSON-INTERN</code> or some other mechanism for security reasons.</p>
 
   <h3 class="section"><a name="DECODER-CUSTOMIZATION"></a> Customizing the decoder </h3>
 
@@ -1395,6 +1403,14 @@ Return a function which takes two arguments and encodes them to
   <h3 class="section"><a name="CAMEL-CASE-TRANSLATION"></a> Camel case translation </h3>
 
 <p>The aim of the functions described in this section is to provide a reasonable mapping between identifier naming conventions&mdash;from JavaScript to Lisp and back again.  Names are regarded as consisting of pieces that, in Lisp, are always uppercase and joined with hyphens, and in JavaScript (and other C-like languages), either joined with underscores or capitalized and joined solid.  Plus signs are used in Lisp to mark constants, which corresponds to the all-caps convention in C-like languages.</p>
+
+  <p class="api">
+[function]
+<code class='api'><span class='api-name'>simplified-camel-case-to-lisp</span>
+<span class='arg-name'>string</span>
+</code>
+  </p>
+<p>Inserts - between lowercase and uppercase chars. Ignores _ + * and several consecutive uppercase.</p>
 
   <p class="api">
 [function]

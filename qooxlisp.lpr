@@ -16,7 +16,7 @@
                  (make-instance 'module :name "group-box.lisp")
                  (make-instance 'module :name "radio.lisp"))
   :projects (list (make-instance 'project-module :name "../cells/cells" :show-modules t)
-                  (make-instance 'project-module :name "cl-json_0.4.0/cl-json"
+                  (make-instance 'project-module :name "cl-json/cl-json"
                                  :show-modules nil))
   :libraries nil
   :editable-files (list "qooxlisp.asd")

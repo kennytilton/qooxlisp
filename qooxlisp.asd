@@ -4,6 +4,8 @@
 (progn
   (declaim (optimize (debug 3) (speed 3) (safety 1) (compilation-speed 0))))
 
+(pushnew :no-cl-json-clos *features*)
+
 (asdf:defsystem :qooxlisp
     :name "qooxlisp"
   :author "Kenny Tilton <kentilton@gmail.com>"
@@ -15,6 +17,7 @@
   :serial t
   :depends-on (:utils-kt :cells :cl-json
                          #-allegro :hunchentoot)
+  ;; Well actually Hunchentoot works with allegro too..
   :components ((:file "package")
                (:file "backend")
                #+allegro

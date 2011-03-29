@@ -47,13 +47,6 @@ return NIL."))
   (with-output-to-string (stream)
     (encode-json object stream)))
 
-(defmethod encode-json :around (anything &optional (stream *json-output*))
-  "If OBJECT is not handled by any specialized encoder signal an error
-which the user can correct by choosing to encode the string which is
-the printed representation of the OBJECT."
-  (with-substitute-printed-representation-restart (anything stream)
-    (call-next-method)))
-
 (defmethod encode-json (anything &optional (stream *json-output*))
   "If OBJECT is not handled by any specialized encoder signal an error
 which the user can correct by choosing to encode the string which is
@@ -198,8 +191,11 @@ STREAM as a Member of an Object (String : Value pair)."
 ;;; End of YASON code.
 
 
-(defmethod encode-json ((s list) &optional (stream *json-output*))
-  "Write the JSON representation of the list S to STREAM (or to
+;;; You can use the streaming encoder above, or
+;;; two differnet types of sexp based encoders below
+
+(defun encode-json-list-guessing-encoder (s stream)
+"Write the JSON representation of the list S to STREAM (or to
 *JSON-OUTPUT*).  If S is not encodable as a JSON Array, try to encode
 it as an Object (per ENCODE-JSON-ALIST)."
   (handler-bind ((unencodable-value-error
@@ -208,7 +204,7 @@ it as an Object (per ENCODE-JSON-ALIST)."
                       (if (and (consp datum)
                                (not (consp (cdr datum)))
                                (ignore-errors (every #'consp s)))
-                          (return-from encode-json
+                          (return-from encode-json-list-guessing-encoder
                             (encode-json-alist s stream))
                           (error e)))))
                  (type-error
@@ -220,6 +216,79 @@ it as an Object (per ENCODE-JSON-ALIST)."
                       (mapcar (stream-array-member-encoder temp) s)))
                   stream)
     nil))
+
+(defun json-bool (value)
+  "Intended for the JSON-EXPLICT-ENCODER. Converts a non-nil value
+to a value (:true) that creates a json true value when used in the 
+explict encoder. Or (:false)."
+  (if value
+      '(:true)
+      '(:false)))
+
+(defun json-or-null (value)
+  "Intended for the JSON-EXPLICT-ENCODER. Returns a non-nil value
+as itself, or a nil value as a json null-value"
+  (or value '(:null)))
+
+(defun encode-json-list-explicit-encoder (s stream)
+  (handler-bind ((type-error
+                  (lambda (e)
+                    (declare (ignore e))
+                    (unencodable-value-error s 'encode-json))))
+    (ecase (car s)
+      (:json (mapcar (lambda (str) (write-string str stream))
+                     (cdr s)))
+      (:true (write-json-chars "true" stream))
+      (:false (write-json-chars "false" stream))
+      (:null (write-json-chars "null" stream))
+      ((:list :array)
+       (with-array (stream)
+         (mapcar (stream-array-member-encoder stream)
+                 (cdr s))))
+      (:object (if (consp (cadr s))
+                  (encode-json-alist (cdr s) stream)
+                  (encode-json-plist (cdr s) stream)))
+      (:alist (encode-json-alist (cdr s) stream))
+      (:plist (encode-json-plist (cdr s) stream)))
+    nil))
+
+(defparameter *json-list-encoder-fn* #'encode-json-list-guessing-encoder)
+
+(defun use-guessing-encoder ()
+  (setf *json-list-encoder-fn* #'encode-json-list-guessing-encoder))
+
+(defun use-explicit-encoder ()
+  (setf *json-list-encoder-fn* #'encode-json-list-explicit-encoder))
+
+(defmacro with-local-encoder (&body body)
+  `(let (*json-list-encoder-fn*)
+     (declare (special *json-list-encoder-fn*))
+     ,@body))
+
+(defmacro with-guessing-encoder  (&body body)
+  `(with-local-encoder (use-guessing-encoder)
+     ,@body))
+
+(defmacro with-explicit-encoder  (&body body)
+  `(with-local-encoder (use-explicit-encoder)
+     ,@body))
+
+(defmethod encode-json ((s list) &optional (stream *json-output*))
+  "Write the JSON representation of the list S to STREAM (or to
+*JSON-OUTPUT*), using one of the two rules specified by 
+first calling USE-GUESSING-ENCODER or USE-EXPLICIT-ENCODER.
+The guessing encoder: If S is a list encode S as a JSON Array, if
+S is a dotted list encode it as an Object (per ENCODE-JSON-ALIST).
+The explicit decoder: If S is a list, the first symbol defines
+the encoding: 
+If (car S) is 'TRUE return a JSON true value.
+If (car S) is 'FALSE return a JSON false value.
+If (car S) is 'NULL return a JSON null value.
+If (car S) is 'JSON princ the strings in (cdr s) to stream
+If (car S) is 'LIST or 'ARRAY encode (cdr S) as a a JSON Array.
+If (car S) is 'OBJECT encode (cdr S) as A JSON Object, 
+interpreting (cdr S) either as an A-LIST or a P-LIST."
+  (funcall *json-list-encoder-fn* s stream))
 
 (defmethod encode-json ((s sequence) &optional (stream *json-output*))
   "Write the JSON representation (Array) of the sequence S (not an
@@ -244,24 +313,24 @@ STREAM (or to *JSON-OUTPUT*)."
 (defun encode-json-alist (alist &optional (stream *json-output*))
   "Write the JSON representation (Object) of ALIST to STREAM (or to
 *JSON-OUTPUT*).  Return NIL."
-  (with-substitute-printed-representation-restart (alist stream)
-    (write-string
-     (with-output-to-string (temp)
-       (with-object (temp)
-         (loop
-           with bindings = alist
-           do (if (listp bindings)
-                  (if (endp bindings)
-                      (return)
-                      (let ((binding (pop bindings)))
-                        (if (consp binding)
-                            (destructuring-bind (key . value) binding
-                              (encode-object-member key value temp))
-                            (unencodable-value-error
-                             alist 'encode-json-alist))))
-                  (unencodable-value-error alist 'encode-json-alist)))))
-     stream)
-    nil))
+  (write-string
+   (with-output-to-string (temp)
+     (with-object (temp)
+       (loop
+          with bindings = alist
+          do (if (listp bindings)
+                 (if (endp bindings)
+                     (return)
+                     (let ((binding (pop bindings)))
+                       (if (consp binding)
+                           (destructuring-bind (key . value) binding
+                             (encode-object-member key value temp))
+                           (unless (null binding)
+                             (unencodable-value-error
+                              alist 'encode-json-alist)))))
+                 (unencodable-value-error alist 'encode-json-alist)))))
+   stream)
+  nil)
 
 (defun encode-json-alist-to-string (alist)
   "Return the JSON representation (Object) of ALIST as a string."
@@ -271,25 +340,24 @@ STREAM (or to *JSON-OUTPUT*)."
 (defun encode-json-plist (plist &optional (stream *json-output*))
   "Write the JSON representation (Object) of PLIST to STREAM (or to
 *JSON-OUTPUT*).  Return NIL."
-  (with-substitute-printed-representation-restart (plist stream)
-    (write-string
-     (with-output-to-string (temp)
-       (with-object (temp)
-         (loop
-           with properties = plist
-           do (if (listp properties)
-                  (if (endp properties)
-                      (return)
-                      (let ((indicator (pop properties)))
-                        (if (and (listp properties)
-                                 (not (endp properties)))
-                            (encode-object-member
-                             indicator (pop properties) temp)
-                            (unencodable-value-error
-                             plist 'encode-json-plist))))
-                  (unencodable-value-error plist 'encode-json-plist)))))
-     stream)
-    nil))
+  (write-string
+   (with-output-to-string (temp)
+     (with-object (temp)
+       (loop
+          with properties = plist
+          do (if (listp properties)
+                 (if (endp properties)
+                     (return)
+                     (let ((indicator (pop properties)))
+                       (if (and (listp properties)
+                                (not (endp properties)))
+                           (encode-object-member
+                            indicator (pop properties) temp)
+                           (unencodable-value-error
+                            plist 'encode-json-plist))))
+                 (unencodable-value-error plist 'encode-json-plist)))))
+   stream)
+  nil)
 
 (defun encode-json-plist-to-string (plist)
   "Return the JSON representation (Object) of PLIST as a string."
@@ -298,15 +366,11 @@ STREAM (or to *JSON-OUTPUT*)."
 
 (defun write-json-string (s stream)
   "Write a JSON representation (String) of S to STREAM."
-  (cond
-   ((string-equal s "jsFalse")
-    (princ "false" stream))
-   (t
-    (write-char #\" stream)
-    (if (stringp s)
-        (write-json-chars s stream)
+  (write-char #\" stream)
+  (if (stringp s)
+      (write-json-chars s stream)
       (encode-json s stream))
-    (write-char #\" stream)))
+  (write-char #\" stream)
   nil)
 
 (defun write-json-chars (s stream)

@@ -43,14 +43,14 @@ be added on the fly.")))
                                 (subclass fluid-class))
   "Fluid classes are thought to be anonymous, and so should not be
 registered in the superclass."
-  (declare (ignorable superclass subclass))
+  (declare (ignore superclass subclass))
   (values))
 
 (defmethod remove-direct-subclass ((superclass class)
                                    (subclass fluid-class))
   "Fluid classes are thought to be anonymous, and so should not be
 registered in the superclass."
-  (declare (ignorable superclass subclass))
+  (declare (ignore superclass subclass))
   (values))
 
 (defmethod validate-superclass ((class fluid-class)
@@ -58,7 +58,7 @@ registered in the superclass."
   "Any fluid class is also a standard class."
   t)
 
-(mop:finalize-inheritance
+(finalize-inheritance
  (defclass fluid-object (standard-object) ()
    (:documentation "Any instance of a fluid class.")
    (:metaclass fluid-class)))
@@ -75,20 +75,20 @@ registered in the superclass."
 (defmethod slot-missing ((class fluid-class) (object fluid-object) name
                          (op (eql 'slot-boundp)) &optional new-value)
   "A missing slot in a fluid class is considered unbound."
-  (declare (ignorable class object name op new-value))
+  (declare (ignore class object name op new-value))
   nil)
 
 (defmethod slot-missing ((class fluid-class) (object fluid-object) name
                          (op (eql 'slot-makunbound)) &optional new-value)
   "A missing slot in a fluid class is considered unbound."
-  (declare (ignorable class name op new-value))
+  (declare (ignore class name op new-value))
   object)
 
 (defmethod slot-missing ((class fluid-class) (object fluid-object) name
                          (op (eql 'slot-value)) &optional new-value)
   "On attempting to get the value of a missing slot, raise a
 slot-unbound error."
-  (declare (ignorable op new-value))
+  (declare (ignore op new-value))
   (slot-unbound class object name))
 
 (defmethod slot-missing ((class fluid-class) (object fluid-object) name
@@ -97,13 +97,13 @@ slot-unbound error."
 then repeat SETF."
   (reinitialize-instance class
     :direct-superclasses
-      (mop:class-direct-superclasses class)
+      (class-direct-superclasses class)
     :direct-slots
-      (let ((extant-slots (mop:class-direct-slots class)))
+      (let ((extant-slots (class-direct-slots class)))
         (if (null extant-slots)
             `((:name ,name))
             (loop for slots on extant-slots
-               for slot-name = (mop:slot-definition-name (car slots))
+               for slot-name = (slot-definition-name (car slots))
                if (endp (cdr slots))
                  collect `(:name ,slot-name)
                  and collect `(:name ,name)
@@ -118,19 +118,19 @@ then repeat SETF."
 the given SLOTS and SUPERCLASSES."
   (flet ((extant-slot-p (name)
            (lambda (class)
-             (loop for slot in (mop:class-slots class)
-                thereis (eq (mop:slot-definition-name slot) name))))
+             (loop for slot in (class-slots class)
+                thereis (eq (slot-definition-name slot) name))))
          (slot-init (name) `(:name ,name)))
     (if extant-class
         (let* ((extant-superclasses
-                (mop:class-direct-superclasses extant-class))
+                (class-direct-superclasses extant-class))
                (new-superclasses
                 (remove-if (lambda (class)
                              (find class extant-superclasses))
                            superclasses))
                (extant-slots
-                (mapcar #'mop:slot-definition-name
-                        (mop:class-direct-slots extant-class)))
+                (mapcar #'slot-definition-name
+                        (class-direct-slots extant-class)))
                (new-slots
                 (remove-if (lambda (name)
                              (let ((containing (extant-slot-p name)))
@@ -163,8 +163,8 @@ and CDRs are the respective values.  If no slot of a given name is
 defined in the CLASS, the corresponding value is discarded."
   (let ((object (make-instance class)))
     (if (typep class 'fluid-class)
-        (loop for slot in (mop:class-direct-slots class)
-          for slot-name = (mop:slot-definition-name slot)
+        (loop for slot in (class-direct-slots class)
+          for slot-name = (slot-definition-name slot)
           if (and (slot-boundp object slot-name)
                   (null (slot-value object slot-name)))
             do (slot-makunbound object slot-name)))
@@ -195,7 +195,7 @@ allocated and added to the *CLASS-REGISTRY*."
                       (append superclasses (list 'fluid-object)))))
          (extant-class-etc
           (member superclasses *class-registry*
-                  :test #'equal :key #'mop:class-direct-superclasses))
+                  :test #'equal :key #'class-direct-superclasses))
          (extant-class (car extant-class-etc))
          (updated-class
           (ensure-fluid-class-with-slots
@@ -210,20 +210,20 @@ allocated and added to the *CLASS-REGISTRY*."
   "If the CLASS is explicitly specified, just create and populate an
 instance, discarding any of the BINDINGS which do not correspond to
 the slots of that CLASS."
-  (declare (ignorable superclasses))
+  (declare (ignore superclasses))
   (let ((class (find-class* class)))
     (make-and-populate-instance class bindings)))
 
 (defmethod make-object (bindings (class (eql (find-class 'cons)))
                         &optional superclasses)
   "If the CLASS is given as 'CONS, return the BINDINGS as alist."
-  (declare (ignorable superclasses))
+  (declare (ignore superclasses))
   (copy-seq bindings))
 
 (defmethod make-object (bindings (class (eql (find-class 'list)))
                         &optional superclasses)
   "If the CLASS is given as 'LIST, return the BINDINGS as plist."
-  (declare (ignorable superclasses))
+  (declare (ignore superclasses))
   (loop for (key . value) in bindings
      collect key collect value))
 
@@ -231,7 +231,7 @@ the slots of that CLASS."
                         &optional superclasses)
   "If the CLASS is given as 'HASH-TABLE, return the BINDINGS as hash
 table."
-  (declare (ignorable superclasses))
+  (declare (ignore superclasses))
   (let ((table (make-hash-table :test #'equal)))
     (loop for (key . value) in bindings
       do (setf (gethash key table) value))
@@ -240,7 +240,7 @@ table."
 (defmethod make-object (bindings (class symbol) &optional superclasses)
   "If the CLASS is given as a symbol, find it and resort to the usual
 procedure."
-  (declare (ignorable superclasses))
+  (declare (ignore superclasses))
   (make-object bindings (find-class class)))
 
 (defun max-package (symbols &key ((:initial-value package)
@@ -284,7 +284,7 @@ of the class's slots and the name of the class / superclasses are to
 be interned."))
 
 (defmethod make-load-form ((prototype prototype) &optional environment)
-  (declare (ignorable environment))
+  (declare (ignore environment))
   `(make-instance 'prototype
      ,@(if (slot-boundp prototype 'lisp-class)
            `(:lisp-class ,(lisp-class prototype)))
@@ -307,7 +307,7 @@ of the OBJECT's slots are to be interned."
          (superclass-names
           (if (not class-name)
               (set-difference
-               (mapcar #'class-name (mop:class-direct-superclasses class))
+               (mapcar #'class-name (class-direct-superclasses class))
                '(standard-object fluid-object))))
          (package
           (max-package (append superclass-names slot-names)
@@ -331,7 +331,7 @@ of the OBJECT's slots are to be interned."
 (defmethod make-object-prototype ((object prototype) &optional slot-names)
   "Prototypes are not to be given their own prototypes, otherwise we
 would proceed ad malinfinitum."
-  (declare (ignorable object slot-names))
+  (declare (ignore object slot-names))
   nil)
 
 (defun maybe-add-prototype (object prototype)
@@ -343,7 +343,7 @@ do set it.  Return OBJECT."
 
 (defun map-slots (function object)
   "Call FUNCTION on the name and value of every bound slot in OBJECT."
-  (loop for slot in (mop:class-slots (class-of object))
-    for slot-name = (mop:slot-definition-name slot)
+  (loop for slot in (class-slots (class-of object))
+    for slot-name = (slot-definition-name slot)
     if (slot-boundp object slot-name)
       do (funcall function slot-name (slot-value object slot-name))))

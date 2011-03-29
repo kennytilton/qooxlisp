@@ -12,9 +12,13 @@
    #:*use-strict-json-rules*
    #:*json-symbols-package*
    #:json-intern
+   #:unknown-symbol-error
+   #:safe-json-intern
    #:*json-identifier-name-to-lisp*
    #:*lisp-identifier-name-to-json*
+   #:*identifier-name-to-key*
    ;; camel-case.lisp
+   #:simplified-camel-case-to-lisp
    #:camel-case-to-lisp
    #:lisp-to-camel-case
    ;; objects.lisp
@@ -69,6 +73,7 @@
    #:*json-output*
    #:unencodable-value-error
    #:substitute-printed-representation
+   #:with-substitute-printed-representation-restart
    #:encode-json
    #:encode-json-to-string
    #:encode-json-alist
@@ -83,6 +88,13 @@
    #:as-object-member
    #:encode-object-member
    #:stream-object-member-encoder
+
+   #:use-explicit-encoder
+   #:use-guessing-encoder
+   #:with-explicit-encoder
+   #:with-guessing-encoder
+   #:json-bool
+   #:json-or-null
    ;; utils.lisp
    #:json-bind
    )
@@ -96,7 +108,7 @@
     #:class-direct-slots
     #:class-direct-superclasses
     #:slot-definition-name
-    #:add-direct-subclass 
+    #:add-direct-subclass
     #:remove-direct-subclass
     #:validate-superclass
     #:class-precedence-list
@@ -106,15 +118,32 @@
 
 (defpackage :json-rpc
   (:use :common-lisp :json)
+  (:shadow #:defconstant)
   (:export
     #:clear-exported
-    #:defun-json-rpc
     #:export-as-json-rpc
+
+    ;; invoke functions for the benefit of JSON-RPC
     #:invoke-rpc
+    #:invoke-rpc-parsed
 
     ;; restarts
     #:send-error
     #:send-error-object
     #:send-nothing
     #:send-internal-error
+
+    ;; special variable for controlling JSON-RPC
+    #:*json-rpc-version*
+
+    ;; constants
+    #:+json-rpc-1.1+
+    #:+json-rpc-2.0+
+
+    ;; condition 
+    #:json-rpc-call-error
+
+    ;; declarations
+    #:def-json-rpc-encoding
+    #:defun-json-rpc
     ))

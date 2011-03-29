@@ -71,6 +71,13 @@
     (is (string= (with-output-to-string (s) (encode-json-alist alist s))
                    expected))))
 
+(test test-encode-json-alist-nested
+      (let ((alist `((:hello . 100)(:hi . ((:a . 1)
+                                           (:b . 2)))))
+            (expected "{\"hello\":100,\"hi\":{\"a\":1,\"b\":2}}"))
+        (is (string= (with-output-to-string (s) (encode-json-alist alist s))
+                     expected))))
+
 (test test-encode-json-alist-string
       (let ((alist `((:hello . "hej")(:hi . "tjena")))
             (expected "{\"hello\":\"hej\",\"hi\":\"tjena\"}"))
@@ -80,6 +87,16 @@
 (test test-encode-json-alist-camel-case
       (let ((alist `((:hello-message . "hej")(*also-starting-with-upper . "hej")))
             (expected "{\"helloMessage\":\"hej\",\"AlsoStartingWithUpper\":\"hej\"}"))
+        (is (string= (with-output-to-string (s) (encode-json-alist alist s))
+                     expected))))
+
+(test test-encode-json-alist-embedded-nil
+  ;; It makes construction easier in some cases, such as this:
+      (let ((alist `((:hello . "england")
+                     ,(when nil
+                            '(:ciao . "italy"))
+                     (:hej . "sweden")))
+            (expected "{\"hello\":\"england\",\"hej\":\"sweden\"}"))
         (is (string= (with-output-to-string (s) (encode-json-alist alist s))
                      expected))))
 
@@ -295,3 +312,157 @@
              (null (set-exclusive-or a b :test #'string-equal))))
       (is (same-string-sets foo-symbols '("BAR" "BAZ" "QUUX")))
       (is (same-string-sets greek-symbols '("LOREM" "IPSUM" "DOLOR" "SIT" "AMET"))))))
+
+(test explicit-encoder
+  (is (string= "true" (with-explicit-encoder
+                        (encode-json-to-string '(:true))))
+      "True")
+  (is (string= "false"
+               (with-explicit-encoder
+                 (encode-json-to-string '(:false))))
+      "False")
+  (is (string= "null"
+               (with-explicit-encoder
+                 (encode-json-to-string '(:null))))
+      "False")
+  (is (string= "[1,\"a\"]"
+               (with-explicit-encoder
+                 (encode-json-to-string '(:list 1 "a"))))
+      "List")
+  (is (string= "[1,\"a\"]"
+               (with-explicit-encoder
+                 (encode-json-to-string '(:array 1 "a"))))
+      "Array")
+  (is (string= "{\"a\":1,\"b\":2}"
+               (with-explicit-encoder
+                 (encode-json-to-string '(:object "a" 1 "b" 2))))
+      "Plist")
+  (is (string= "{\"a\":1,\"b\":2}"
+               (with-explicit-encoder
+                 (encode-json-to-string '(:object ("a" . 1) ( "b" . 2)))))
+      "Alist")
+  (is (string= "{\"a\":1,\"b\":2}"
+               (with-explicit-encoder
+                 (encode-json-to-string '(:alist ("a" . 1) ( "b" . 2)))))
+      "Explicit Alist")
+  
+  (is (string= "{\"a\":1,\"b\":2}"
+               (with-explicit-encoder
+                 (encode-json-to-string '(:plist "a" 1 "b" 2))))
+      "Explicit Plist")
+  
+  (is (string= "{\"a\":{\"c\":1,\"d\",2},\"b\":2}"
+               (with-explicit-encoder
+                 (encode-json-to-string '(:object
+                                          "a" (:json "{\"c\":1,\"d\",2}")
+                                          "b" 2))))
+      "Embedded json")
+  (is (string= "{\"a\":{\"c\":1,\"d\":2},\"b\":2}"
+               (with-explicit-encoder
+                 (encode-json-to-string '(:object
+                                          "a" (:object "c" 1 "d" 2)
+                                          "b" 2))))
+      "Object in object")
+  (is (string= "{\"a\":{\"c\":1,\"d\":2},\"b\":2}"
+               (with-explicit-encoder
+                 (encode-json-to-string '(:object
+                                          "a" (:object ( "c" . 1) ( "d" . 2))
+                                          "b" 2))))
+      "Mixed alist and plist")
+
+  (is (string= "{\"a\":1,\"b\":2}"
+               (with-explicit-encoder
+                 (encode-json-to-string '(:object ("a" . 1) nil ( "b" . 2)))))
+      "Alist with a nil value"))
+
+
+(test explicit-encoder-complex-objects
+  (let ((sample-1-alists
+         `(:object
+           (:method . some-function)
+           (:id . 1)
+           (:params .
+                    (:list
+                     (:object (:id . bar-id)
+                              (:name . bar))
+                     (:true)
+                     (:list (:object
+                             (:name . a)
+                             (:id . b)))
+                     (:list (:object
+                             (:name . foo)
+                             (:id . foo-id)))
+                     ))))
+        (sample-2-plists
+         `(:object
+           :method some-function
+           :id  1
+           :params (:list
+                    (:json "{\"id\":\"barId\",\"name\":\"bar\"}")
+                    (:true)
+                    (:list (:object "name"  a :id b))
+                    (:list (:object
+                            :name  foo
+                            :id  foo-id))
+            )))
+        (correct-json "
+          {\"method\":\"someFunction\",
+            \"id\":1,\"params\":
+                 [{\"id\":\"barId\",\"name\":\"bar\"},
+                  true,
+                 [{\"name\":\"a\",\"id\":\"b\"}],
+                 [{\"name\":\"foo\",\"id\":\"fooId\"}]]}")
+        exact-json sample-1-json sample-2-json)
+    (setf sample-1-json 
+          (with-explicit-encoder
+            (encode-json-to-string sample-1-alists)))
+    (setf sample-2-json 
+          (with-explicit-encoder
+            (encode-json-to-string sample-2-plists)))
+    (is (string= sample-1-json sample-2-json))
+    (setf exact-json (remove #\Newline
+                             (remove #\Space correct-json :test #'char=)
+                             :test #'char=))
+    (is (string= sample-1-json exact-json))))
+
+(test json-bool
+  (is (equal (json-bool t) '(:true)))
+  (is (equal (json-bool 1) '(:true)))
+  (is (equal (json-bool nil) '(:false))))
+
+(test json-or-null
+  (is (equal (json-or-null 'something) 'something))
+  (is (equal (json-or-null '(:list)) '(:list)))
+  (is (equal (json-or-null nil) '(:null)))
+  (is (equal (json-or-null (when t  '(:list)))
+             '(:list)))
+  (is (equal (json-or-null (when nil  '(:list)))
+             '(:null))))
+
+(test sample-explict-decoder-building-with-json-bool
+  (labels
+      ((foo-p (thing)
+         (eq thing 'foo))
+       (bar-p (thing)
+         (eq thing 'bar))
+       (foo-bar (thing)
+         (when (foo-p thing)
+           (cons :foo-bar "FUBAR!")))
+       (bar-json ()
+         "{\"bar\":true}")
+       (get-json (thing)
+         (with-explicit-encoder
+           (encode-json-to-string
+            `(:object :method foo-bar-check :id 0
+                      :params (:object
+                               (:bar . (:json ,(bar-json)))
+                               (:is-foo . ,(json-bool (foo-p thing)))
+                               (:is-bar . ,(json-bool (bar-p thing)))
+                               ,(foo-bar thing)))))))
+    (let ((json-foo (get-json 'foo))
+          (json-bar (get-json 'bar)))
+      (is (string= json-foo
+"{\"method\":\"fooBarCheck\",\"id\":0,\"params\":{\"bar\":{\"bar\":true},\"isFoo\":true,\"isBar\":false,\"fooBar\":\"FUBAR!\"}}"))
+      (is (string= json-bar
+"{\"method\":\"fooBarCheck\",\"id\":0,\"params\":{\"bar\":{\"bar\":true},\"isFoo\":false,\"isBar\":true}}")))))
+

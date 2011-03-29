@@ -164,24 +164,65 @@ returned!"
       (is (equal '((:START--*X-POS . 98) (:START--*Y-POS . 4))
                  (decode-json-from-string tricky-json))))))
 
+(test custom-identifier-name-to-key
+  "Interns of many unique symbols could potentially use a lot of memory.
+An attack could exploit this by submitting something that is passed
+through cl-json that has many very large, unique symbols. See the
+safe-symbols-parsing function here for a cure."
+  (with-decoder-simple-list-semantics
+      (flet ((safe-symbols-parsing (name)
+               (or (find-symbol name *json-symbols-package*)
+                   (error "unknown symbols not allowed"))))
+        (let ((good-symbols "{\"car\":1,\"cdr\":2}")
+              (bad-symbols "{\"could-be\":1,\"a-denial-of-service-attack\":2}")
+              (*json-symbols-package* (find-package :cl))
+              (*identifier-name-to-key* #'safe-symbols-parsing))
+          (is (equal '((car . 1) (cdr . 2))
+                     (decode-json-from-string good-symbols)))
+          (signals error (decode-json-from-string bad-symbols))))))
 
+(test safe-json-intern
+  (with-decoder-simple-list-semantics
+      (let ((good-symbols "{\"car\":1,\"cdr\":2}")
+            (bad-symbols "{\"could-be\":1,\"a-denial-of-service-attack\":2}")
+            (*json-symbols-package* (find-package :cl))
+            (*identifier-name-to-key* #'safe-json-intern))
+        (is (equal '((car . 1) (cdr . 2))
+                   (decode-json-from-string good-symbols)))
+        (signals unknown-symbol-error (decode-json-from-string bad-symbols)))))
 
 
 (test json-object-camel-case
   (with-decoder-simple-list-semantics
-    (let ((*json-symbols-package* (find-package :keyword)))
-      (is (equalp '((:hello-key . "hej")
-                    (:*hi-starts-with-upper-case . "tjena")
-                    (:+json+-all-capitals . "totae majusculae")
-                    (:+two-words+ . "duo verba")
-                    (:camel-case--*mixed--+4-parts+ . "partes miscella quatuor"))
-                  (decode-json-from-string " { \"helloKey\" : \"hej\" ,
-                       \"HiStartsWithUpperCase\" : \"tjena\",
-                       \"JSONAllCapitals\": \"totae majusculae\",
-                       \"TWO_WORDS\": \"duo verba\",
-                       \"camelCase_Mixed_4_PARTS\": \"partes miscella quatuor\"
-                     }"))))))
+      (let ((*json-symbols-package* (find-package :keyword)))
+        (is (equalp '((:hello-key . "hej")
+                      (:*hi-starts-with-upper-case . "tjena")
+                      (:+json+-all-capitals . "totae majusculae")
+                      (:+two-words+ . "duo verba")
+                      (:camel-case--*mixed--+4-parts+ . "partes miscella quatuor"))
+                    (decode-json-from-string " { \"helloKey\" : \"hej\" ,
+                 \"HiStartsWithUpperCase\" : \"tjena\",
+                 \"JSONAllCapitals\": \"totae majusculae\",
+                 \"TWO_WORDS\": \"duo verba\",
+                 \"camelCase_Mixed_4_PARTS\": \"partes miscella quatuor\"
+               }"))))))
 
+(test json-object-simplified-camel-case
+  ;; Compare this with json-object-camel-case above
+  (with-decoder-simple-list-semantics
+      (let ((*json-symbols-package* (find-package :keyword))
+            (*json-identifier-name-to-lisp* #'simplified-camel-case-to-lisp))
+        (is (equalp '((:hello-key . "hej")
+                      (:hi-starts-with-upper-case . "tjena")
+                      (:jsonall-capitals . "totae majusculae")
+                      (:two_words . "duo verba")
+                      (:camel-case_mixed_4_parts . "partes miscella quatuor"))
+                    (decode-json-from-string " { \"helloKey\" : \"hej\" ,
+                 \"HiStartsWithUpperCase\" : \"tjena\",
+                 \"JSONAllCapitals\": \"totae majusculae\",
+                 \"TWO_WORDS\": \"duo verba\",
+                 \"camelCase_Mixed_4_PARTS\": \"partes miscella quatuor\"
+               }"))))))
 
 (defmacro with-fp-overflow-handler (handler-expr &body body)
   (let ((err (gensym)))
@@ -203,17 +244,17 @@ returned!"
   (is (= (decode-json-from-string "100") 100))
   (is (= (decode-json-from-string "10.01") 10.01))
   (is (= (decode-json-from-string "-2.3") -2.3))
-  (is (= (decode-json-from-string "-2.3e3") -2.3e3))          
+  (is (= (decode-json-from-string "-2.3e3") -2.3e3))
   (is (= (decode-json-from-string "-3e4") -3e4))
-  (is (= (decode-json-from-string "3e4") 3e4))  
+  (is (= (decode-json-from-string "3e4") 3e4))
   (let ((*read-default-float-format* 'double-float))
     (is (= (decode-json-from-string "2e40") 2d40)))
-  #-(and sbcl darwin)
+  #-(or (and sbcl darwin) (and allegro macosx))
   (is (equalp (with-fp-overflow-handler
                   (invoke-restart 'bignumber-string "BIG:")
                 (decode-json-from-string "2e444"))
               "BIG:2e444"))
-  #-(and sbcl darwin)
+  #-(or (and sbcl darwin) (and allegro macosx))
   (is (= (with-fp-overflow-handler
              (invoke-restart 'rational-approximation)
            (decode-json-from-string "2e444"))
@@ -225,7 +266,7 @@ returned!"
          (* 2.0 (expt 10.0 444)))))
 
 
-(defparameter *json-test-files-path* *load-pathname*)
+(defvar *json-test-files-path*)
 
 (defun test-file (name)
   (make-pathname :name name :type "json" :defaults *json-test-files-path*))
@@ -263,8 +304,8 @@ returned!"
 (test fail-files
   (dotimes (x 24)
     (if (member x *ignore-tests-strict*)
-        (is-true t) 
-        (5am:signals error 
+        (is-true t)
+        (5am:signals error
           (decode-file (test-file (format nil "fail~a" x)))))))
 
 (defun contents-of-file(file)
@@ -273,18 +314,33 @@ returned!"
       (read-sequence s stream)
       s)))
 
-(test decoder-performance  
+(test decoder-performance
   (let* ((json-string (contents-of-file (test-file "pass1")))
          (chars (length json-string))
          (count 1000))
     (format t "Decoding ~a varying chars from memory ~a times." chars count)
     (time
-     (dotimes (x count) 
+     (dotimes (x count)
        (let ((discard-soon
               (with-fp-overflow-handler (invoke-restart 'placeholder :infty)
                 (with-no-char-handler (invoke-restart 'substitute-char #\?)
                   (decode-json-from-string json-string)))))
          (funcall #'identity discard-soon))))));Do something so the compiler don't optimize too much
+
+(test decoder-performance-with-simplified-camel-case
+  (let* ((json-string (contents-of-file (test-file "pass1")))
+         (chars (length json-string))
+         (count 1000))
+    (format t "Decoding ~a varying chars from memory ~a times." chars count)
+    (time
+     (with-shadowed-custom-vars
+         (let ((*json-identifier-name-to-lisp* #'simplified-camel-case-to-lisp))
+           (dotimes (x count)
+             (let ((discard-soon
+                    (with-fp-overflow-handler (invoke-restart 'placeholder :infty)
+                      (with-no-char-handler (invoke-restart 'substitute-char #\?)
+                        (decode-json-from-string json-string)))))
+               (funcall #'identity discard-soon)))))))) ;Do something so the compiler don't optimize too much
 
 ;;#+when-u-want-profiling
 ;;(defun profile-decoder-performance()
@@ -294,7 +350,7 @@ returned!"
 ;;          (count 10))
 ;;      (format t "Parsing test-file pass1 from memory ~a times." count)
 ;;      (sb-sprof:with-profiling ()
-;;        (dotimes (x count) 
+;;        (dotimes (x count)
 ;;          (let ((discard-soon (decode-json-from-string json-string)))
 ;;            (funcall #'identity discard-soon))))
 ;;      (sb-sprof:report)
@@ -347,6 +403,7 @@ returned!"
         (is (equal (symbol-package (caar x))
                    (find-package :keyword))))
       #+(and cl-json-clos
+             (not allegro) ; seems like allegro doesn't, either.
              (not cmu))   ; CMUCL does not allow keywords as slot names
       (with-decoder-simple-clos-semantics
         (setf x (decode-json-from-string "{\"x\":1}"))
