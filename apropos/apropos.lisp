@@ -23,7 +23,7 @@
     (pfn "/cbjson" 'qx-callback-json)
 
     (let* ((src-build "build")
-           (app-root "/devel/qooxlisp/ide") ;; <=== just change this
+           (app-root "/Users/Kenneth/dev/qooxlisp/ide") ;; <=== just change this
            (app-source (format nil "~a/~a/" app-root src-build)))
       (flet ((src-ext (x)
                (format nil "~a~a" app-source x)))
@@ -36,7 +36,7 @@
 (defun qx-begin (req ent)
   (ukt::stop-check :qx-begin)
   ;(trace md-awaken make-qx-instance)
-  (let ((*ekojs* nil)) ;; qx-begin
+  (let ((*ekojs* t)) ;; qx-begin
     (with-js-response (req ent)
       (top-level.debug::with-auto-zoom-and-exit ("aabegin-zoo.txt" :exit nil)
         (let ((*web-session* nil))

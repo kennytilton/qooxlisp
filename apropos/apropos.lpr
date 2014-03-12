@@ -1,4 +1,4 @@
-;; -*- lisp-version: "8.2 [64-bit Windows] (Jan 25, 2010 15:11)"; cg: "1.134"; -*-
+;; -*- lisp-version: "9.0 [64-bit Windows *SMP*] (Mar 10, 2014 18:23)"; cg: "9.0"; -*-
 
 (in-package :cg-user)
 
@@ -21,6 +21,7 @@
   :project-package-name :qooxlisp
   :main-form nil
   :compilation-unit t
+  :concatenate-project-fasls nil
   :verbose nil
   :runtime-modules (list :cg-dde-utils :cg.acache :cg.base :cg.bitmap-pane
                          :cg.bitmap-pane.clipboard :cg.bitmap-stream :cg.button :cg.caret

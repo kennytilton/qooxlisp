@@ -10,9 +10,6 @@
 
 (in-package :qxl)
 
-(eval-now!
- (defun qx-dummy ())
- (set-macro-character #\® #'qx-dummy))
 
 (defconstant +qx-alt-key-mask+ 4)
 (defconstant +qx-shift-key-mask+ 1)
