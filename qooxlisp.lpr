@@ -1,4 +1,4 @@
-;; -*- lisp-version: "8.2 [64-bit Windows] (Sep 7, 2010 10:06)"; cg: "1.134"; -*-
+;; -*- lisp-version: "10.0 [64-bit Windows *SMP*] (Jan 18, 2020 14:08)"; -*-
 
 (in-package :cg-user)
 
@@ -25,6 +25,7 @@
   :project-package-name :common-graphics-user
   :main-form nil
   :compilation-unit t
+  :concatenate-project-fasls nil
   :verbose nil
   :runtime-modules (list :cg-dde-utils :cg.acache :cg.base :cg.bitmap-pane
                          :cg.bitmap-pane.clipboard :cg.bitmap-stream :cg.button :cg.caret

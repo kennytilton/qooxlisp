@@ -1,6 +1,18 @@
-(in-package :qooxlisp)
+﻿(in-package :qooxlisp)
 
-(defparameter *ug* (format nil "Below: a UI into the Lisp function <code>apropos-list</code> which searches ~
+(defmd hacking (qxl-session)
+  :kids (c? (the-kids
+             (vbox (:spacing 6)
+               (:add '(:left 0 :top 0 :width "100%" :height "100%")
+                 :padding 6)
+               (lbl "Exported Only"
+                     :width 192
+                     :background-color 'pink)
+               (checkbox :exported-only "Exported Only"
+                     :width 192
+                     :background-color 'yellow)))))
+
+(defparameter *uguide* (format nil "Below: a UI into the Lisp function <code>apropos-list</code> which searches ~
 the running application for any Lisp source name containing a given substring. Yes, names live on in ~
 Lisp even after native compilation. ~
 Try \"qx\" or \"qxl\" to see elements used in <b>qooxlisp</b>. ~
@@ -15,14 +27,16 @@ Try \"apropos\" to see elements used in this specific example. Packages, by the 
              (vbox (:spacing 6)
                (:add '(:left 0 :top 0 :width "100%" :height "100%")
                  :padding 6)
-               (lbl *ug* :rich t :width 600)
+               (lbl *uguide* :rich t :width 600)
  
                (search-panel-kt self)
                (hbox (:spacing 6)()
                  (pkg-filter-kt self)
                  (vbox (:spacing 6 :align-x "center")()
                    (type-filter self)
-                   (checkbox :exported-only "Exported Only")))
+                   (checkbox :exported-only "Exported Only"
+                     :width 192
+                     :background-color 'yellow)))
                (symbols-found-rethought self)))))
 
 (defun symbols-found-rethought (self)

@@ -31,7 +31,7 @@
   "let" :
   {
     "APPLICATION"  : "ide",
-    "QOOXDOO_PATH" : "C:/devel/qx",
+    "QOOXDOO_PATH" : "../../../qooxdoo-5.0.2-sdk/",
     "QXTHEME"      : "ide.theme.Theme",
     "API_EXCLUDE"  : ["qx.test.*", "${APPLICATION}.theme.*", "${APPLICATION}.test.*"],
     "LOCALES"      : [ "en" ],

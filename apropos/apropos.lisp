@@ -1,6 +1,7 @@
-(in-package :qooxlisp)
+﻿(in-package :qooxlisp)
 
 (defun serve-apropos (&optional (port 8000))
+  (trcx :serve-apropos port)
   (when *wserver* (shutdown))
   (qx-reset)
   (net.aserve:start :debug nil :port port)
@@ -17,16 +18,18 @@
          (pfn (p fn)
            (publish :path p :function fn)))
     
-    (pdr "/qx/" "/devel/qx/")
+    (pdr "/qx/" "/qooxdoo-5.0.2-sdk/")
+    (pdr "/qooxdoo-5.0.2-sdk/" "/qooxdoo-5.0.2-sdk/")
     (pfn "/begin" 'qx-begin) ;; <=== qx-begin (below) gets customized
     (pfn "/callback" 'qx-callback-js)
     (pfn "/cbjson" 'qx-callback-json)
 
     (let* ((src-build "build")
-           (app-root "/Users/Kenneth/dev/qooxlisp/ide") ;; <=== just change this
+           (app-root "/devel/qooxlisp/ide") ;; <=== just change this
            (app-source (format nil "~a/~a/" app-root src-build)))
       (flet ((src-ext (x)
                (format nil "~a~a" app-source x)))
+        (trcx :index-html!!! (src-ext "index.html"))
         (pfl "/" (src-ext "index.html"))
         (pdr (format nil "/~a/" src-build) app-source)
         (pdr "/script/" (src-ext "script/"))
@@ -34,6 +37,7 @@
         (format t "~&Now serving port ~a." port)))))
 
 (defun qx-begin (req ent)
+  (trcx :begin!!!!!!!!!!!!!)
   (ukt::stop-check :qx-begin)
   ;(trace md-awaken make-qx-instance)
   (let ((*ekojs* t)) ;; qx-begin

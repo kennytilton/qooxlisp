@@ -1,8 +1,8 @@
-;; -*- lisp-version: "9.0 [64-bit Windows *SMP*] (Mar 10, 2014 18:23)"; cg: "9.0"; -*-
+;; -*- lisp-version: "10.0 [64-bit Windows *SMP*] (Jan 18, 2020 14:08)"; -*-
 
 (in-package :cg-user)
 
-(defpackage :QOOXLISP)
+(defpackage :qooxlisp)
 
 (define-project :name :apropos
   :modules (list (make-instance 'module :name "apropos.lisp")
@@ -12,7 +12,7 @@
                  (make-instance 'module :name "makeover.lisp")
                  (make-instance 'module :name "rethought.lisp"))
   :projects (list (make-instance 'project-module :name "../qooxlisp.lpr" :show-modules
-                                 t))
+                                 nil))
   :libraries nil
   :editable-files (list "../ide/source/index.html")
   :distributed-files (list "../ide/source/class/ide/Application.js"
