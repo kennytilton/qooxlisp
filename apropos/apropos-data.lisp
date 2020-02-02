@@ -1,4 +1,4 @@
-(in-package :qooxlisp)
+﻿(in-package :qooxlisp)
 
 (defstruct symbol-info name pkg fntype setf? var? class? exported?)
 
@@ -13,13 +13,12 @@
       (loop for sym in (apropos-list s)
           collecting (make-symbol-info
                       :name (symbol-name sym)
-                      :pkg (or (symbol-package sym)
-                             (break "no sympkg for ~a" sym))
+                      :pkg (symbol-package sym)
                       :fntype (cond
                                ((macro-function sym) "macro")
                                ((fboundp sym) "function")
                                (t ""))
-                      :var? (if (boundp sym)
+                      :var? (when (boundp sym)
                                 (if (constantp sym)
                                     "con" "var") "")
                       :setf? (funcall eor (fboundp `(setf ,sym)))
@@ -27,7 +26,7 @@
                       :exported? (funcall eor (exportedp sym)))))))
 
 (defun symbol-info-filtered (syms type exported-only-p selected-pkg-p selected-pkg)
-  (trcx :symbol-info-filtered-sees selected-pkg-p selected-pkg)
+  (trcx :symbol-info-filtered-sees type exported-only-p selected-pkg-p selected-pkg)
   (loop for sym in syms
       when (and
             (or (not exported-only-p) (or (eq t (symbol-info-exported? sym))

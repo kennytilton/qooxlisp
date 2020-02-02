@@ -40,7 +40,7 @@
   (trcx :begin!!!!!!!!!!!!!)
   (ukt::stop-check :qx-begin)
   ;(trace md-awaken make-qx-instance)
-  (let ((*ekojs* t)) ;; qx-begin
+  (let ((*ekojs* nil)) ;; qx-begin
     (with-js-response (req ent)
       (top-level.debug::with-auto-zoom-and-exit ("aabegin-zoo.txt" :exit nil)
         (let ((*web-session* nil))
@@ -56,7 +56,7 @@ function cbjs (oid,opcode,data) {
 }
 clDict[0] = qx.core.Init.getApplication().getRoot();
 sessId=~a;" (session-id (setf *web-session*
-                          (make-instance 'apropos-session-kt))))))))))
+                          (make-instance 'apropos-session-classic))))))))))
 
 
 (defmd apropos-session (qxl-session) ;; abstract class
@@ -64,7 +64,7 @@ sessId=~a;" (session-id (setf *web-session*
   (syms-unfiltered (c? (b-when seg (^sym-seg)
                          (symbol-info-raw seg))))
   selected-pkg-p ;; supplied by subclasses
-  (syms-filtered (c? (symbol-info-filtered (^syms-unfiltered)
+  (syms-filtered (c? (ekx :symfiltered symbol-info-filtered (^syms-unfiltered)
                        (value (fm-other :type-filter))
                        (value (fm-other :exported-only))
                        (^selected-pkg-p)

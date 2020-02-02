@@ -1,4 +1,4 @@
-;; -*- mode: Lisp; Syntax: Common-Lisp; Package: qooxlisp; -*-
+﻿;; -*- mode: Lisp; Syntax: Common-Lisp; Package: qooxlisp; -*-
 #|
 
     qx-utils
@@ -47,10 +47,11 @@
   (or (gethash oid (dictionary *web-session*))
     (error "no item for oid ~a, caller ~a" oid caller)))
 
-(defun oid$-to-object (oid$ &optional caller)
+(defun oid$-to-object (oid$ &optional caller must-succeed-p)
   (b-if oid (parse-integer oid$ :junk-allowed t)
     (oid-to-object oid caller)
-    (error "oid NAN ~a, caller ~a" oid$ caller)))
+    (when must-succeed-p
+      (error "oid NAN ~a, caller ~a" oid$ caller))))
 
 (export! qx-alt-key-p qx-control-key-p qx-shift-key-p)
 

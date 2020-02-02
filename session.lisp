@@ -1,4 +1,4 @@
-;; -*- mode: Lisp; Syntax: Common-Lisp; Package: qooxlisp; -*-
+﻿;; -*- mode: Lisp; Syntax: Common-Lisp; Package: qooxlisp; -*-
 #|
 
     session -- session management
@@ -167,13 +167,11 @@ sessId=~a;" (session-id self)))
 
 (export! qx-callback-js qx-callback-json make-qx-instance qx-alert) ;;>>> maybe not once start-up inherits
 
-
-
 (defun qx-callback-js (req ent)
   (let ((*ekojs* nil)) ;; qx-callback-js
     (with-js-response (req ent) 
       (top-level.debug::with-auto-zoom-and-exit ("aa-callback-js.txt" :exit nil)
-        (trc "qx-callback-js sees req" (req-val req "sessId") (req-val req "opcode") (req-val req "oid"))
+        ;;(trc "qx-callback-js sees req" (req-val req "sessId") (req-val req "opcode") (req-val req "oid"))
         (let ((sessId (parse-integer (req-val req "sessId") :junk-allowed t)))
           (b-if *web-session* (if sessId
                                   (gethash sessId *qx-sessions*)
@@ -187,7 +185,7 @@ sessId=~a;" (session-id self)))
                 (let ((opcode (qxl-sym (req-val req "opcode")))
                       (ukt::*stopped* 'qxl-session-stopped)
                       (cz::*c-stopper* 'qxl-session-stop))
-                  (trcx qx-callback-js *web-session*  opcode  self  (request-raw-request req))
+                  ;;(trcx qx-callback-js *web-session*  opcode  self  (request-raw-request req))
                   (with-integrity ()
                     (b-if cb (funcall opcode self)
                       (funcall cb self req)

@@ -1,4 +1,4 @@
-(in-package :qooxlisp)
+﻿(in-package :qooxlisp)
 
 ;;; The top-level apropos structure, which defines
 ;;; slots for key data items and also constitutes
@@ -50,11 +50,9 @@
                       :label sympart) .cache))
           .cache)))
     (button "Search" (:enabled t #+not (c? (> (length (value (psib))) 1)))
-      :onexec (b-if sympart (value (psib))
-                (progn
+      :onexec (b-when sympart (value (psib))
                   (print `(:sympart-onexec ,sympart))
-                  (setf (sym-seg (u^ qxl-session)) sympart))
-                (qxfmt "alert('Disable me!!!')" )))))
+                  (setf (sym-seg (u^ qxl-session)) sympart)))))
 
 ;;; The next two functions build the second row of the GUI
 ;;; which contains various widgets to filter the search results
@@ -64,23 +62,22 @@
   ;; as a check-group-box "Search Specific Package", but the
   ;; original works this way, so...
   (groupbox (:spacing 2)(:legend "Package(s) to Search")
-      (hbox (:spacing 20)()
-        (checkbox :all-packages "All"
-          :value (c-in t))
-        (selectbox :selected-pkg (:add '(:flex 1)
-                                   :enabled (c? (not (value (fm-other :all-packages))))
-                                   :onchangeselection (lambda (self req)
-                                                        (let ((nv (req-val req "value")))
-                                                          (trcx :pkgsel nv (find-package nv))
-                                                          (setf (^value) (find-package nv)))))
-          (loop for pkg in (b-if syms (syms-unfiltered (u^ qxl-session))
-                             (loop with pkgs
-                                 for symi in syms
-                                 do (pushnew (symbol-info-pkg symi) pkgs)
-                                 finally (return pkgs))
-                             (subseq (list-all-packages) 0 #+testing 4))
-              collecting (listitem (package-name pkg)))))))
-
+    (hbox (:spacing 20)()
+      (checkbox :all-packages "All"
+        :value (c-in t))
+      (selectbox :selected-pkg (:add '(:flex 1)
+                                 :enabled (c? (not (value (fm-other :all-packages))))
+                                 :onchangeselection (lambda (self req)
+                                                      (let* ((nv (req-val req "value")))
+                                                        (b-when item (oid$-to-object nv :ochgsel nil)
+                                                          (setf (^value) (model item))))))
+        (loop for pkg in (b-if syms (syms-unfiltered (u^ qxl-session))
+                           (loop with pkgs
+                               for symi in syms
+                               do (pushnew (symbol-info-pkg symi) pkgs)
+                               finally (return pkgs))
+                           (subseq (list-all-packages) 0 4))
+            collecting (listitem (package-name pkg)))))))
 
 (defun type-filter (self)
   (groupbox ()(:legend "Show")

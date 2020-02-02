@@ -1,4 +1,4 @@
-;; -*- mode: Lisp; Syntax: Common-Lisp; Package: qooxlisp; -*-
+﻿;; -*- mode: Lisp; Syntax: Common-Lisp; Package: qooxlisp; -*-
 #|
 
     widget
@@ -94,7 +94,7 @@ clDict[~a].addListener('changeSelection', function(e) {
 (defmd qx-combo-box (qx-abstract-select-box)
   (qx-class "qx.ui.form.ComboBox" :allocation :class :cell nil)
   (onchangevalue (lambda (self req)
-                   (print :onchangevalue-fires)
+                   (trcx :qx-combo-box-onchangevalue-fires (req-val req "value"))
                    (let ((nv (req-val req "value")))
                      (setf (^value) nv))))
   :value (c-in nil))
@@ -108,6 +108,7 @@ clDict[~a].addListener('changeValue', function(e) {
     rq.setParameter('sessId', sessId);
     rq.setParameter('opcode', 'onchangevalue');
     rq.setParameter('oid',~:*~a);
+    console.log('generic onchgval sees data ', e.getData());
     rq.setParameter('value', e.getData());
     rq.send();
 });" (oid self))))))
@@ -140,6 +141,7 @@ clDict[~a].addListener('changeValue', function(e) {
 (defmacro listitem (label-form &optional model)
   (let ((label (gensym)))
     `(let ((,label ,label-form))
+       (trcx :listitwm-model-label (or ,model ,label) ,label)
        (make-kid 'qx-list-item
          :label ,label
          :model (or ,model ,label)))))
@@ -186,7 +188,9 @@ clDict[~a].addListener('changeValue', function(e) {
 (defmd qx-toggle-button (qx-atom qooxlisp-control )
   (value (c-in nil))
   (onchangevalue (lambda (self req)
-                   (print :onchangevalue-fires)
+                   (trc "qx-toggle-button-onchangevalue-fires"
+                     (req-val req "value")
+                     self req)
                    (let ((nv (cvtjs (req-val req "value"))))
                      (setf (^value) nv)
                      (trc "qx-toggle-button ~a changed to ~a')"
@@ -205,6 +209,7 @@ clDict[~a].addListener('changeValue', function(e) {
   (qx-class "qx.ui.form.SelectBox" :allocation :class :cell nil)
   (onchangeselection (lambda (self req)
                        (let ((nv (req-val req "value")))
+                         (trc "qx-select-box onchgsel sees nv, req" nv req)
                          (setf (^value) nv))))
   :value (c-in nil))
 
