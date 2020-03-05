@@ -275,10 +275,14 @@ clDict[~a].addListener('keydown', function(e) {
      ((functionp new-value) (qxfmt "
 clDict[~a].addListener('keypress', function(e) {
     var k = e.getKeyIdentifier();
+    var oid = ~:*~a;
+    var priorv = clDict[oid].getValue();
+    console.log('priorv '+ priorv);
     // e.preventDefault();
-    var rq = new qx.io.remote.Request('/callback?sessId='+sessId+'&opcode=onkeypress&oid=~:*~a','GET', 'text/javascript');
+    var rq = new qx.io.remote.Request('/callback?sessId='+sessId+'&opcode=onkeypress&oid=~:*~a&priorv='+priorv,'GET', 'text/javascript');
     rq.setParameter('keyId', k);
     rq.setParameter('mods', e.getModifiers());
+    console.log('keypress sees value ', clDict[oid].getValue());
     console.log('keypress listener 1 sends '+ k);
     rq.send();
 });" (oid self)))

@@ -5,7 +5,6 @@
 ;;; the root of the GUI framework
 
 (defmd apropos-session-classic (apropos-session)
-  :selected-pkg-p (c? (not (value (fm-other :all-packages))))
   :kids (c? (the-kids
              (vbox (:spacing 6) 
                (:add '(:left 0 :top 0 :width "100%" :height "100%")
@@ -13,7 +12,7 @@
                (search-panel self)
                (hbox (:spacing 6)()
                  (vbox (:spacing 6)(:add '(:flex 1))
-                   (checkbox :exported-only "Show Exported Symbols Only")
+                   ;;(checkbox :exported-only "Show Exported Symbols Only")
                    (pkg-filter self))
                  (type-filter self))
                (vbox (:spacing 6)(:add '(:flex 1))
@@ -35,10 +34,18 @@
     (combobox :symbol-string
       (:add '(:flex 1)
         :allow-grow-x t
+        :onkeypress (lambda (self req)
+                      (let* ((key (req-val req "keyId"))
+                             (priorv (req-val req "priorv")))
+                        (when (string-equal key "Enter")
+                          ;; the session property "sym-seg" is the dataflow origin, along
+                          ;; with filters on which matches to show.
+                          (setf (sym-seg (u^ qxl-session)) priorv))))
         :onchangevalue (lambda (self req)
-                         (let ((sympart (req-val req "value")))
-                           (setf (sym-seg (u^ qxl-session)) sympart))))
-      ;; rule below runs whenever the user searches for a segment
+                         ;;; emulating the Allegro IDE, just save the changed value, do not kick
+                         ;;; off an immediate search.
+                         (setf (^value) (req-val req "value"))))
+      ;; rule below runs whenever the user triggers a search for a segment
       ;; if they did not search on "" and they searched on something new,
       ;; that is added to the existing list of prior searches and
       ;; thru hidden plumbing gets added to the client-side menu of the combo box
@@ -49,10 +56,11 @@
               (cons (make-kid 'qx-list-item
                       :label sympart) .cache))
           .cache)))
-    (button "Search" (:enabled t #+not (c? (> (length (value (psib))) 1)))
+    (button "Search" ()
       :onexec (b-when sympart (value (psib))
-                  (print `(:sympart-onexec ,sympart))
-                  (setf (sym-seg (u^ qxl-session)) sympart)))))
+                (setf (sym-seg (u^ qxl-session)) sympart)))))
+
+#+xxxx (inspect (find-package :socket))
 
 ;;; The next two functions build the second row of the GUI
 ;;; which contains various widgets to filter the search results
@@ -71,16 +79,16 @@
                                                       (let* ((nv (req-val req "value")))
                                                         (b-when item (oid$-to-object nv :ochgsel nil)
                                                           (setf (^value) (model item))))))
-        (loop for pkg in (b-if syms (syms-unfiltered (u^ qxl-session))
+        (loop for pkg in (b-if syms nil #+xxxx (syms-unfiltered (u^ qxl-session))
                            (loop with pkgs
                                for symi in syms
                                do (pushnew (symbol-info-pkg symi) pkgs)
                                finally (return pkgs))
-                           (subseq (list-all-packages) 0 4))
+                           (list-all-packages))
             collecting (listitem (package-name pkg)))))))
 
 (defun type-filter (self)
-  (groupbox ()(:legend "Show")
+  (groupbox (:spacing 10)(:legend "Show")
     (radiobuttongroup :type-filter (:value (c-in "all"))
       (qx-grid :spacing-x 12 :spacing-y 6)
       (radiobutton "all" "All"
@@ -90,7 +98,8 @@
       (radiobutton "fn" "Functions"
         :add '(:row 1 :column 0))
       (radiobutton "class" "Classes"
-        :add '(:row 1 :column 1)))))
+        :add '(:row 1 :column 1)))
+    (checkbox :exported-only "Exported Symbols Only")))
 
 ;;; The search results table itself
 ;;; Missing is a table column model to control initial

@@ -1,11 +1,9 @@
-(in-package :qooxlisp)
+﻿(in-package :qooxlisp)
 
 (defmd apropos-session-makeover (apropos-session)
   :syms-filtered (c? (symbol-info-filtered (^syms-unfiltered)
                        (value (fm-other :type-filter))
-                       (value (fm-other :exported-only))
-                       (value (fm-other :selected-pkg-p))
-                       (value (fm-other :selected-pkg))))
+                       (value (fm-other :exported-only))))
   :kids (c? (the-kids
              (vbox (:spacing 6) 
                (:add '(:left 0 :top 0 :width "100%" :height "100%")
@@ -26,11 +24,11 @@
                                :legend "Search One Package"
                                :value (c-in nil)) ;; becomes state of check-box!
     (selectbox :selected-pkg (:add '(:flex 1)
-                               :enabled (c? (value (fm-other :selected-pkg-p)))
+                               :enabled t
                                :onchangeselection (lambda (self req)
                                                         (let ((nv (req-val req "value")))
                                                           (setf (^value) (find-package nv)))))
-      (b-if syms (syms-unfiltered (u^ qxl-session))
+      (b-if syms nil #+xxx (syms-filtered (u^ qxl-session))
         (loop with pkgs
             for symi in syms
             do (pushnew (symbol-info-pkg symi) pkgs)

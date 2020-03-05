@@ -62,13 +62,11 @@ sessId=~a;" (session-id (setf *web-session*
 (defmd apropos-session (qxl-session) ;; abstract class
   (sym-seg (c-in nil))
   (syms-unfiltered (c? (b-when seg (^sym-seg)
-                         (symbol-info-raw seg))))
-  selected-pkg-p ;; supplied by subclasses
-  (syms-filtered (c? (ekx :symfiltered symbol-info-filtered (^syms-unfiltered)
+                         (trcx :calcing-symunfiltered! seg)
+                         (symbol-info-raw seg :pkg (value (fm-other :selected-pkg))))))
+  (syms-filtered (c? (symbol-info-filtered (^syms-unfiltered)
                        (value (fm-other :type-filter))
-                       (value (fm-other :exported-only))
-                       (^selected-pkg-p)
-                       (value (fm-other :selected-pkg)))))
+                       (value (fm-other :exported-only)))))
   (sym-sort-spec (c-in nil))
   (sym-info (c? (let ((si (^syms-filtered)))
                   (trcx :sym-info-fires (length si))
@@ -89,4 +87,5 @@ sessId=~a;" (session-id (setf *web-session*
     (let ((tbl (fm-other :sym-info-table)))
       (assert tbl)
       (b-when oid (oid (table-model tbl))
+        (trcx :reloading!!!!)
         (qxfmt "clDict[~a].reloadData();" oid)))))

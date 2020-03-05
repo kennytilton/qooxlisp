@@ -184,7 +184,6 @@ clDict[~a].addListener('changeValue', function(e) {
    (cfg source)
    (cfg scale)))
 
-
 (defmd qx-toggle-button (qx-atom qooxlisp-control )
   (value (c-in nil))
   (onchangevalue (lambda (self req)
@@ -193,8 +192,7 @@ clDict[~a].addListener('changeValue', function(e) {
                      self req)
                    (let ((nv (cvtjs (req-val req "value"))))
                      (setf (^value) nv)
-                     (trc "qx-toggle-button ~a changed to ~a')"
-                       self nv)))))
+                     (trcx :toggle-chgval self nv)))))
 
 (defmethod qx-configurations append ((self qx-toggle-button))
   (nconc

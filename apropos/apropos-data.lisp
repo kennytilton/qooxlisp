@@ -5,12 +5,12 @@
 ;;; Next two functions support rules for gathering matching symbols
 ;;; and filtering them as user changes constraints on what to show
 
-(defun symbol-info-raw (s &key (eor (lambda (x)
+(defun symbol-info-raw (s &key pkg (eor (lambda (x)
                                       (if x "x" ""))))
   (when (plusp (length s))
     (flet ((exportedp (sym)
              (eql (nth-value 1 (find-symbol (symbol-name sym)(symbol-package sym))) :external)))
-      (loop for sym in (apropos-list s)
+      (loop for sym in (apropos-list s pkg)
           collecting (make-symbol-info
                       :name (symbol-name sym)
                       :pkg (symbol-package sym)
@@ -25,15 +25,12 @@
                       :class? (funcall eor (find-class sym nil))
                       :exported? (funcall eor (exportedp sym)))))))
 
-(defun symbol-info-filtered (syms type exported-only-p selected-pkg-p selected-pkg)
-  (trcx :symbol-info-filtered-sees type exported-only-p selected-pkg-p selected-pkg)
+(defun symbol-info-filtered (syms type exported-only-p)
+  (trcx :symbol-info-filtered-sees type exported-only-p)
   (loop for sym in syms
       when (and
             (or (not exported-only-p) (or (eq t (symbol-info-exported? sym))
                                         (equal "x" (symbol-info-exported? sym))))
-            (or (not selected-pkg-p) (if (listp selected-pkg)
-                                         (find (symbol-info-pkg sym) selected-pkg)
-                                       (eq selected-pkg (symbol-info-pkg sym))))
             (case$ type
               ("all" t)
               ("fn" (not (equal "" (symbol-info-fntype sym))))

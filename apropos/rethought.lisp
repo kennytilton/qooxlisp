@@ -20,15 +20,17 @@ Try \"apropos\" to see elements used in this specific example. Packages, by the 
 
 (defmd apropos-session-kt (apropos-session)
   :syms-unfiltered (c? (b-when seg (^sym-seg)
-                         (symbol-info-raw seg :eor (lambda (x)
-                                                     (if x t :js-false)))))
+                         (symbol-info-raw seg
+                           :pkg (value (fm-other :selected-pkg))
+                           :eor (lambda (x)
+                                  (if x t :js-false)))))
   :selected-pkg-p (c? (not (null (value (fm-other :selected-pkg)))))
   :kids (c? (the-kids
              (vbox (:spacing 6)
                (:add '(:left 0 :top 0 :width "100%" :height "100%")
                  :padding 6)
                (lbl *uguide* :rich t :width 600)
- 
+               
                (search-panel-kt self)
                (hbox (:spacing 6)()
                  (pkg-filter-kt self)
@@ -78,7 +80,7 @@ Try \"apropos\" to see elements used in this specific example. Packages, by the 
                          (setf (sym-seg (u^ qxl-session)) sympart))))
     (button "Search" (:enabled t #+not (c? (> (length (value (psib))) 1)))
       :onexec (b-when sympart (value (psib))
-                (print `(:sympart-onexec ,sympart))
+                (print `(:sympart-onexec-rethought ,sympart))
                 (setf (sym-seg (u^ qxl-session)) sympart)))))
 
 (defun pkg-filter-kt (self)
