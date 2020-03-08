@@ -6,7 +6,7 @@
 ;;; and filtering them as user changes constraints on what to show
 
 (defun symbol-info-raw (s &key pkg (eor (lambda (x)
-                                      (if x "x" ""))))
+                                          (if x "x" ""))))
   (when (plusp (length s))
     (flet ((exportedp (sym)
              (eql (nth-value 1 (find-symbol (symbol-name sym)(symbol-package sym))) :external)))
@@ -46,7 +46,7 @@
     (setf start (parse-integer start))
     (setf row-count (parse-integer row-count))
     (trcx :qx-getdata start row-count)
-    (loop for sym in (sym-info (u^ qxl-session))
+    (loop for sym in (sym-info (u^ apropos-variant))
         for n upfrom 0
         when (< (1- start) n (+ start row-count))
         collect (list

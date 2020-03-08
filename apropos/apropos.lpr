@@ -7,7 +7,7 @@
 (define-project :name :apropos
   :modules (list (make-instance 'module :name "apropos.lisp")
                  (make-instance 'module :name "../INSTALL.txt")
-                 (make-instance 'module :name "apropos-data.lisp")
+                 (make-instance 'module :name "symbol-info.lisp")
                  (make-instance 'module :name "classic.lisp")
                  (make-instance 'module :name "makeover.lisp")
                  (make-instance 'module :name "rethought.lisp"))

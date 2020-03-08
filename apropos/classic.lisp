@@ -4,7 +4,7 @@
 ;;; slots for key data items and also constitutes
 ;;; the root of the GUI framework
 
-(defmd apropos-session-classic (apropos-session)
+(defmd apropos-classic (apropos-variant)
   :kids (c? (the-kids
              (vbox (:spacing 6) 
                (:add '(:left 0 :top 0 :width "100%" :height "100%")
@@ -16,7 +16,7 @@
                    (pkg-filter self))
                  (type-filter self))
                (vbox (:spacing 6)(:add '(:flex 1))
-                 (lbl (c? (let ((sym-seg (sym-seg (u^ qxl-session))))
+                 (lbl (c? (let ((sym-seg (sym-seg (u^ apropos-variant))))
                             (if (plusp (length sym-seg))
                                 (format nil "Symbols containing ~s" sym-seg)
                               "Symbols Found:"))))
@@ -40,7 +40,7 @@
                         (when (string-equal key "Enter")
                           ;; the session property "sym-seg" is the dataflow origin, along
                           ;; with filters on which matches to show.
-                          (setf (sym-seg (u^ qxl-session)) priorv))))
+                          (setf (sym-seg (u^ apropos-variant)) priorv))))
         :onchangevalue (lambda (self req)
                          ;;; emulating the Allegro IDE, just save the changed value, do not kick
                          ;;; off an immediate search.
@@ -49,7 +49,7 @@
       ;; if they did not search on "" and they searched on something new,
       ;; that is added to the existing list of prior searches and
       ;; thru hidden plumbing gets added to the client-side menu of the combo box
-      (let ((sympart (sym-seg (u^ qxl-session))))
+      (let ((sympart (sym-seg (u^ apropos-variant))))
         (if (plusp (length sympart))
             (if (find sympart .cache :key 'label :test 'string-equal)
                 .cache
@@ -58,7 +58,7 @@
           .cache)))
     (button "Search" ()
       :onexec (b-when sympart (value (psib))
-                (setf (sym-seg (u^ qxl-session)) sympart)))))
+                (setf (sym-seg (u^ apropos-variant)) sympart)))))
 
 #+xxxx (inspect (find-package :socket))
 
@@ -79,7 +79,7 @@
                                                       (let* ((nv (req-val req "value")))
                                                         (b-when item (oid$-to-object nv :ochgsel nil)
                                                           (setf (^value) (model item))))))
-        (loop for pkg in (b-if syms nil #+xxxx (syms-unfiltered (u^ qxl-session))
+        (loop for pkg in (b-if syms nil #+xxxx (syms-unfiltered (u^ apropos-variant))
                            (loop with pkgs
                                for symi in syms
                                do (pushnew (symbol-info-pkg symi) pkgs)
@@ -115,8 +115,8 @@
     ;; next three are for data model delegate
     :cb-row-count (lambda (self req)
                     (declare (ignore req))
-                    ;(trcx :load-row-count-says (length (sym-info (u^ qxl-session))))
-                    (length (sym-info (u^ qxl-session))))
+                    ;(trcx :load-row-count-says (length (sym-info (u^ apropos-variant))))
+                    (length (sym-info (u^ apropos-variant))))
     :cb-load-row-data 'sym-get
     :cb-sort-row-data 'sym-sort
     :block-size 100

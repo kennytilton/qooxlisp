@@ -18,7 +18,7 @@ Lisp even after native compilation. ~
 Try \"qx\" or \"qxl\" to see elements used in <b>qooxlisp</b>. ~
 Try \"apropos\" to see elements used in this specific example. Packages, by the way, are Lisp groups of names."))
 
-(defmd apropos-session-kt (apropos-session)
+(defmd apropos-ala-kenny (apropos-variant)
   :syms-unfiltered (c? (b-when seg (^sym-seg)
                          (symbol-info-raw seg
                            :pkg (value (fm-other :selected-pkg))
@@ -50,7 +50,7 @@ Try \"apropos\" to see elements used in this specific example. Packages, by the 
     ;; next three are for data model delegate
     :cb-row-count (lambda (self req)
                     (declare (ignore req))
-                    (length (sym-info (u^ qxl-session))))
+                    (length (sym-info (u^ apropos-variant))))
     :cb-load-row-data 'sym-get
     :cb-sort-row-data 'sym-sort
     :block-size 100
@@ -77,11 +77,11 @@ Try \"apropos\" to see elements used in this specific example. Packages, by the 
       :allow-grow-x t
       :onchangevalue (lambda (self req)
                        (let ((sympart (req-val req "value")))
-                         (setf (sym-seg (u^ qxl-session)) sympart))))
+                         (setf (sym-seg (u^ apropos-variant)) sympart))))
     (button "Search" (:enabled t #+not (c? (> (length (value (psib))) 1)))
       :onexec (b-when sympart (value (psib))
                 (print `(:sympart-onexec-rethought ,sympart))
-                (setf (sym-seg (u^ qxl-session)) sympart)))))
+                (setf (sym-seg (u^ apropos-variant)) sympart)))))
 
 (defun pkg-filter-kt (self)
   (vbox ()(:add '(:flex 1))
@@ -104,7 +104,7 @@ Try \"apropos\" to see elements used in this specific example. Packages, by the 
                                                     do (trcx :pkgfound pkg$ pkg)
                                                     when (find-package pkg$)
                                                     collect pkg))))))
-      (loop for pkg in (b-if syms (syms-unfiltered (u^ qxl-session))
+      (loop for pkg in (b-if syms (syms-unfiltered (u^ apropos-variant))
                          (loop with pkgs
                              for symi in syms
                              do (pushnew (symbol-info-pkg symi) pkgs)

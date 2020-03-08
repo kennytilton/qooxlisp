@@ -314,7 +314,11 @@
   layout-iargs
   :layout (c? (make-layout self 'qx-vbox (^layout-iargs))))
 
-(export! qxl-row qxl-flow vbox grid)
+(export! qxl-row qxl-column qxl-flow vbox grid)
+
+(defmd qxl-column (qx-composite)
+  layout-iargs
+  :layout (c? (make-layout self 'qx-vbox (^layout-iargs))))
 
 (defmd qxl-row (qx-composite)
   layout-iargs

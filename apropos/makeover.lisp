@@ -1,6 +1,6 @@
 ﻿(in-package :qooxlisp)
 
-(defmd apropos-session-makeover (apropos-session)
+(defmd apropos-makeover (apropos-variant)
   :syms-filtered (c? (symbol-info-filtered (^syms-unfiltered)
                        (value (fm-other :type-filter))
                        (value (fm-other :exported-only))))
@@ -10,14 +10,13 @@
                  :padding 6)
                (search-panel self)
                (hbox (:spacing 6)()
-                 (pkg-filter-mo self)
+                 (makeover-pkg-filter self)
                  (vbox (:spacing 6 :align-x "center")()
                    (type-filter-mo self)
                    (checkbox :exported-only "Exported Only")))
                (symbols-found self)))))
 
-
-(defun pkg-filter-mo (self)
+(defun makeover-pkg-filter (self)
   (checkgroupbox (:spacing 2)(:md-name :selected-pkg-p
                                :add '(:flex 1)
                                :allow-grow-y :js-false
@@ -28,7 +27,7 @@
                                :onchangeselection (lambda (self req)
                                                         (let ((nv (req-val req "value")))
                                                           (setf (^value) (find-package nv)))))
-      (b-if syms nil #+xxx (syms-filtered (u^ qxl-session))
+      (b-if syms nil #+xxx (syms-filtered (u^ apropos-variant))
         (loop with pkgs
             for symi in syms
             do (pushnew (symbol-info-pkg symi) pkgs)

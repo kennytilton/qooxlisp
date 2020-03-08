@@ -56,10 +56,25 @@ function cbjs (oid,opcode,data) {
 }
 clDict[0] = qx.core.Init.getApplication().getRoot();
 sessId=~a;" (session-id (setf *web-session*
-                          (make-instance 'apropos-session-classic))))))))))
+                          (make-instance 'apropos-sampler))))))))))
 
+(defparameter apropos-variants
+  '((apropos-classic "Classic")
+    (apropos-makeover "Makeover")
+    (apropos-ala-kenny "a la Kenny")))
 
-(defmd apropos-session (qxl-session) ;; abstract class
+(defmd apropos-sampler (qxl-session)
+  :kids (c? (the-kids
+             (hbox (:spacing 6)(:add '(:left 0 :top 0 :width "100%" :height "100%") :padding 6)
+               (groupbox (:spacing 10)(:legend "Variant")
+                 (radiobuttongroup :ux-variant (:value (c-in 'apropos-classic))
+                   (qx-vbox :spacing 6)
+                   (loop for av in apropos-variants
+                       collecting (radiobutton (car av) (cadr av)))))
+               (vbox ()()
+                 (make-kid (value (fm^ :ux-variant))))))))
+
+(defmd apropos-variant (qxl-column) ;; abstract class
   (sym-seg (c-in nil))
   (syms-unfiltered (c? (b-when seg (^sym-seg)
                          (trcx :calcing-symunfiltered! seg)
@@ -68,17 +83,15 @@ sessId=~a;" (session-id (setf *web-session*
                        (value (fm-other :type-filter))
                        (value (fm-other :exported-only)))))
   (sym-sort-spec (c-in nil))
-  (sym-info (c? (let ((si (^syms-filtered)))
-                  (trcx :sym-info-fires (length si))
-                  (b-if sort (^sym-sort-spec)
-                    (destructuring-bind (sort-key order) sort
-                      (sort (copy-list si)
-                        (if (equal order "asc")
-                            'string-lessp 'string-greaterp)
-                        :key (if (equal sort-key "pkg")
-                                 (lambda (si) (package-name (symbol-info-pkg si)))
-                               (qxl-sym (conc$ 'symbol-info- sort-key)))))
-                    si)))))
+  (sym-info (c? (b-if sort (^sym-sort-spec)
+                  (destructuring-bind (sort-key order) sort
+                    (sort (copy-list (^syms-filtered))
+                      (if (equal order "asc")
+                          'string-lessp 'string-greaterp)
+                      :key (if (equal sort-key "pkg")
+                               (lambda (si) (package-name (symbol-info-pkg si)))
+                             (qxl-sym (conc$ 'symbol-info- sort-key)))))
+                  (^syms-filtered)))))
 
 (defobserver sym-info ()
   (trcx :sym-info-observer-fires)
