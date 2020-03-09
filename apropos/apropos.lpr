@@ -6,13 +6,14 @@
 
 (define-project :name :apropos
   :modules (list (make-instance 'module :name "apropos.lisp")
-                 (make-instance 'module :name "../INSTALL.txt")
-                 (make-instance 'module :name "classic.lisp")
+                 (make-instance 'module :name "apropos-variant")
+                 (make-instance 'module :name "av-classic")
+                 (make-instance 'module :name "av-classic-plus")
                  (make-instance 'module :name "makeover.lisp")
-                 (make-instance 'module :name "rethought.lisp")
-                 (make-instance 'module :name "sym-info"))
+                 (make-instance 'module :name "av-kenny")
+                 (make-instance 'module :name "../INSTALL.txt"))
   :projects (list (make-instance 'project-module :name "../qooxlisp.lpr" :show-modules
-                                 t))
+                                 nil))
   :libraries nil
   :editable-files (list "../ide/source/index.html")
   :distributed-files (list "../ide/source/class/ide/Application.js"

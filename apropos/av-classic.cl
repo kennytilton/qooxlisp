@@ -12,15 +12,9 @@
                (search-panel self)
                (hbox (:spacing 6)()
                  (vbox (:spacing 6)(:add '(:flex 1))
-                   ;;(checkbox :exported-only "Show Exported Symbols Only")
                    (pkg-filter self))
                  (type-filter self))
-               (vbox (:spacing 6)(:add '(:flex 1))
-                 (lbl (c? (let ((sym-seg (sym-seg (u^ apropos-variant))))
-                            (if (plusp (length sym-seg))
-                                (format nil "Symbols containing ~s" sym-seg)
-                              "Symbols Found:"))))
-                 (symbols-found self))))))
+               (symbols-found self t)))))
 
 ;;; The top row of the dialogue, where one specifies the search substring.
 ;;; The combo-box used to hold prior matches is overkill but let's us
@@ -69,7 +63,8 @@
   ;; this guy could be a lot simpler (for user and developer)
   ;; as a check-group-box "Search Specific Package", but the
   ;; original works this way, so...
-  (groupbox (:spacing 2)(:legend "Package(s) to Search")
+  (groupbox (:spacing 2)(:legend "Package(s) to Search"
+                          :add '(:flex 1))
     (hbox (:spacing 20)()
       (checkbox :all-packages "All"
         :value (c-in t))

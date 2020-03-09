@@ -12,7 +12,7 @@
                (hbox (:spacing 6)()
                  (makeover-pkg-filter self)
                  (vbox (:spacing 6 :align-x "center")()
-                   (type-filter-mo self)
+                   (type-filter self)
                    (checkbox :exported-only "Exported Only")))
                (symbols-found self)))))
 
@@ -42,15 +42,4 @@
                 :model (package-name pkg)
                 :label (package-name pkg)))))))
 
-(defun type-filter-mo (self)
-  (groupbox ()(:legend "Show")
-    (radiobuttongroup :type-filter (:value (c-in "all"))
-      (qx-grid :spacing-x 12 :spacing-y 6)
-      (radiobutton "all" "All"
-        :add '(:row 0 :column 0))
-      (radiobutton "var" "Variables"
-        :add '(:row 0 :column 1))
-      (radiobutton "fn" "Functions"
-        :add '(:row 1 :column 0))
-      (radiobutton "class" "Classes"
-        :add '(:row 1 :column 1)))))
+

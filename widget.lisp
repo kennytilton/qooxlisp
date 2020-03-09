@@ -141,7 +141,6 @@ clDict[~a].addListener('changeValue', function(e) {
 (defmacro listitem (label-form &optional model)
   (let ((label (gensym)))
     `(let ((,label ,label-form))
-       (trcx :listitwm-model-label (or ,model ,label) ,label)
        (make-kid 'qx-list-item
          :label ,label
          :model (or ,model ,label)))))
