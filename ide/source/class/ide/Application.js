@@ -1,4 +1,4 @@
-/* ************************************************************************
+﻿/* ************************************************************************
 
    Copyright:
 
@@ -43,7 +43,6 @@ qx.Class.define("ide.Application",
     {
       // Call super class
       this.base(arguments);
-      console.log("I do get!!!!! not isSet")
 
             // Enable logging in debug variant
       if (qx.core.Environment.get("qx.debug"))

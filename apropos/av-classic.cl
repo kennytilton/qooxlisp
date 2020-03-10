@@ -58,6 +58,7 @@
           .cache)))
     (rtf "<u>S</u>earch" 
       :decorator "button"
+      :padding '(4 12)
       :onclick (lambda (self req)
                  (b-when sympart (value (psib))
                    (describe self)
@@ -77,17 +78,12 @@
                           :add '(:flex 1))
     (hbox (:spacing 20)()
       (checkbox :all-packages "All"
-        :value (c-in t))
+        :value (c-in nil))
       (selectbox :selected-pkg (:add '(:flex 1)
                                  :enabled (c? (not (value (fm-other :all-packages))))
                                  :onchangeselection (lambda (self req)
                                                       (let* ((nv (req-val req "value")))
                                                         (b-when item (oid$-to-object nv :ochgsel nil)
                                                           (setf (^value) (model item))))))
-        (loop for pkg in (b-if syms nil #+xxxx (syms-unfiltered (u^ apropos-variant))
-                           (loop with pkgs
-                               for symi in syms
-                               do (pushnew (symbol-info-pkg symi) pkgs)
-                               finally (return pkgs))
-                           (list-all-packages))
+        (loop for pkg in (list-all-packages)
             collecting (listitem (package-name pkg)))))))

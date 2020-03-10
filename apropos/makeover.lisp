@@ -1,7 +1,7 @@
 ﻿(in-package :qooxlisp)
 
 (defmd apropos-makeover (apropos-variant)
-  :syms-filtered (c? (symbol-info-filtered (^syms-unfiltered)
+  :syms-filtered (c? (symbol-info-filtered (^apropos-pkg-syms)
                        (value (fm-other :type-filter))
                        (value (fm-other :exported-only))))
   :kids (c? (the-kids

@@ -1,6 +1,5 @@
 ﻿(in-package :qooxlisp)
 
-
 (defmd av-classic-plus (apropos-variant)
   :kids (c? (the-kids
              (vbox (:spacing 6) 
@@ -43,18 +42,27 @@
                           :add '(:flex 1))
     (hbox (:spacing 20)()
       (checkbox :all-packages "All"
-        :value (c-in t))
-      (selectbox :selected-pkg (:add '(:flex 1)
-                                 :visibility (c? (vis/not (not (value (fm^ :all-packages)))))
-                                 :onchangeselection (lambda (self req)
-                                                      (let* ((nv (req-val req "value")))
-                                                        (b-when item (oid$-to-object nv :ochgsel nil)
-                                                          (setf (^value) (model item))))))
-        (loop for pkg in (b-if syms nil #+xxxx (syms-unfiltered (u^ apropos-variant))
-                           (loop with pkgs
-                               for symi in syms
-                               do (pushnew (symbol-info-pkg symi) pkgs)
-                               finally (return pkgs))
-                           (list-all-packages))
-            collecting (listitem (package-name pkg)))))))
+        :value (c-in nil))
+      (make-kid 'pkg-selector
+        :md-name :selected-pkg
+        :add '(:flex 1)
+        :visibility (c? (vis/not (not (value (fm^ :all-packages)))))))))
 
+
+(defmd pkg-selector (qx-select-box)
+  (pkgs-to-match (c? (mapcar 'symbol-info-pkg 
+                       (apropos-pkg-syms (u^ apropos-variant)))))
+  :onchangeselection (lambda (self req)
+                       (let* ((nv (req-val req "value")))
+                         (b-when item (oid$-to-object nv :ochgsel nil)
+                           (setf (^value) (model item)))))
+  :kids (c? (the-kids
+             (loop for pkg in (list-all-packages)
+                 collecting (make-kid 'qx-list-item
+                              :label (package-name pkg)
+                              :model (package-name pkg)
+                              :visibility (let ((pkg pkg))
+                                            (c? (vis/collapsed
+                                                 (b-if pkgs (pkgs-to-match (u^ pkg-selector))
+                                                   (find pkg pkgs)
+                                                   t)))))))))

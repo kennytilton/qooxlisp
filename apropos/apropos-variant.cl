@@ -6,12 +6,12 @@
 (defmd apropos-variant (kb-manager qxl-column)
   :onkeydown 'apropos-onkeydown
   (sym-seg (c-in nil))
-  (syms-unfiltered (c? (b-when seg (^sym-seg)
+  (apropos-pkg-syms (c? (b-when seg (^sym-seg)
                          (trcx :calcing-symunfiltered! seg)
                          (symbol-info-raw seg :pkg (value (fm-other :selected-pkg))))))
-  (syms-filtered (c? (symbol-info-filtered (^syms-unfiltered)
-                       nil #+xxx (value (fm-other :type-filter))
-                       nil #+xxx (value (fm-other :exported-only)))))
+  (syms-filtered (c? (symbol-info-filtered (^apropos-pkg-syms)
+                       (value (fm-other :type-filter))
+                       (value (fm-other :exported-only)))))
   (sym-sort-spec (c-in nil))
   (sym-info (c? (b-if sort (^sym-sort-spec)
                   (destructuring-bind (sort-key order) sort
@@ -23,7 +23,6 @@
                              (qxl-sym (conc$ 'symbol-info- sort-key)))))
                   (^syms-filtered)))))
 
-#+hhack
 (defun apropos-onkeydown (self req)
   (declare (ignorable self))
   (let* ((key (req-val req "keyId"))
@@ -39,7 +38,6 @@
             (warn "keychord ~a match yes, onexec binding no: ~a" (list key mods) control)))
         (trcx no-kb-control!!!!!! self key mods)))))
 
-#+hhack
 (defobserver sym-info ()
   (with-integrity (:client `(:post-make-qx ,self))
     (let ((tbl (fm-other :sym-info-table)))
@@ -134,7 +132,10 @@
                        (format nil "Symbols containing ~s:" sym-seg)
                      "Symbols Found:")
                  (if (plusp (length sym-seg))
-                     (format nil "Found ~d symbols containing ~s:" (length sym-seg) sym-seg)
+                     (format nil "Found ~d~a symbols containing ~s:" 
+                       (length (sym-info (u^ apropos-variant)))
+                       (if (fmv :exported-only) " exported" "")
+                       sym-seg)
                    "")))))
     (symbols-found-table self)))
 
