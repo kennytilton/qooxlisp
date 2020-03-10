@@ -66,7 +66,7 @@ Try \"apropos\" to see elements used in this specific example. Packages, by the 
                        (let ((sympart (req-val req "value")))
                          (setf (sym-seg (u^ apropos-variant)) sympart))))
     (button "Search" (:enabled t #+not (c? (> (length (value (psib))) 1)))
-      :onexec (b-when sympart (value (psib))
+      :onexecute (b-when sympart (value (psib))
                 (print `(:sympart-onexec-rethought ,sympart))
                 (setf (sym-seg (u^ apropos-variant)) sympart)))))
 

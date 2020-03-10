@@ -253,10 +253,7 @@ clDict[~a].addListener('keydown', function(e) {
     rq.setParameter('oid',oid);
     rq.setParameter('keyId', k);
     rq.setParameter('mods', e.getModifiers());
-        if (jsMath.TeX==undefined)
-           rq.setParameter('tex','no');
-        else
-           rq.setParameter('tex','yes');
+    rq.setParameter('tex','no');
     if (k=='Enter') {
        if (clDict[oid].timeoutset==undefined) {
            clDict[oid].timeoutset=true;

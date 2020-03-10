@@ -3,14 +3,15 @@
 ;;; The top-level apropos structure, an abstract class which defines
 ;;; slots for key data items and also constitutes the root of the GUI framework
 
-(defmd apropos-variant (qxl-column)
+(defmd apropos-variant (kb-manager qxl-column)
+  :onkeydown 'apropos-onkeydown
   (sym-seg (c-in nil))
   (syms-unfiltered (c? (b-when seg (^sym-seg)
                          (trcx :calcing-symunfiltered! seg)
                          (symbol-info-raw seg :pkg (value (fm-other :selected-pkg))))))
   (syms-filtered (c? (symbol-info-filtered (^syms-unfiltered)
-                       (value (fm-other :type-filter))
-                       (value (fm-other :exported-only)))))
+                       nil #+xxx (value (fm-other :type-filter))
+                       nil #+xxx (value (fm-other :exported-only)))))
   (sym-sort-spec (c-in nil))
   (sym-info (c? (b-if sort (^sym-sort-spec)
                   (destructuring-bind (sort-key order) sort
@@ -22,6 +23,23 @@
                              (qxl-sym (conc$ 'symbol-info- sort-key)))))
                   (^syms-filtered)))))
 
+#+hhack
+(defun apropos-onkeydown (self req)
+  (declare (ignorable self))
+  (let* ((key (req-val req "keyId"))
+         (mods (parse-integer (req-val req "mods"))))
+    ;; ugh. Re-inventing qx propagation, returning nil if keydown not for me
+    (prog1 t  ;; optimistic. above exceptions will have to be hardcoded to handle others
+       (trcx onkeydown!!!!!!!!!! self key mods)
+       (terpri)
+      (b-if control (kb-control-match self key mods)
+        (progn
+          (b-if action (onexecute control)
+            (funcall action control req)
+            (warn "keychord ~a match yes, onexec binding no: ~a" (list key mods) control)))
+        (trcx no-kb-control!!!!!! self key mods)))))
+
+#+hhack
 (defobserver sym-info ()
   (with-integrity (:client `(:post-make-qx ,self))
     (let ((tbl (fm-other :sym-info-table)))

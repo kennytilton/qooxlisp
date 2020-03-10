@@ -40,7 +40,7 @@
   (trcx :begin!!!!!!!!!!!!!)
   (ukt::stop-check :qx-begin)
   ;(trace md-awaken make-qx-instance)
-  (let ((*ekojs* nil)) ;; qx-begin
+  (let ((*ekojs* t)) ;; qx-begin
     (with-js-response (req ent)
       (top-level.debug::with-auto-zoom-and-exit ("aabegin-zoo.txt" :exit nil)
         (let ((*web-session* nil))
@@ -68,7 +68,7 @@ sessId=~a;" (session-id (setf *web-session*
   :kids (c? (the-kids
              (hbox (:spacing 6)(:add '(:left 0 :top 0 :width "100%" :height "100%") :padding 6)
                (groupbox (:spacing 10)(:legend "Variant")
-                 (radiobuttongroup :ux-variant (:value (c-in 'av-classic-plus))
+                 (radiobuttongroup :ux-variant (:value (c-in 'av-classic))
                    (qx-vbox :spacing 6)
                    (loop for av in apropos-variants
                        collecting (radiobutton (car av) (cadr av)))))

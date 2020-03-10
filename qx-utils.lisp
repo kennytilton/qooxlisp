@@ -395,10 +395,11 @@
 
 (export! textfield)
 
-(defmacro button (label (&rest iargs) &key onexec)
+(defmacro button (label (&rest iargs) &key onexecute)
   `(make-kid 'qx-button
      :label ,label
      ,@iargs
      :onexecute (lambda (self req)
                   (declare (ignorable self req))
-                  ,onexec)))
+                  (trcx :hunh-exec?)
+                  ,onexecute)))

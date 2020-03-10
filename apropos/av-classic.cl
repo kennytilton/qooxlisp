@@ -24,17 +24,23 @@
   (hbox (:align-y 'middle :spacing 12)
     (:allow-grow-y :js-false
       :padding 4)
-    (lbl "String:")
+    (rtf "Stri<u>n</u>g:")
     (combobox :symbol-string
       (:add '(:flex 1)
         :allow-grow-x t
         :onkeypress (lambda (self req)
                       (let* ((key (req-val req "keyId"))
                              (priorv (req-val req "priorv")))
+                        (trcx :keypress-search key)
                         (when (string-equal key "Enter")
                           ;; the session property "sym-seg" is the dataflow origin, along
                           ;; with filters on which matches to show.
                           (setf (sym-seg (u^ apropos-variant)) priorv))))
+        :onkeydown (lambda (self req)
+                     (let* ((key (req-val req "keyId"))
+                            (mods (req-val req "mods")))
+                       (trcx :keydown-search key mods self)))
+        
         :onchangevalue (lambda (self req)
                          ;;; emulating the Allegro IDE, just save the changed value, do not kick
                          ;;; off an immediate search.
@@ -50,9 +56,13 @@
               (cons (make-kid 'qx-list-item
                       :label sympart) .cache))
           .cache)))
-    (button "Search" ()
-      :onexec (b-when sympart (value (psib))
-                (setf (sym-seg (u^ apropos-variant)) sympart)))))
+    (rtf "<u>S</u>earch" 
+      :decorator "button"
+      :onclick (lambda (self req)
+                 (b-when sympart (value (psib))
+                   (describe self)
+                   (trcx :self self req)
+                   (setf (sym-seg (u^ apropos-variant)) sympart))))))
 
 #+xxxx (inspect (find-package :socket))
 

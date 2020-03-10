@@ -10,7 +10,8 @@
 (in-package :qxl)
 
 (defmd qx-atom (qx-widget)
-  label)
+  label
+  rich)
 
 (defmethod qx-configurations append ((self qx-atom))
   (nconc
