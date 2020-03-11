@@ -16,20 +16,23 @@
     (:allow-grow-y :js-false
       :tool-tip-text "Enter symbol name or name fragment for case-insensitive match:\."
       :padding 4)
-    (lbl "Symbol name/segment:")
+    (lbl "Symbol fragment:")
     (combobox :symbol-string
       (:add '(:flex 1)
+        :value (c-in "queue") ;; TODOO get working
         :allow-grow-x t
          :onchangevalue (lambda (self req)
                          (setf (sym-seg (u^ apropos-variant)) (req-val req "value"))))
 
       ;; TODO: why the internals .cache hacking?
+      ;; TODO: generalize with an optional "history" item builder
 
       (let ((sympart (sym-seg (u^ apropos-variant))))
         (if (plusp (length sympart))
             (if (find sympart .cache :key 'label :test 'string-equal)
                 .cache
               (cons (make-kid 'qx-list-item
+                      :model sympart
                       :label sympart) .cache))
           .cache)))
     (rtf "Just Hit Enter")))
@@ -42,12 +45,14 @@
                           :add '(:flex 1))
     (hbox (:spacing 20)()
       (checkbox :all-packages "All"
-        :value (c-in nil))
-      (make-kid 'pkg-selector
-        :md-name :selected-pkg
-        :add '(:flex 1)
-        :visibility (c? (vis/not (not (value (fm^ :all-packages)))))))))
-
+        :value (c-in t))
+      (hbox ()()
+        ;; a bit of trickery to get fresh selector with no current selectee
+        (when (not (fm^v :all-packages))
+          (make-kid 'pkg-selector
+            :md-name :selected-pkg
+            :add '(:flex 1)
+            :visibility (c? (vis/not (not (value (fm^ :all-packages)))))))))))
 
 (defmd pkg-selector (qx-select-box)
   (pkgs-to-match (c? (mapcar 'symbol-info-pkg 
