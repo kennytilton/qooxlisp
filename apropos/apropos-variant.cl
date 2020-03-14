@@ -57,7 +57,7 @@
            (eor (x)
                                   (if x t :js-false))
            (exportedp (sym)
-             (eql (nth-value 1 (find-symbol (symbol-name sym)(symbol-package sym))) :external)))
+             (eq (nth-value 1 (find-symbol (symbol-name sym)(symbol-package sym))) :external)))
       (loop for sym in (apropos-list s pkg)
           collecting ; TODOO memoize next in a 'build-symbol-info fn
             (make-symbol-info
@@ -75,21 +75,22 @@
                      "")
              :setf? (eor (fboundp `(setf ,sym)))
              :class? (eor (find-class sym nil))
-             :exported? (eor (exportedp sym)))))))
+             :exported? (progn (trcx :expo? (exportedp sym) sym)
+                          (exportedp sym)))))))
 
 (defun symbol-info-filtered (syms type exported-only-p)
   (trcx :symbol-info-filtered-sees type exported-only-p)
   (loop for sym in syms
       when (and
-            (or (not exported-only-p) (or (eq t (symbol-info-exported? sym))
-                                        (equal "x" (symbol-info-exported? sym))))
+            (or (not exported-only-p)
+              (symbol-info-exported? sym))
             (case$ type
               ("all" t)
               ("fn" (not (equal "" (symbol-info-fntype sym))))
               ("var" (plusp (length (symbol-info-var? sym))))
               ("class" (or (eq t (symbol-info-class? sym))
                          (equal "x" (symbol-info-class? sym))))
-              (otherwise (error "Type selector ~a invalid" type) )))
+              (otherwise (error "Type selector ~a invalid" type))))
       collecting sym))
 
 (defun sym-get (self req)
@@ -103,15 +104,17 @@
         when (< (1- start) n (+ start row-count))
         collect (list
                  (cons :name (symbol-info-name sym))
-                 (cons :pkg (b-if nns (remove "" (package-nicknames (symbol-info-pkg sym))
+                 (cons :pkg (conc$ (b-if nns (remove "" (package-nicknames (symbol-info-pkg sym))
                                         :test 'string-equal)
                               (car nns)
-                              (package-name (symbol-info-pkg sym))))
+                              (package-name (symbol-info-pkg sym)))
+                              (if (symbol-info-exported? sym) ":" "::")))
                  (cons :fntype (symbol-info-fntype sym))
                  (cons :var? (symbol-info-var? sym))
                  (cons :setf? (symbol-info-setf? sym))
                  (cons :class? (symbol-info-class? sym))
-                 (cons :exported? (symbol-info-exported? sym))))))
+                 (cons :exported? (if (symbol-info-exported? sym)
+                                      t :js-false))))))
 
 (defun sym-sort (self req)
   (prog1 nil
@@ -174,7 +177,7 @@
                 (mtc "Package" 'pkg)
                 (mtc "Function" 'fntype)
                 (mtc "Setf" 'setf? :width 48 :renderer 'boolean)
-                (mtc "Var" 'var? :width 48 :renderer '(html "center" "red" "" ""))
-                (mtc "Class" 'class? :width 48)
+                (mtc "Var" 'var? :width 48 :renderer '(html "center" "" "" ""))
+                (mtc "Class" 'class? :width 48 :renderer 'boolean)
                 (mtc "Exp" 'exported? :width 48 :renderer 'boolean)))))
 
