@@ -103,6 +103,10 @@
 (define-symbol-macro .focus (focus ^session))
 (define-symbol-macro .focused (^focused-on))
 
+#+xxxx (describe 'qxl:.focus)
+#+xxx (get 'qxl:.focus 'sys::.symbol-macro.)
+#+xxx (assoc  'sys::.symbol-macro. (symbol-plist 'qxl:.focus))
+
 (defmethod session ((self qxl-session)) self)
 
 (defmethod session (self)

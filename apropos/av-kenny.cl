@@ -6,6 +6,7 @@ Lisp even after native compilation. ~
 Try \"qx\" or \"qxl\" to see elements used in <b>qooxlisp</b>. ~
 Try \"apropos\" to see elements used in this specific example. Packages, by the way, are Lisp groups of names."))
 
+#+xxxx
 (defmd apropos-ala-kenny (apropos-variant)
   :syms-unfiltered (c? (b-when seg (^sym-seg)
                          (symbol-info-raw seg
@@ -26,6 +27,17 @@ Try \"apropos\" to see elements used in this specific example. Packages, by the 
                    (checkbox :exported-only "Exported Only"
                      :width 192
                      :background-color 'yellow)))
+               (symbols-found-kenny self)))))
+
+(defmd apropos-ala-kenny (apropos-variant)
+  :kids (c? (the-kids
+             (vbox (:spacing 6) 
+               (:add '(:left 0 :top 0 :width "100%" :height "100%")
+                 :padding 6)
+               (search-panel-plus self)
+               (hbox (:spacing 6)()
+                 (pkg-filter-plus self)
+                 (type-filter self))
                (symbols-found-kenny self)))))
 
 (defun symbols-found-kenny (self)

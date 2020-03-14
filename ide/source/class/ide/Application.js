@@ -85,6 +85,8 @@ qx.Class.define("ide.Application",
       qx.theme.Classic;
       qx.theme.Modern;
       qx.ui.table.cellrenderer.Boolean;
+      qx.ui.table.cellrenderer.String;
+      qx.ui.table.cellrenderer.Html;
       qx.ui.form.List;
       qx.ui.form.ListItem;
       // var x = new ide.TableModelQXL(7,100);

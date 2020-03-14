@@ -20,7 +20,7 @@ qx.$$g = {}
 
 qx.$$loader = {
   parts : {"boot":[0]},
-  packages : {"0":{"uris":["__out__:ide.c3504ada4687.js"]}},
+  packages : {"0":{"uris":["__out__:ide.899fd0dc39a9.js"]}},
   urisBefore : [],
   cssBefore : [],
   boot : "boot",
@@ -79608,7 +79608,7 @@ qx.Class.define("qx.html.Root",
     }
   }
 });
-/* ************************************************************************
+﻿/* ************************************************************************
 
    Copyright:
 
@@ -79653,7 +79653,6 @@ qx.Class.define("ide.Application",
     {
       // Call super class
       this.base(arguments);
-      console.log("I do get!!!!! not isSet")
 
             // Enable logging in debug variant
       if (qx.core.Environment.get("qx.debug"))
@@ -79696,6 +79695,8 @@ qx.Class.define("ide.Application",
       qx.theme.Classic;
       qx.theme.Modern;
       qx.ui.table.cellrenderer.Boolean;
+      qx.ui.table.cellrenderer.String;
+      qx.ui.table.cellrenderer.Html;
       qx.ui.form.List;
       qx.ui.form.ListItem;
       // var x = new ide.TableModelQXL(7,100);
@@ -130950,6 +130951,461 @@ qx.Class.define("qx.ui.table.cellrenderer.Boolean",
 });
 /* ************************************************************************
 
+    qooxdoo - the new era of web development
+
+    http://qooxdoo.org
+
+    Copyright:
+      2007 by Tartan Solutions, Inc, http://www.tartansolutions.com
+
+    License:
+      LGPL 2.1: http://www.gnu.org/licenses/lgpl.html
+      EPL: http://www.eclipse.org/org/documents/epl-v10.php
+
+    Authors:
+      * Dan Hummon
+
+************************************************************************ */
+
+/**
+ * The conditional cell renderer allows special per cell formatting based on
+ * conditions on the cell's value.
+ *
+ * @require(qx.util.format.NumberFormat)
+ */
+qx.Class.define("qx.ui.table.cellrenderer.Conditional",
+{
+  extend : qx.ui.table.cellrenderer.Default,
+
+
+
+
+  /*
+  *****************************************************************************
+     CONSTRUCTOR
+  *****************************************************************************
+  */
+
+  /**
+   * @param align {String|null}
+   *   The default text alignment to format the cell with by default.
+   *
+   * @param color {String|null}
+   *   The default font color to format the cell with by default.
+   *
+   * @param style {String|null}
+   *   The default font style to format the cell with by default.
+   *
+   * @param weight {String|null}
+   *   The default font weight to format the cell with by default.
+   */
+  construct : function(align, color, style, weight)
+  {
+    this.base(arguments);
+
+    this.numericAllowed = ["==", "!=", ">", "<", ">=", "<="];
+    this.betweenAllowed = ["between", "!between"];
+    this.conditions = [];
+
+    this.__defaultTextAlign = align || "";
+    this.__defaultColor = color || "";
+    this.__defaultFontStyle = style || "";
+    this.__defaultFontWeight = weight || "";
+  },
+
+
+
+
+  /*
+  *****************************************************************************
+     MEMBERS
+  *****************************************************************************
+  */
+
+  members :
+  {
+    __defaultTextAlign : null,
+    __defaultColor : null,
+    __defaultFontStyle : null,
+    __defaultFontWeight : null,
+
+
+    /**
+     * Applies the cell styles to the style map.
+     * @param condition {Array} The matched condition
+     * @param style {Map} map of already applied styles.
+     */
+    __applyFormatting : function(condition, style)
+    {
+      if (condition[1] != null) {
+        style["text-align"] = condition[1];
+      }
+
+      if (condition[2] != null) {
+        style["color"] = condition[2];
+      }
+
+      if (condition[3] != null) {
+        style["font-style"] = condition[3];
+      }
+
+      if (condition[4] != null) {
+        style["font-weight"] = condition[4];
+      }
+    },
+
+
+    /**
+     * The addNumericCondition method is used to add a basic numeric condition to
+     * the cell renderer.
+     *
+     * Note: Passing null is different from passing an empty string in the align,
+     * color, style and weight arguments. Null will allow pre-existing formatting
+     * to pass through, where an empty string will clear it back to the default
+     * formatting set in the constructor.
+     *
+     *
+     * @param condition {String} The type of condition. Accepted strings are "==", "!=", ">", "<", ">=",
+     *     and "<=".
+     * @param value1 {Integer} The value to compare against.
+     * @param align {String|null} The text alignment to format the cell with if the condition matches.
+     * @param color {String|null} The font color to format the cell with if the condition matches.
+     * @param style {String|null} The font style to format the cell with if the condition matches.
+     * @param weight {String|null} The font weight to format the cell with if the condition matches.
+     * @param target {String|null} The text value of the column to compare against. If this is null,
+     *     comparisons will be against the contents of this cell.
+     * @throws {Error} If the condition can not be recognized or value is null.
+     */
+    addNumericCondition : function(condition, value1, align, color, style, weight, target)
+    {
+      var temp = null;
+
+      if (qx.lang.Array.contains(this.numericAllowed, condition))
+      {
+        if (value1 != null) {
+          temp = [condition, align, color, style, weight, value1, target];
+        }
+      }
+
+      if (temp != null) {
+        this.conditions.push(temp);
+      } else {
+        throw new Error("Condition not recognized or value is null!");
+      }
+    },
+
+
+    /**
+     * The addBetweenCondition method is used to add a between condition to the
+     * cell renderer.
+     *
+     * Note: Passing null is different from passing an empty string in the align,
+     * color, style and weight arguments. Null will allow pre-existing formatting
+     * to pass through, where an empty string will clear it back to the default
+     * formatting set in the constructor.
+     *
+     *
+     * @param condition {String} The type of condition. Accepted strings are "between" and "!between".
+     * @param value1 {Integer} The first value to compare against.
+     * @param value2 {Integer} The second value to compare against.
+     * @param align {String|null} The text alignment to format the cell with if the condition matches.
+     * @param color {String|null} The font color to format the cell with if the condition matches.
+     * @param style {String|null} The font style to format the cell with if the condition matches.
+     * @param weight {String|null} The font weight to format the cell with if the condition matches.
+     * @param target {String|null} The text value of the column to compare against. If this is null,
+     *     comparisons will be against the contents of this cell.
+     * @throws {Error} If the condition can not be recognized or value is null.
+     */
+    addBetweenCondition : function(condition, value1, value2, align, color, style, weight, target)
+    {
+      if (qx.lang.Array.contains(this.betweenAllowed, condition))
+      {
+        if (value1 != null && value2 != null) {
+          var temp = [condition, align, color, style, weight, value1, value2, target];
+        }
+      }
+
+      if (temp != null) {
+        this.conditions.push(temp);
+      } else {
+        throw new Error("Condition not recognized or value1/value2 is null!");
+      }
+    },
+
+
+    /**
+     * The addRegex method is used to add a regular expression condition to the
+     * cell renderer.
+     *
+     * Note: Passing null is different from passing an empty string in the align,
+     * color, style and weight arguments. Null will allow pre-existing formatting
+     * to pass through, where an empty string will clear it back to the default
+     * formatting set in the constructor.
+     *
+     *
+     * @param regex {String} The regular expression to match against.
+     * @param align {String|null} The text alignment to format the cell with if the condition matches.
+     * @param color {String|null} The font color to format the cell with if the condition matches.
+     * @param style {String|null} The font style to format the cell with if the condition matches.
+     * @param weight {String|null} The font weight to format the cell with if the condition matches.
+     * @param target {String|null} The text value of the column to compare against. If this is null,
+     *     comparisons will be against the contents of this cell.
+     * @throws {Error} If the regex is null.
+     */
+    addRegex : function(regex, align, color, style, weight, target)
+    {
+      if (regex != null) {
+        var temp = ["regex", align, color, style, weight, regex, target];
+      }
+
+      if (temp != null) {
+        this.conditions.push(temp);
+      } else {
+        throw new Error("regex cannot be null!");
+      }
+    },
+
+
+    /**
+     * Overridden; called whenever the cell updates. The cell will iterate through
+     * each available condition and apply formatting for those that
+     * match. Multiple conditions can match, but later conditions will override
+     * earlier ones. Conditions with null values will stack with other conditions
+     * that apply to that value.
+     *
+     * @param cellInfo {Map} The information about the cell.
+     *          See {@link qx.ui.table.cellrenderer.Abstract#createDataCellHtml}.
+     * @return {Map}
+     */
+    _getCellStyle : function(cellInfo)
+    {
+      var tableModel = cellInfo.table.getTableModel();
+      var i;
+      var cond_test;
+      var compareValue;
+
+      var style =
+      {
+        "text-align": this.__defaultTextAlign,
+        "color": this.__defaultColor,
+        "font-style": this.__defaultFontStyle,
+        "font-weight": this.__defaultFontWeight
+      };
+
+      for (i in this.conditions)
+      {
+        cond_test = false;
+
+        if (qx.lang.Array.contains(this.numericAllowed, this.conditions[i][0]))
+        {
+          if (this.conditions[i][6] == null) {
+            compareValue = cellInfo.value;
+          } else {
+            compareValue = tableModel.getValueById(this.conditions[i][6], cellInfo.row);
+          }
+
+          switch(this.conditions[i][0])
+          {
+            case "==":
+              if (compareValue == this.conditions[i][5]) {
+                cond_test = true;
+              }
+
+              break;
+
+            case "!=":
+              if (compareValue != this.conditions[i][5]) {
+                cond_test = true;
+              }
+
+              break;
+
+            case ">":
+              if (compareValue > this.conditions[i][5]) {
+                cond_test = true;
+              }
+
+              break;
+
+            case "<":
+              if (compareValue < this.conditions[i][5]) {
+                cond_test = true;
+              }
+
+              break;
+
+            case ">=":
+              if (compareValue >= this.conditions[i][5]) {
+                cond_test = true;
+              }
+
+              break;
+
+            case "<=":
+              if (compareValue <= this.conditions[i][5]) {
+                cond_test = true;
+              }
+
+              break;
+          }
+        }
+        else if (qx.lang.Array.contains(this.betweenAllowed, this.conditions[i][0]))
+        {
+          if (this.conditions[i][7] == null) {
+            compareValue = cellInfo.value;
+          } else {
+            compareValue = tableModel.getValueById(this.conditions[i][7], cellInfo.row);
+          }
+
+          switch(this.conditions[i][0])
+          {
+            case "between":
+              if (compareValue >= this.conditions[i][5] && compareValue <= this.conditions[i][6]) {
+                cond_test = true;
+              }
+
+              break;
+
+            case "!between":
+              if (compareValue < this.conditions[i][5] || compareValue > this.conditions[i][6]) {
+                cond_test = true;
+              }
+
+              break;
+          }
+        }
+        else if (this.conditions[i][0] == "regex")
+        {
+          if (this.conditions[i][6] == null) {
+            compareValue = cellInfo.value;
+          } else {
+            compareValue = tableModel.getValueById(this.conditions[i][6], cellInfo.row);
+          }
+
+          var the_pattern = new RegExp(this.conditions[i][5], 'g');
+          cond_test = the_pattern.test(compareValue);
+        }
+
+        // Apply formatting, if any.
+        if (cond_test == true) {
+          this.__applyFormatting(this.conditions[i], style);
+        }
+      }
+
+      var styleString = [];
+      for(var key in style) {
+        if (style[key]) {
+          styleString.push(key, ":", style[key], ";");
+        }
+      }
+      return styleString.join("");
+    }
+  },
+
+  /*
+  *****************************************************************************
+     DESTRUCTOR
+  *****************************************************************************
+  */
+
+  destruct : function() {
+    this.numericAllowed = this.betweenAllowed = this.conditions = null;
+  }
+});
+/* ************************************************************************
+
+   qooxdoo - the new era of web development
+
+   http://qooxdoo.org
+
+   Copyright:
+     2007 OpenHex SPRL, http://www.openhex.org
+
+   License:
+     LGPL: http://www.gnu.org/licenses/lgpl.html
+     EPL: http://www.eclipse.org/org/documents/epl-v10.php
+     See the LICENSE file in the project's top-level directory for details.
+
+   Authors:
+     * Gaetan de Menten (ged)
+
+************************************************************************ */
+
+/**
+ * The string data cell renderer. All it does is escape the incoming String
+ * values.
+ */
+qx.Class.define("qx.ui.table.cellrenderer.String",
+{
+  extend : qx.ui.table.cellrenderer.Conditional,
+
+  /*
+  *****************************************************************************
+     MEMBERS
+  *****************************************************************************
+  */
+
+  members :
+  {
+    // overridden
+    _getContentHtml : function(cellInfo) {
+      return qx.bom.String.escape(cellInfo.value || "");
+    },
+
+    // overridden
+    _getCellClass : function(cellInfo) {
+      return "qooxdoo-table-cell";
+    }
+  }
+});
+/* ************************************************************************
+
+   qooxdoo - the new era of web development
+
+   http://qooxdoo.org
+
+   Copyright:
+     2007 OpenHex SPRL, http://www.openhex.org
+
+   License:
+     LGPL: http://www.gnu.org/licenses/lgpl.html
+     EPL: http://www.eclipse.org/org/documents/epl-v10.php
+     See the LICENSE file in the project's top-level directory for details.
+
+   Authors:
+     * Dirk Wellmann (dw(at)piponline.net)
+
+************************************************************************ */
+
+/**
+ * This Cellrender is for transparent use, without escaping! Use this Cellrender
+ * to output plain HTML content.
+ */
+qx.Class.define("qx.ui.table.cellrenderer.Html",
+{
+  extend : qx.ui.table.cellrenderer.Conditional,
+
+  /*
+  *****************************************************************************
+     MEMBERS
+  *****************************************************************************
+  */
+
+  members :
+  {
+    // overridden
+    _getContentHtml : function(cellInfo) {
+      return (cellInfo.value || "");
+    },
+
+    // overridden
+    _getCellClass : function(cellInfo) {
+      return "qooxdoo-table-cell";
+    }
+  }
+});
+/* ************************************************************************
+
    qooxdoo - the new era of web development
 
    http://qooxdoo.org
@@ -134087,478 +134543,6 @@ qx.Class.define("qx.io.remote.transport.Abstract",
 
 ************************************************************************ */
 
-/**
- * Transports requests to a server using dynamic script tags.
- *
- * This class should not be used directly by client programmers.
- */
-qx.Class.define("qx.io.remote.transport.Script",
-{
-  extend : qx.io.remote.transport.Abstract,
-
-
-
-
-  /*
-  *****************************************************************************
-     CONSTRUCTOR
-  *****************************************************************************
-  */
-
-  construct : function()
-  {
-    this.base(arguments);
-
-    var vUniqueId = ++qx.io.remote.transport.Script.__uniqueId;
-
-    if (vUniqueId >= 2000000000) {
-      qx.io.remote.transport.Script.__uniqueId = vUniqueId = 1;
-    }
-
-    this.__element = null;
-    this.__uniqueId = vUniqueId;
-  },
-
-
-
-
-  /*
-  *****************************************************************************
-     STATICS
-  *****************************************************************************
-  */
-
-  statics :
-  {
-    /**
-     * Unique identifier for each instance.
-     *
-     * @internal
-     */
-    __uniqueId : 0,
-
-    /**
-     * Registry for all script transport instances.
-     *
-     * @internal
-     */
-    _instanceRegistry : {},
-
-    /**
-     * Internal URL parameter prefix.
-     *
-     * @internal
-     */
-    ScriptTransport_PREFIX : "_ScriptTransport_",
-
-    /**
-     * Internal URL parameter ID.
-     *
-     * @internal
-     */
-    ScriptTransport_ID_PARAM : "_ScriptTransport_id",
-
-    /**
-     * Internal URL parameter data prefix.
-     *
-     * @internal
-     */
-    ScriptTransport_DATA_PARAM : "_ScriptTransport_data",
-
-    /**
-     * Capabilities of this transport type.
-     *
-     * @internal
-     */
-    handles :
-    {
-      synchronous           : false,
-      asynchronous          : true,
-      crossDomain           : true,
-      fileUpload            : false,
-      programaticFormFields : false,
-      responseTypes         : [ "text/plain", "text/javascript", "application/json" ]
-    },
-
-
-    /**
-     * Returns always true, because script transport is supported by all browsers.
-     * @return {Boolean} <code>true</code>
-     */
-    isSupported : function() {
-      return true;
-    },
-
-
-
-
-    /*
-    ---------------------------------------------------------------------------
-      EVENT LISTENER
-    ---------------------------------------------------------------------------
-    */
-
-    /**
-     * For reference:
-     * http://msdn.microsoft.com/en-us/library/ie/ms534359%28v=vs.85%29.aspx
-     *
-     * @internal
-     */
-    _numericMap :
-    {
-      "uninitialized" : 1,
-      "loading"       : 2,
-      "loaded"        : 2,
-      "interactive"   : 3,
-      "complete"      : 4
-    },
-
-
-    /**
-     * This method can be called by the script loaded by the ScriptTransport
-     * class.
-     *
-     * @signature function(id, content)
-     * @param id {String} Id of the corresponding transport object,
-     *     which is passed as an URL parameter to the server an
-     * @param content {String} This string is passed to the content property
-     *     of the {@link qx.io.remote.Response} object.
-     */
-    _requestFinished : qx.event.GlobalError.observeMethod(function(id, content)
-    {
-      var vInstance = qx.io.remote.transport.Script._instanceRegistry[id];
-
-      if (vInstance == null)
-      {
-        if (qx.core.Environment.get("qx.debug"))
-        {
-          if (qx.core.Environment.get("qx.debug.io.remote")) {
-            this.warn("Request finished for an unknown instance (probably aborted or timed out before)");
-          }
-        }
-      }
-      else
-      {
-        vInstance._responseContent = content;
-        vInstance._switchReadyState(qx.io.remote.transport.Script._numericMap.complete);
-      }
-    })
-  },
-
-
-
-
-  /*
-  *****************************************************************************
-     MEMBERS
-  *****************************************************************************
-  */
-
-  members :
-  {
-
-    __lastReadyState : 0,
-    __element : null,
-    __uniqueId : null,
-
-    /*
-    ---------------------------------------------------------------------------
-      USER METHODS
-    ---------------------------------------------------------------------------
-    */
-
-    /**
-     * Sends the request using "script" elements
-     *
-     */
-    send : function()
-    {
-      var vUrl = this.getUrl();
-
-      // --------------------------------------
-      //   Adding parameters
-      // --------------------------------------
-      vUrl += (vUrl.indexOf("?") >= 0 ? "&" : "?") + qx.io.remote.transport.Script.ScriptTransport_ID_PARAM + "=" + this.__uniqueId;
-
-      var vParameters = this.getParameters();
-      var vParametersList = [];
-
-      for (var vId in vParameters)
-      {
-        if (vId.indexOf(qx.io.remote.transport.Script.ScriptTransport_PREFIX) == 0) {
-          this.error("Illegal parameter name. The following prefix is used internally by qooxdoo): " + qx.io.remote.transport.Script.ScriptTransport_PREFIX);
-        }
-
-        var value = vParameters[vId];
-
-        if (value instanceof Array)
-        {
-          for (var i=0; i<value.length; i++) {
-            vParametersList.push(encodeURIComponent(vId) + "=" + encodeURIComponent(value[i]));
-          }
-        }
-        else
-        {
-          vParametersList.push(encodeURIComponent(vId) + "=" + encodeURIComponent(value));
-        }
-      }
-
-      if (vParametersList.length > 0) {
-        vUrl += "&" + vParametersList.join("&");
-      }
-
-      // --------------------------------------
-      //   Sending data
-      // --------------------------------------
-      var vData = this.getData();
-
-      if (vData != null) {
-        vUrl += "&" + qx.io.remote.transport.Script.ScriptTransport_DATA_PARAM + "=" + encodeURIComponent(vData);
-      }
-
-      qx.io.remote.transport.Script._instanceRegistry[this.__uniqueId] = this;
-      this.__element = document.createElement("script");
-
-      // IE needs this (it ignores the
-      // encoding from the header sent by the
-      // server for dynamic script tags)
-      this.__element.charset = "utf-8";
-      this.__element.src = vUrl;
-
-      if (qx.core.Environment.get("qx.debug"))
-      {
-        if (qx.core.Environment.get("qx.debug.io.remote.data"))
-        {
-          this.debug("Request: " + vUrl);
-        }
-      }
-
-      document.body.appendChild(this.__element);
-    },
-
-
-    /**
-     * Switches the readystate by setting the internal state.
-     *
-     * @param vReadyState {String} readystate value
-     */
-    _switchReadyState : function(vReadyState)
-    {
-      // Ignoring already stopped requests
-      switch(this.getState())
-      {
-        case "completed":
-        case "aborted":
-        case "failed":
-        case "timeout":
-          this.warn("Ignore Ready State Change");
-          return;
-      }
-
-      // Updating internal state
-      while (this.__lastReadyState < vReadyState) {
-        this.setState(qx.io.remote.Exchange._nativeMap[++this.__lastReadyState]);
-      }
-    },
-
-
-
-
-    /*
-    ---------------------------------------------------------------------------
-      REQUEST HEADER SUPPORT
-    ---------------------------------------------------------------------------
-    */
-
-    /**
-     * Sets a request header with the given value.
-     *
-     * This method is not implemented at the moment.
-     *
-     * @param vLabel {String} Request header name
-     * @param vValue {var} Request header value
-     */
-    setRequestHeader : function(vLabel, vValue) {},
-
-    /*
-    ---------------------------------------------------------------------------
-      RESPONSE HEADER SUPPORT
-    ---------------------------------------------------------------------------
-    */
-
-    /**
-     * Returns the value of the given response header.
-     *
-     * This method is not implemented at the moment and returns always "null".
-     *
-     * @param vLabel {String} Response header name
-     * @return {null} Returns null
-     */
-    getResponseHeader : function(vLabel) {
-      return null;
-    },
-
-    /**
-     * Provides an hash of all response headers.
-     *
-     * This method is not implemented at the moment and returns an empty map.
-     *
-     * @return {Map} empty map
-     */
-    getResponseHeaders : function() {
-      return {};
-    },
-
-    /*
-    ---------------------------------------------------------------------------
-      STATUS SUPPORT
-    ---------------------------------------------------------------------------
-    */
-
-    /**
-     * Returns the current status code of the request if available or -1 if not.
-     * This method needs implementation (returns always 200).
-     *
-     * @return {Integer} status code
-     */
-    getStatusCode : function() {
-      return 200;
-    },
-
-    /**
-     * Provides the status text for the current request if available and null otherwise.
-     * This method needs implementation (returns always an empty string)
-     *
-     * @return {String} always an empty string.
-     */
-    getStatusText : function() {
-      return "";
-    },
-
-    /*
-    ---------------------------------------------------------------------------
-      RESPONSE DATA SUPPORT
-    ---------------------------------------------------------------------------
-    */
-
-    /**
-     * Returns the length of the content as fetched thus far.
-     * This method needs implementation (returns always 0).
-     *
-     * @return {Integer} Returns 0
-     */
-    getFetchedLength : function() {
-      return 0;
-    },
-
-    /**
-     * Returns the content of the response.
-     *
-     * @return {null | String} If successful content of response as string.
-     */
-    getResponseContent : function()
-    {
-      if (this.getState() !== "completed")
-      {
-        if (qx.core.Environment.get("qx.debug"))
-        {
-          if (qx.core.Environment.get("qx.debug.io.remote")) {
-            this.warn("Transfer not complete, ignoring content!");
-          }
-        }
-
-        return null;
-      }
-
-      if (qx.core.Environment.get("qx.debug"))
-      {
-        if (qx.core.Environment.get("qx.debug.io.remote")) {
-          this.debug("Returning content for responseType: " + this.getResponseType());
-        }
-      }
-
-      switch(this.getResponseType())
-      {
-        case "text/plain":
-          // server is responsible for using a string as the response
-        case "application/json":
-        case "text/javascript":
-          if (qx.core.Environment.get("qx.debug"))
-          {
-            if (qx.core.Environment.get("qx.debug.io.remote.data"))
-            {
-              this.debug("Response: " + this._responseContent);
-            }
-          }
-          var ret = this._responseContent;
-          return (ret === 0 ? 0 : (ret || null));
-
-        default:
-          this.warn("No valid responseType specified (" + this.getResponseType() + ")!");
-          return null;
-      }
-    }
-  },
-
-
-
-  /*
-  *****************************************************************************
-     DEFER
-  *****************************************************************************
-  */
-
-  defer : function()
-  {
-    // basic registration to qx.io.remote.Exchange
-    // the real availability check (activeX stuff and so on) follows at the first real request
-    qx.io.remote.Exchange.registerType(qx.io.remote.transport.Script, "qx.io.remote.transport.Script");
-  },
-
-
-
-
-  /*
-  *****************************************************************************
-     DESTRUCTOR
-  *****************************************************************************
-  */
-
-  destruct : function()
-  {
-    if (this.__element)
-    {
-      delete qx.io.remote.transport.Script._instanceRegistry[this.__uniqueId];
-      document.body.removeChild(this.__element);
-    }
-
-    this.__element = this._responseContent = null;
-  }
-});
-/* ************************************************************************
-
-   qooxdoo - the new era of web development
-
-   http://qooxdoo.org
-
-   Copyright:
-     2004-2008 1&1 Internet AG, Germany, http://www.1und1.de
-     2006 Derrell Lipman
-     2006 STZ-IDA, Germany, http://www.stz-ida.de
-
-   License:
-     LGPL: http://www.gnu.org/licenses/lgpl.html
-     EPL: http://www.eclipse.org/org/documents/epl-v10.php
-     See the LICENSE file in the project's top-level directory for details.
-
-   Authors:
-     * Sebastian Werner (wpbasti)
-     * Andreas Ecker (ecker)
-     * Derrell Lipman (derrell)
-     * Andreas Junghans (lucidcake)
-
-************************************************************************ */
-
 /* ************************************************************************
 
 
@@ -135552,6 +135536,478 @@ qx.Class.define("qx.bom.Iframe",
       qx.bom.Event.addNativeListener(iframe, "load", callback);
     }
 
+  }
+});
+/* ************************************************************************
+
+   qooxdoo - the new era of web development
+
+   http://qooxdoo.org
+
+   Copyright:
+     2004-2008 1&1 Internet AG, Germany, http://www.1und1.de
+     2006 Derrell Lipman
+     2006 STZ-IDA, Germany, http://www.stz-ida.de
+
+   License:
+     LGPL: http://www.gnu.org/licenses/lgpl.html
+     EPL: http://www.eclipse.org/org/documents/epl-v10.php
+     See the LICENSE file in the project's top-level directory for details.
+
+   Authors:
+     * Sebastian Werner (wpbasti)
+     * Andreas Ecker (ecker)
+     * Derrell Lipman (derrell)
+     * Andreas Junghans (lucidcake)
+
+************************************************************************ */
+
+/**
+ * Transports requests to a server using dynamic script tags.
+ *
+ * This class should not be used directly by client programmers.
+ */
+qx.Class.define("qx.io.remote.transport.Script",
+{
+  extend : qx.io.remote.transport.Abstract,
+
+
+
+
+  /*
+  *****************************************************************************
+     CONSTRUCTOR
+  *****************************************************************************
+  */
+
+  construct : function()
+  {
+    this.base(arguments);
+
+    var vUniqueId = ++qx.io.remote.transport.Script.__uniqueId;
+
+    if (vUniqueId >= 2000000000) {
+      qx.io.remote.transport.Script.__uniqueId = vUniqueId = 1;
+    }
+
+    this.__element = null;
+    this.__uniqueId = vUniqueId;
+  },
+
+
+
+
+  /*
+  *****************************************************************************
+     STATICS
+  *****************************************************************************
+  */
+
+  statics :
+  {
+    /**
+     * Unique identifier for each instance.
+     *
+     * @internal
+     */
+    __uniqueId : 0,
+
+    /**
+     * Registry for all script transport instances.
+     *
+     * @internal
+     */
+    _instanceRegistry : {},
+
+    /**
+     * Internal URL parameter prefix.
+     *
+     * @internal
+     */
+    ScriptTransport_PREFIX : "_ScriptTransport_",
+
+    /**
+     * Internal URL parameter ID.
+     *
+     * @internal
+     */
+    ScriptTransport_ID_PARAM : "_ScriptTransport_id",
+
+    /**
+     * Internal URL parameter data prefix.
+     *
+     * @internal
+     */
+    ScriptTransport_DATA_PARAM : "_ScriptTransport_data",
+
+    /**
+     * Capabilities of this transport type.
+     *
+     * @internal
+     */
+    handles :
+    {
+      synchronous           : false,
+      asynchronous          : true,
+      crossDomain           : true,
+      fileUpload            : false,
+      programaticFormFields : false,
+      responseTypes         : [ "text/plain", "text/javascript", "application/json" ]
+    },
+
+
+    /**
+     * Returns always true, because script transport is supported by all browsers.
+     * @return {Boolean} <code>true</code>
+     */
+    isSupported : function() {
+      return true;
+    },
+
+
+
+
+    /*
+    ---------------------------------------------------------------------------
+      EVENT LISTENER
+    ---------------------------------------------------------------------------
+    */
+
+    /**
+     * For reference:
+     * http://msdn.microsoft.com/en-us/library/ie/ms534359%28v=vs.85%29.aspx
+     *
+     * @internal
+     */
+    _numericMap :
+    {
+      "uninitialized" : 1,
+      "loading"       : 2,
+      "loaded"        : 2,
+      "interactive"   : 3,
+      "complete"      : 4
+    },
+
+
+    /**
+     * This method can be called by the script loaded by the ScriptTransport
+     * class.
+     *
+     * @signature function(id, content)
+     * @param id {String} Id of the corresponding transport object,
+     *     which is passed as an URL parameter to the server an
+     * @param content {String} This string is passed to the content property
+     *     of the {@link qx.io.remote.Response} object.
+     */
+    _requestFinished : qx.event.GlobalError.observeMethod(function(id, content)
+    {
+      var vInstance = qx.io.remote.transport.Script._instanceRegistry[id];
+
+      if (vInstance == null)
+      {
+        if (qx.core.Environment.get("qx.debug"))
+        {
+          if (qx.core.Environment.get("qx.debug.io.remote")) {
+            this.warn("Request finished for an unknown instance (probably aborted or timed out before)");
+          }
+        }
+      }
+      else
+      {
+        vInstance._responseContent = content;
+        vInstance._switchReadyState(qx.io.remote.transport.Script._numericMap.complete);
+      }
+    })
+  },
+
+
+
+
+  /*
+  *****************************************************************************
+     MEMBERS
+  *****************************************************************************
+  */
+
+  members :
+  {
+
+    __lastReadyState : 0,
+    __element : null,
+    __uniqueId : null,
+
+    /*
+    ---------------------------------------------------------------------------
+      USER METHODS
+    ---------------------------------------------------------------------------
+    */
+
+    /**
+     * Sends the request using "script" elements
+     *
+     */
+    send : function()
+    {
+      var vUrl = this.getUrl();
+
+      // --------------------------------------
+      //   Adding parameters
+      // --------------------------------------
+      vUrl += (vUrl.indexOf("?") >= 0 ? "&" : "?") + qx.io.remote.transport.Script.ScriptTransport_ID_PARAM + "=" + this.__uniqueId;
+
+      var vParameters = this.getParameters();
+      var vParametersList = [];
+
+      for (var vId in vParameters)
+      {
+        if (vId.indexOf(qx.io.remote.transport.Script.ScriptTransport_PREFIX) == 0) {
+          this.error("Illegal parameter name. The following prefix is used internally by qooxdoo): " + qx.io.remote.transport.Script.ScriptTransport_PREFIX);
+        }
+
+        var value = vParameters[vId];
+
+        if (value instanceof Array)
+        {
+          for (var i=0; i<value.length; i++) {
+            vParametersList.push(encodeURIComponent(vId) + "=" + encodeURIComponent(value[i]));
+          }
+        }
+        else
+        {
+          vParametersList.push(encodeURIComponent(vId) + "=" + encodeURIComponent(value));
+        }
+      }
+
+      if (vParametersList.length > 0) {
+        vUrl += "&" + vParametersList.join("&");
+      }
+
+      // --------------------------------------
+      //   Sending data
+      // --------------------------------------
+      var vData = this.getData();
+
+      if (vData != null) {
+        vUrl += "&" + qx.io.remote.transport.Script.ScriptTransport_DATA_PARAM + "=" + encodeURIComponent(vData);
+      }
+
+      qx.io.remote.transport.Script._instanceRegistry[this.__uniqueId] = this;
+      this.__element = document.createElement("script");
+
+      // IE needs this (it ignores the
+      // encoding from the header sent by the
+      // server for dynamic script tags)
+      this.__element.charset = "utf-8";
+      this.__element.src = vUrl;
+
+      if (qx.core.Environment.get("qx.debug"))
+      {
+        if (qx.core.Environment.get("qx.debug.io.remote.data"))
+        {
+          this.debug("Request: " + vUrl);
+        }
+      }
+
+      document.body.appendChild(this.__element);
+    },
+
+
+    /**
+     * Switches the readystate by setting the internal state.
+     *
+     * @param vReadyState {String} readystate value
+     */
+    _switchReadyState : function(vReadyState)
+    {
+      // Ignoring already stopped requests
+      switch(this.getState())
+      {
+        case "completed":
+        case "aborted":
+        case "failed":
+        case "timeout":
+          this.warn("Ignore Ready State Change");
+          return;
+      }
+
+      // Updating internal state
+      while (this.__lastReadyState < vReadyState) {
+        this.setState(qx.io.remote.Exchange._nativeMap[++this.__lastReadyState]);
+      }
+    },
+
+
+
+
+    /*
+    ---------------------------------------------------------------------------
+      REQUEST HEADER SUPPORT
+    ---------------------------------------------------------------------------
+    */
+
+    /**
+     * Sets a request header with the given value.
+     *
+     * This method is not implemented at the moment.
+     *
+     * @param vLabel {String} Request header name
+     * @param vValue {var} Request header value
+     */
+    setRequestHeader : function(vLabel, vValue) {},
+
+    /*
+    ---------------------------------------------------------------------------
+      RESPONSE HEADER SUPPORT
+    ---------------------------------------------------------------------------
+    */
+
+    /**
+     * Returns the value of the given response header.
+     *
+     * This method is not implemented at the moment and returns always "null".
+     *
+     * @param vLabel {String} Response header name
+     * @return {null} Returns null
+     */
+    getResponseHeader : function(vLabel) {
+      return null;
+    },
+
+    /**
+     * Provides an hash of all response headers.
+     *
+     * This method is not implemented at the moment and returns an empty map.
+     *
+     * @return {Map} empty map
+     */
+    getResponseHeaders : function() {
+      return {};
+    },
+
+    /*
+    ---------------------------------------------------------------------------
+      STATUS SUPPORT
+    ---------------------------------------------------------------------------
+    */
+
+    /**
+     * Returns the current status code of the request if available or -1 if not.
+     * This method needs implementation (returns always 200).
+     *
+     * @return {Integer} status code
+     */
+    getStatusCode : function() {
+      return 200;
+    },
+
+    /**
+     * Provides the status text for the current request if available and null otherwise.
+     * This method needs implementation (returns always an empty string)
+     *
+     * @return {String} always an empty string.
+     */
+    getStatusText : function() {
+      return "";
+    },
+
+    /*
+    ---------------------------------------------------------------------------
+      RESPONSE DATA SUPPORT
+    ---------------------------------------------------------------------------
+    */
+
+    /**
+     * Returns the length of the content as fetched thus far.
+     * This method needs implementation (returns always 0).
+     *
+     * @return {Integer} Returns 0
+     */
+    getFetchedLength : function() {
+      return 0;
+    },
+
+    /**
+     * Returns the content of the response.
+     *
+     * @return {null | String} If successful content of response as string.
+     */
+    getResponseContent : function()
+    {
+      if (this.getState() !== "completed")
+      {
+        if (qx.core.Environment.get("qx.debug"))
+        {
+          if (qx.core.Environment.get("qx.debug.io.remote")) {
+            this.warn("Transfer not complete, ignoring content!");
+          }
+        }
+
+        return null;
+      }
+
+      if (qx.core.Environment.get("qx.debug"))
+      {
+        if (qx.core.Environment.get("qx.debug.io.remote")) {
+          this.debug("Returning content for responseType: " + this.getResponseType());
+        }
+      }
+
+      switch(this.getResponseType())
+      {
+        case "text/plain":
+          // server is responsible for using a string as the response
+        case "application/json":
+        case "text/javascript":
+          if (qx.core.Environment.get("qx.debug"))
+          {
+            if (qx.core.Environment.get("qx.debug.io.remote.data"))
+            {
+              this.debug("Response: " + this._responseContent);
+            }
+          }
+          var ret = this._responseContent;
+          return (ret === 0 ? 0 : (ret || null));
+
+        default:
+          this.warn("No valid responseType specified (" + this.getResponseType() + ")!");
+          return null;
+      }
+    }
+  },
+
+
+
+  /*
+  *****************************************************************************
+     DEFER
+  *****************************************************************************
+  */
+
+  defer : function()
+  {
+    // basic registration to qx.io.remote.Exchange
+    // the real availability check (activeX stuff and so on) follows at the first real request
+    qx.io.remote.Exchange.registerType(qx.io.remote.transport.Script, "qx.io.remote.transport.Script");
+  },
+
+
+
+
+  /*
+  *****************************************************************************
+     DESTRUCTOR
+  *****************************************************************************
+  */
+
+  destruct : function()
+  {
+    if (this.__element)
+    {
+      delete qx.io.remote.transport.Script._instanceRegistry[this.__uniqueId];
+      document.body.removeChild(this.__element);
+    }
+
+    this.__element = this._responseContent = null;
   }
 });
 /* ************************************************************************

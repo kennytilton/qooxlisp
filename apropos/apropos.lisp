@@ -40,7 +40,7 @@
   (trcx :begin!!!!!!!!!!!!!)
   (ukt::stop-check :qx-begin)
   ;(trace md-awaken make-qx-instance)
-  (let ((*ekojs* nil)) ;; qx-begin
+  (let ((*ekojs* t)) ;; qx-begin
     (with-js-response (req ent)
       (top-level.debug::with-auto-zoom-and-exit ("aabegin-zoo.txt" :exit nil)
         (let ((*web-session* nil))
@@ -61,7 +61,6 @@ sessId=~a;" (session-id (setf *web-session*
 (defparameter apropos-variants
   '((av-classic "Classic")
     (av-classic-plus "Classic++")
-    (apropos-makeover "Makeover")
     (apropos-ala-kenny "a la Kenny")))
 
 (defmd apropos-sampler (qxl-session)

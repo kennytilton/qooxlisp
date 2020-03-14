@@ -20,6 +20,7 @@
 ;;; The combo-box used to hold prior matches is overkill but let's us
 ;;; show off a new widget and is indeed how the original dialog works.
 
+
 (defun search-panel (self)
   (hbox (:align-y 'middle :spacing 12)
     (:allow-grow-y :js-false
@@ -28,6 +29,7 @@
     (combobox :symbol-string
       (:add '(:flex 1)
         :allow-grow-x t
+        :focus-grab t
         :onkeypress (lambda (self req)
                       (let* ((key (req-val req "keyId"))
                              (priorv (req-val req "priorv")))
@@ -60,12 +62,10 @@
       :decorator "button"
       :padding '(4 12)
       :onclick (lambda (self req)
+                 (declare (ignorable req))
                  (b-when sympart (value (psib))
                    (describe self)
-                   (trcx :self self req)
                    (setf (sym-seg (u^ apropos-variant)) sympart))))))
-
-#+xxxx (inspect (find-package :socket))
 
 ;;; The next two functions build the second row of the GUI
 ;;; which contains various widgets to filter the search results

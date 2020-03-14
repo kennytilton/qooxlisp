@@ -1,4 +1,4 @@
-;; -*- mode: Lisp; Syntax: Common-Lisp; Package: qooxlisp; -*-
+﻿;; -*- mode: Lisp; Syntax: Common-Lisp; Package: qooxlisp; -*-
 #|
 
     table 
@@ -79,10 +79,13 @@ var tcm = clDict[~a].getTableColumnModel();" (oid self) model-oid (oid self))
             for n upfrom 0
             do
               (b-when w (tcol-width col)
+                (trcx :colwidth!!!! w)
                 (qxfmt "tcm.setColumnWidth(~a,~a);"  n w))
               (b-when w (tcol-renderer col)
-                (qxfmt "tcm.setDataCellRenderer(~a, new qx.ui.table.cellrenderer.~:(~a~)());" n w)))
-        ))))
+                (if (atom w)
+                    (qxfmt "tcm.setDataCellRenderer(~a, new qx.ui.table.cellrenderer.~:(~a~)());" n w)
+                  (dsb (op &rest params) w
+                    (qxfmt "tcm.setDataCellRenderer(~a, new qx.ui.table.cellrenderer.~:(~a~)(~{~s~^,~}));" n op params)))))))))
 
 (defstruct (table-column (:conc-name tcol-))
   name id width renderer visible editable)

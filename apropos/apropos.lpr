@@ -9,7 +9,6 @@
                  (make-instance 'module :name "apropos-variant")
                  (make-instance 'module :name "av-classic")
                  (make-instance 'module :name "av-classic-plus")
-                 (make-instance 'module :name "makeover.lisp")
                  (make-instance 'module :name "av-kenny")
                  (make-instance 'module :name "../INSTALL.txt"))
   :projects (list (make-instance 'project-module :name "../qooxlisp.lpr" :show-modules

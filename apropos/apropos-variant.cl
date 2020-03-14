@@ -50,10 +50,13 @@
 ;;; Next two functions support rules for gathering matching symbols
 ;;; and filtering them as user changes constraints on what to show
 
-(defun symbol-info-raw (s &key pkg (eor (lambda (x)
-                                          (if x "x" ""))))
-  (when (plusp (length s))
-    (flet ((exportedp (sym)
+(defun symbol-info-raw (s &key pkg)
+  (when (plusp (length s)) ;; todoo (when s...
+    (flet (#+xxx(eor (x)
+                  (if x "x" ""))
+           (eor (x)
+                                  (if x t :js-false))
+           (exportedp (sym)
              (eql (nth-value 1 (find-symbol (symbol-name sym)(symbol-package sym))) :external)))
       (loop for sym in (apropos-list s pkg)
           collecting ; TODOO memoize next in a 'build-symbol-info fn
@@ -62,15 +65,17 @@
              :pkg (symbol-package sym)
              :fntype (cond
                       ((macro-function sym) "macro")
+                      ((and (fboundp sym)
+                         (typep (symbol-function sym) 'standard-generic-function)) "generic")
                       ((fboundp sym) "function")
                       (t ""))
              :var? (if (boundp sym)
                        (if (constantp sym)
                            "con" "var")
                      "")
-             :setf? (funcall eor (fboundp `(setf ,sym)))
-             :class? (funcall eor (find-class sym nil))
-             :exported? (funcall eor (exportedp sym)))))))
+             :setf? (eor (fboundp `(setf ,sym)))
+             :class? (eor (find-class sym nil))
+             :exported? (eor (exportedp sym)))))))
 
 (defun symbol-info-filtered (syms type exported-only-p)
   (trcx :symbol-info-filtered-sees type exported-only-p)
@@ -168,8 +173,8 @@
                 (mtc "Symbol Name" 'name :width 192)
                 (mtc "Package" 'pkg)
                 (mtc "Function" 'fntype)
-                (mtc "Setf" 'setf? :width 48)
-                (mtc "Var" 'var? :width 48)
+                (mtc "Setf" 'setf? :width 48 :renderer 'boolean)
+                (mtc "Var" 'var? :width 48 :renderer '(html "center" "red" "" ""))
                 (mtc "Class" 'class? :width 48)
-                (mtc "Exp" 'exported? :width 48)
-                ))))
+                (mtc "Exp" 'exported? :width 48 :renderer 'boolean)))))
+
