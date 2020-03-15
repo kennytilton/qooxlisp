@@ -45,10 +45,14 @@
       (b-when oid (oid (table-model tbl))
         (qxfmt "clDict[~a].reloadData();" oid)))))
 
-(defstruct symbol-info name pkg fntype setf? var? class? exported?)
+(defstruct symbol-info name pkg fntype setf? var? class? exported? compiler-macro-p)
 
 ;;; Next two functions support rules for gathering matching symbols
 ;;; and filtering them as user changes constraints on what to show
+
+#+xxxx (symbol-plist 'record-source-file)
+#+xxxx (compiler-macro-function 'record-source-file)
+
 
 (defun symbol-info-raw (s &key pkg)
   (when (plusp (length s)) ;; todoo (when s...
@@ -76,7 +80,8 @@
              :setf? (eor (fboundp `(setf ,sym)))
              :class? (eor (find-class sym nil))
              :exported? (progn (trcx :expo? (exportedp sym) sym)
-                          (exportedp sym)))))))
+                          (exportedp sym))
+             :compiler-macro-p (not (null (compiler-macro-function sym))))))))
 
 (defun symbol-info-filtered (syms type exported-only-p)
   (trcx :symbol-info-filtered-sees type exported-only-p)
@@ -86,7 +91,8 @@
               (symbol-info-exported? sym))
             (case$ type
               ("all" t)
-              ("fn" (not (equal "" (symbol-info-fntype sym))))
+              ("fn" (or (not (equal "" (symbol-info-fntype sym)))
+                      (symbol-info-compiler-macro-p sym)))
               ("var" (plusp (length (symbol-info-var? sym))))
               ("class" (or (eq t (symbol-info-class? sym))
                          (equal "x" (symbol-info-class? sym))))
@@ -114,7 +120,9 @@
                  (cons :setf? (symbol-info-setf? sym))
                  (cons :class? (symbol-info-class? sym))
                  (cons :exported? (if (symbol-info-exported? sym)
-                                      t :js-false))))))
+                                      t :js-false))
+                 (cons :compiler-macro-p (if (symbol-info-compiler-macro-p sym)
+                                     t :js-false))))))
 
 (defun sym-sort (self req)
   (prog1 nil
@@ -184,10 +192,17 @@
                 (mtc "Var" 'var? :width 48
                   :renderer '(html "center" "" "" "")
                   :header 'TableColumnCenteredHeader)
-                (mtc "Class" 'class? :width 48
+                (mtc "Class" 'class?
+                  :width 48
                   :renderer 'boolean
                   :header 'TableColumnCenteredHeader)
-                (mtc "Exp" 'exported? :width 48
+                (mtc "Exp" 'exported?
+                  :width 48
                   :renderer 'boolean
-                  :header 'TableColumnCenteredHeader)))))
+                  :header 'TableColumnCenteredHeader)
+                (mtc "Cmp Mac" ':compiler-macro-p
+                  :width 64
+                  :renderer 'boolean)))))
+
+
 

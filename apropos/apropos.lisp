@@ -60,8 +60,7 @@ sessId=~a;" (session-id (setf *web-session*
 
 (defparameter apropos-variants
   '((av-classic "Classic")
-    (av-classic-plus "Classic++")
-    (apropos-ala-kenny "a la Kenny")))
+    (av-classic-plus "Classic++")))
 
 (defmd apropos-sampler (qxl-session)
   :kids (c? (the-kids
