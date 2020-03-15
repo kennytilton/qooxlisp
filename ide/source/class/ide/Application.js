@@ -64,6 +64,7 @@ qx.Class.define("ide.Application",
       qx.ui.decoration.Beveled;
       qx.ui.decoration.Uniform;
       ide.TableModelQXL;
+      ide.TableColumnCenteredHeader;
       qx.ui.layout.HBox;
       qx.ui.layout.VBox;
       qx.ui.layout.Grid;

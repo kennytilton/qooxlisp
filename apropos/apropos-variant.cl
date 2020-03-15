@@ -155,6 +155,8 @@
 ;;; column widths and other things like flagging cells
 ;;; as boolean to get a neat check-mark rendering
 
+;; tcm.setHeaderCellRenderer(2, new qx.ui.table.headerrenderer.Icon("icon/16/apps/office-calendar.png", "A date"));
+
 (defun symbols-found-table (self)
   (make-kid 'qxl-table-remote
     :md-name :sym-info-table
@@ -176,8 +178,16 @@
                 (mtc "Symbol Name" 'name :width 192)
                 (mtc "Package" 'pkg)
                 (mtc "Function" 'fntype)
-                (mtc "Setf" 'setf? :width 48 :renderer 'boolean)
-                (mtc "Var" 'var? :width 48 :renderer '(html "center" "" "" ""))
-                (mtc "Class" 'class? :width 48 :renderer 'boolean)
-                (mtc "Exp" 'exported? :width 48 :renderer 'boolean)))))
+                (mtc "Setf" 'setf? :width 48
+                  :renderer 'boolean
+                  :header 'TableColumnCenteredHeader)
+                (mtc "Var" 'var? :width 48
+                  :renderer '(html "center" "" "" "")
+                  :header 'TableColumnCenteredHeader)
+                (mtc "Class" 'class? :width 48
+                  :renderer 'boolean
+                  :header 'TableColumnCenteredHeader)
+                (mtc "Exp" 'exported? :width 48
+                  :renderer 'boolean
+                  :header 'TableColumnCenteredHeader)))))
 

@@ -20,7 +20,7 @@ qx.$$g = {}
 
 qx.$$loader = {
   parts : {"boot":[0]},
-  packages : {"0":{"uris":["__out__:ide.899fd0dc39a9.js"]}},
+  packages : {"0":{"uris":["__out__:ide.25a3205335c4.js"]}},
   urisBefore : [],
   cssBefore : [],
   boot : "boot",
@@ -79674,6 +79674,7 @@ qx.Class.define("ide.Application",
       qx.ui.decoration.Beveled;
       qx.ui.decoration.Uniform;
       ide.TableModelQXL;
+      ide.TableColumnCenteredHeader;
       qx.ui.layout.HBox;
       qx.ui.layout.VBox;
       qx.ui.layout.Grid;
@@ -137208,6 +137209,28 @@ qx.Class.define("ide.TableModelQXL", {
 	    req.setParameter('opcode', opcode);
         }
     }
+});
+﻿qx.Class.define("ide.TableColumnCenteredHeader",
+{
+  extend : qx.ui.table.headerrenderer.Default,
+
+  construct : function()
+  {
+    this.base(arguments);
+  },
+
+
+  members :
+  {
+    // overridden
+    updateHeaderCell : function(cellInfo, cellWidget)
+    {
+      this.base(arguments, cellInfo, cellWidget);
+      var label = cellWidget.getChildControl('label');
+      label.setTextAlign('center');
+      label.setAllowGrowX(true);
+    }
+  }
 });
 /* ************************************************************************
 
