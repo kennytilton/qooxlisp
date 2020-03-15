@@ -45,21 +45,19 @@
       (b-when oid (oid (table-model tbl))
         (qxfmt "clDict[~a].reloadData();" oid)))))
 
-(defstruct symbol-info name pkg fntype setf? var? class? exported? compiler-macro-p)
+(defstruct symbol-info name pkg fntype setfp varp classp exportedp compiler-macro-p symbol-macro-p)
 
 ;;; Next two functions support rules for gathering matching symbols
 ;;; and filtering them as user changes constraints on what to show
 
-#+xxxx (symbol-plist 'record-source-file)
+#+xxxx (symbol-plist '.focus)
 #+xxxx (compiler-macro-function 'record-source-file)
 
 
 (defun symbol-info-raw (s &key pkg)
   (when (plusp (length s)) ;; todoo (when s...
-    (flet (#+xxx(eor (x)
-                  (if x "x" ""))
-           (eor (x)
-                                  (if x t :js-false))
+    (flet ((eor (x)
+             (if x t :js-false))
            (exportedp (sym)
              (eq (nth-value 1 (find-symbol (symbol-name sym)(symbol-package sym))) :external)))
       (loop for sym in (apropos-list s pkg)
@@ -73,29 +71,33 @@
                          (typep (symbol-function sym) 'standard-generic-function)) "generic")
                       ((fboundp sym) "function")
                       (t ""))
-             :var? (if (boundp sym)
+             :varp (if (boundp sym)
                        (if (constantp sym)
                            "con" "var")
                      "")
-             :setf? (eor (fboundp `(setf ,sym)))
-             :class? (eor (find-class sym nil))
-             :exported? (progn (trcx :expo? (exportedp sym) sym)
+             :setfp (eor (fboundp `(setf ,sym)))
+             :classp (eor (find-class sym nil))
+             :exportedp (progn (trcx :expo? (exportedp sym) sym)
                           (exportedp sym))
-             :compiler-macro-p (not (null (compiler-macro-function sym))))))))
+             :compiler-macro-p (not (null (compiler-macro-function sym)))
+             :symbol-macro-p (not (null (get sym 'sys::.symbol-macro.))))))))
+
+#+xxx (symbol-info-raw ".focus")
 
 (defun symbol-info-filtered (syms type exported-only-p)
   (trcx :symbol-info-filtered-sees type exported-only-p)
   (loop for sym in syms
       when (and
             (or (not exported-only-p)
-              (symbol-info-exported? sym))
+              (symbol-info-exportedp sym))
             (case$ type
               ("all" t)
               ("fn" (or (not (equal "" (symbol-info-fntype sym)))
-                      (symbol-info-compiler-macro-p sym)))
-              ("var" (plusp (length (symbol-info-var? sym))))
-              ("class" (or (eq t (symbol-info-class? sym))
-                         (equal "x" (symbol-info-class? sym))))
+                      (symbol-info-compiler-macro-p sym)
+                      (symbol-info-symbol-macro-p sym)))
+              ("var" (plusp (length (symbol-info-varp sym))))
+              ("class" (or (eq t (symbol-info-classp sym))
+                         (equal "x" (symbol-info-classp sym))))
               (otherwise (error "Type selector ~a invalid" type))))
       collecting sym))
 
@@ -114,14 +116,16 @@
                                         :test 'string-equal)
                               (car nns)
                               (package-name (symbol-info-pkg sym)))
-                              (if (symbol-info-exported? sym) ":" "::")))
+                              (if (symbol-info-exportedp sym) ":" "::")))
                  (cons :fntype (symbol-info-fntype sym))
-                 (cons :var? (symbol-info-var? sym))
-                 (cons :setf? (symbol-info-setf? sym))
-                 (cons :class? (symbol-info-class? sym))
-                 (cons :exported? (if (symbol-info-exported? sym)
+                 (cons :varp (symbol-info-varp sym))
+                 (cons :setfp (symbol-info-setfp sym))
+                 (cons :classp (symbol-info-classp sym))
+                 (cons :exportedp (if (symbol-info-exportedp sym)
                                       t :js-false))
                  (cons :compiler-macro-p (if (symbol-info-compiler-macro-p sym)
+                                     t :js-false))
+                 (cons :symbol-macro-p (if (symbol-info-symbol-macro-p sym)
                                      t :js-false))))))
 
 (defun sym-sort (self req)
@@ -158,13 +162,6 @@
                    "")))))
     (symbols-found-table self)))
 
-;;; The search results table itself
-;;; Missing is a table column model to control initial
-;;; column widths and other things like flagging cells
-;;; as boolean to get a neat check-mark rendering
-
-;; tcm.setHeaderCellRenderer(2, new qx.ui.table.headerrenderer.Icon("icon/16/apps/office-calendar.png", "A date"));
-
 (defun symbols-found-table (self)
   (make-kid 'qxl-table-remote
     :md-name :sym-info-table
@@ -186,21 +183,24 @@
                 (mtc "Symbol Name" 'name :width 192)
                 (mtc "Package" 'pkg)
                 (mtc "Function" 'fntype)
-                (mtc "Setf" 'setf? :width 48
+                (mtc "Setf" 'setfp :width 48
                   :renderer 'boolean
                   :header 'TableColumnCenteredHeader)
-                (mtc "Var" 'var? :width 48
+                (mtc "Var" 'varp :width 48
                   :renderer '(html "center" "" "" "")
                   :header 'TableColumnCenteredHeader)
-                (mtc "Class" 'class?
+                (mtc "Class" 'classp
                   :width 48
                   :renderer 'boolean
                   :header 'TableColumnCenteredHeader)
-                (mtc "Exp" 'exported?
+                (mtc "Exp" 'exportedp
                   :width 48
                   :renderer 'boolean
                   :header 'TableColumnCenteredHeader)
                 (mtc "Cmp Mac" ':compiler-macro-p
+                  :width 64
+                  :renderer 'boolean)
+                (mtc "Sym Mac" ':symbol-macro-p
                   :width 64
                   :renderer 'boolean)))))
 
